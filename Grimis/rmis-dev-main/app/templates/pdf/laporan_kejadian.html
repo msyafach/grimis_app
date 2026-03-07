@@ -1,0 +1,78 @@
+{% extends "pdf/base.html" %}
+
+{% block title %}Laporan Kejadian Risiko - {{ laporan.nama_kejadian }}{% endblock %}
+
+{% block content %}
+<div class="header" style="text-align: center; margin-bottom: 20px;">
+    <h2>LAPORAN KEJADIAN RISIKO</h2>
+    <p>TAHUN: {{ laporan.tahun }}</p>
+</div>
+
+<div class="content-section">
+    <table class="data-table">
+        <tr>
+            <th style="width: 30%;">Nama Kejadian</th>
+            <td>{{ laporan.nama_kejadian }}</td>
+        </tr>
+        <tr>
+            <th>Waktu Kejadian</th>
+            <td>{{ laporan.waktu_kejadian.strftime('%d %B %Y %H:%M') if laporan.waktu_kejadian else '-' }}</td>
+        </tr>
+        <tr>
+            <th>Tempat Kejadian</th>
+            <td>{{ laporan.tempat_kejadian }}</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td><strong>{{ laporan.status }}</strong></td>
+        </tr>
+    </table>
+</div>
+
+<div class="content-section" style="margin-top: 20px;">
+    <h3>1. Pemicu / Deskripsi Kejadian</h3>
+    <div style="border: 1px solid #ddd; padding: 10px; min-height: 80px;">
+        {{ laporan.pemicu_kejadian }}
+    </div>
+</div>
+
+<div class="content-section" style="margin-top: 20px;">
+    <h3>2. Data Pelapor</h3>
+    <table class="data-table">
+        <tr>
+            <th style="width: 30%;">Nama Lengkap</th>
+            <td>{{ laporan.nama }}</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>{{ laporan.email }}</td>
+        </tr>
+        <tr>
+            <th>No. Handphone</th>
+            <td>{{ laporan.no_hp }}</td>
+        </tr>
+        <tr>
+            <th>Waktu Pelaporan</th>
+            <td>{{ laporan.created_at.strftime('%d %B %Y %H:%M') if laporan.created_at else '-' }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="signatures-section" style="margin-top: 60px;">
+    <table style="width: 100%; border: none;">
+        <tr>
+            <td style="width: 50%; text-align: center; border: none;">
+                <p>Dilaporkan Oleh,</p>
+                <br><br><br>
+                <p><strong>{{ laporan.nama }}</strong></p>
+            </td>
+            <td style="width: 50%; text-align: center; border: none;">
+                <p>Mengetahui/Menyetujui,</p>
+                <br><br><br>
+                <p><strong>{{ laporan.approved_by_name if laporan.approved_by_name else (laporan.rejected_by_name if
+                        laporan.rejected_by_name else '_______________________') }}</strong></p>
+            </td>
+        </tr>
+    </table>
+</div>
+{% endblock %}

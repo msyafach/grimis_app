@@ -1,0 +1,37 @@
+services:
+  # A web service
+  - type: web
+    name: rmis-api
+    env: docker
+    region: singapore
+    plan: free
+    buildCommand: chmod +x build_check.sh && ./build_check.sh
+    healthCheckPath: /api/v1/health
+    # Specify repository if using GitHub or GitLab integration
+    # repo: https://github.com/yourusername/your-repo.git
+    # branch: main
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: MONGODB_URL
+        sync: false # Secrets must be manually set in Render dashboard
+      - key: DB_NAME
+        value: RMIS
+      - key: JWT_SECRET_KEY
+        generateValue: true # Will generate a random value on first deployment
+      - key: AZURE_OPENAI_ENDPOINT
+        sync: false
+      - key: AZURE_OPENAI_API_KEY
+        sync: false
+      - key: AZURE_OPENAI_DEPLOYMENT_NAME
+        sync: false
+      - key: AZURE_OPENAI_API_VERSION
+        value: 2024-08-01-preview
+      - key: AZURE_EMBEDDING_ENDPOINT
+        sync: false
+      - key: AZURE_EMBEDDING_API_KEY
+        sync: false
+      - key: AZURE_EMBEDDING_DEPLOYMENT_NAME
+        sync: false
+      - key: AZURE_EMBEDDING_API_VERSION
+        value: 2024-08-01-preview 

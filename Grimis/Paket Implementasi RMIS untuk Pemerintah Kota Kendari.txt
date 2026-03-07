@@ -1,0 +1,50 @@
+Paket Implementasi RMIS untuk Pemerintah Kota Kendari, Inspektorat dan Dinas Kesehatan
+
+1. Asumsi & batasan
+
+Dokumen ini disusun berdasarkan Petunjuk Teknis/User Manual Risk Management Information System (RMIS) versi Pemilik & Pengelola Risiko yang disediakan oleh BPKP. Manual tersebut menjadi satusatunya sumber resmi dalam menafsirkan modul, alur kerja dan struktur data RMIS. Dalam penyusunan paket ini penulis berasumsi bahwa:
+	•	Aplikasi RMIS yang dipakai oleh Pemerintah Kota Kendari, Inspektorat dan Dinas Kesehatan memiliki modul dan menu identik dengan manual tersebut. Bila terdapat perbedaan tampilan atau field, pengguna harus menyesuaikan mapping yang disediakan.
+	•	Struktur organisasi, proses bisnis dan sasaran setiap perangkat daerah belum diberikan. Sebagai gantinya digunakan contoh nama unit (Bappeda, Dinas PUPR, Puskesmas, dll.) dan tujuan strategis yang lazim di pemerintah daerah. Pengguna diminta untuk mengganti dengan struktur dan sasaran yang sebenarnya.
+	•	Manual tidak memuat definisi skala probabilitas dan dampak secara rinci. Oleh karena itu disediakan kriteria risiko default yang dapat disesuaikan dengan kebijakan internal. Jika entitas memiliki matriks risiko tersendiri, gunakan definisi tersebut.
+	•	Sebagian field tertentu mungkin tidak relevan atau belum tersedia; diisi placeholder “TBD” atau [TBDVALIDATION] seperti yang diminta, sampai ada klarifikasi lebih lanjut.
+
+2. Ringkasan modul aplikasi & workflow
+
+RMIS mendukung siklus manajemen risiko endtoend: mulai penentuan selera risiko hingga pemantauan kejadian. Pengguna dipisahkan menjadi Pengelola Risiko (risk officer) yang menginput dan memproses data serta Pemilik Risiko (unit pemilik) yang memonitor saja. Admin entitas mengelola parameter dan melakukan approval. Berikut modulmodulnya:
+
+2.1 Menentukan Selera Risiko
+
+Menu ini digunakan untuk menetapkan selera risiko (risk appetite) dan matriks probabilitas–dampak. Nilai selera risiko ditentukan dari area penerimaan dalam heatmap; contoh di manual menunjukkan konversi ke angka “9”. Hasil ini akan digunakan sistem untuk menilai apakah residual risk berada dalam batas selera atau tidak.
+
+2.2 Parameter
+
+Kamus Risiko adalah basis data seluruh narasi risiko dalam suatu entitas. Tujuannya menghindari redundansi narasi; unit kerja disarankan mengkonsolidasikan narasi risiko yang berbeda menjadi satu terminologi standar. Menu ini dapat diakses oleh pemilik dan pengelola risiko untuk melihat daftar dan detail kamus risiko.
+
+Usulan Kamus memungkinkan pengguna mengajukan pernyataan risiko baru jika belum ada di kamus. Formulir memuat Kategori Risiko, Kode Risiko dan Pernyataan Risiko. Setelah disimpan, admin entitas menerima notifikasi dan dapat memverifikasi, menolak atau menyetujui (dengan penyesuaian) usulan.
+
+Usulan Konteks digunakan untuk mengusulkan sasaran atau proses bisnis (konteks) yang belum ada. Formulir memuat nama konteks dan keterangan; status approval sama seperti usulan kamus.
+
+Usulan Indikator digunakan untuk menambah indikator kinerja untuk sasaran tertentu. Pengguna memilih sasaran/konteks, memasukkan kode dan nama indikator lalu menyimpan.
+
+2.3 Pengelolaan Risiko
+	•	Identifikasi Risiko – Pengelola risiko menginput risiko teridentifikasi; pemilik risiko hanya memantau. Langkahnya: pilih menu Identifikasi Risiko di sidebar, klik Tambah Identifikasi Risiko dan lengkapi formulir. Apabila narasi risiko tidak ditemukan, pengguna dapat menambahkannya melalui menu Usulan Kamus. Formulir mengharuskan pemilihan salah satu dari empat tujuan SPIP (Sistem Pengendalian Internal Pemerintah) serta penjelasan dampak. Setelah diisi, opsi Analisis Risiko atau Evaluasi Risiko akan tersedia. Data identifikasi dapat diubah, dihapus (dengan approval) atau dinonaktifkan.
+	•	Analisis Risiko – Menu ini digunakan untuk menilai probabilitas dan dampak risiko serta mengunggah pengendalian yang sudah ada. Pengelola memilih menu Analisis Risiko dan mengisi formulir nilai kemungkinan dan dampak; level risiko dihitung otomatis sesuai matriks yang telah ditetapkan. Jika ada kegiatan pengendalian (existing control), pengguna menambahkan judul kontrol, unsur SPIP, deskripsi, mengunggah berkas atau tautan, dan keterangan. Sistem akan menghitung apakah kontrol memadai atau tidak (memadai jika level risiko setelah kontrol ≤ selera risiko; tidak memadai jika > selera risiko).
+	•	Evaluasi Risiko – Langkah ini mengevaluasi akar penyebab (root cause). Pengguna memilih menu Evaluasi Risiko, kemudian untuk setiap risiko memilih jenis penyebab dari parameter dan menuliskan narasi akar penyebab.
+	•	Respon Risiko (RTP) – Merekomendasikan rencana tindak pengendalian. Respon dapat berfokus pada mengurangi kemungkinan, mengurangi dampak, atau keduanya. Formulir memuat uraian kegiatan pengendalian, penanggung jawab, indikator output, unsur SPIP, dan tanggal target. Realisasi RTP diunggah beserta berkas pendukung; jika ada beberapa rencana, proses penginputan diulang.
+	•	Treated Risk – Menginput skor risiko setelah pelaksanaan RTP. Pengguna memilih menu Treated Risk, lalu mengisi skor kemungkinan dan dampak yang baru. Nilai dan level risiko dihitung otomatis; perhatikan apakah RTP mengurangi kemungkinan, dampak atau keduanya.
+	•	Monitoring Risiko – Fitur ini memonitor kejadian risiko berdasarkan laporan melalui QR Code. Daftar kejadian yang telah melalui proses approval ditampilkan; pengguna dapat melihat detail, mengubah data kejadian, mencetak laporan PDF atau mengunduh spreadsheet. Formulir kejadian memuat pernyataan risiko, nama kejadian, nama penyebab, lokasi, waktu, dampak dan pemicu kejadian.
+	•	Pelaporan Risiko – Semua user RMIS dapat mengunduh laporan otomatis dari sistem. Tersedia berbagai jenis laporan: daftar identifikasi, analisis, daftar risiko prioritas (berdasarkan residu), analisis akar masalah, rencana tindak pengendalian, daftar pemantauan kegiatan pengendalian, kejadian risiko, dan keseluruhan proses.
+	•	Proses Akhir Tahun (PAT) dan Proses Nilai Aktual – Pengelola risiko menjalankan PAT untuk mengarsipkan risiko selama satu tahun dan menjadikan RTP yang telah direalisasikan sebagai existing control pada tahun berikutnya. Menu Proses Nilai Aktual menampilkan daftar risiko aktual selama tahun berjalan dan digunakan sebelum PAT dilaksanakan.
+
+2.4 Approval Kejadian dan Lapor Kejadian
+
+Fitur ini berhubungan dengan pelaporan kejadian risiko oleh pegawai melalui QR Code. Pengelola risiko memverifikasi laporan dan menentukan apakah kejadian tersebut dimasukkan ke monitoring. Proses approval dan pelaporan tidak diuraikan panjang lebar di manual, namun termasuk mengisi detail kejadian, dampak, penyebab dan melakukan approval.
+
+2.5 Dashboard
+
+Dashboard menyediakan visualisasi heatmap risiko, daftar risiko prioritas dan status implementasi kontrol. Pengguna dapat memantau sebaran risiko, tingkat efektivitas pengendalian dan tugas yang belum selesai.
+
+3. Data dictionary & mapping field
+
+Tabel berikut merangkum objek utama di RMIS beserta fieldfield pentingnya. Data dictionary ini hanya contoh; silakan sesuaikan dengan template impor aplikasi.
+

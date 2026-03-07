@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 2cm;
+
+            @bottom-right {
+                content: "Halaman " counter(page) " dari " counter(pages);
+                font-family: Arial, sans-serif;
+                font-size: 9pt;
+            }
+
+            @bottom-left {
+                content: "Dicetak pada: {{ print_date }}";
+                font-family: Arial, sans-serif;
+                font-size: 9pt;
+                color: #555;
+            }
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* KOP SURAT */
+        .kop-surat {
+            display: flex;
+            align-items: center;
+            border-bottom: 3px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .kop-logo {
+            width: 100px;
+            /* Fixed width */
+            margin-right: 20px;
+            text-align: center;
+        }
+
+        .kop-logo img {
+            max-width: 90px;
+            max-height: 90px;
+            object-fit: contain;
+        }
+
+        .kop-teks {
+            flex: 1;
+            text-align: center;
+            padding-right: 120px;
+            /* Balance the logo width for true center */
+        }
+
+        .kop-baris-1 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .kop-baris-2 {
+            font-size: 18pt;
+            font-weight: bold;
+            margin: 3px 0;
+            text-transform: uppercase;
+        }
+
+        .kop-baris-3 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .kop-alamat {
+            font-size: 10pt;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        /* KONTEN UTAMA */
+        h2.report-title {
+            text-align: center;
+            font-size: 16pt;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+
+        table.data-table th,
+        table.data-table td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        table.data-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        /* Utility */
+        .text-center {
+            text-align: center !important;
+        }
+
+        .text-right {
+            text-align: right !important;
+        }
+
+        .bg-light {
+            background-color: #f9f9f9 !important;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 8pt;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header / Kop Surat -->
+    <div class="kop-surat">
+        <div class="kop-logo">
+            {% if instansi.logo_instansi %}
+            <img src="{{ instansi.logo_instansi }}" alt="Logo Instansi">
+            {% endif %}
+        </div>
+        <div class="kop-teks">
+            <p class="kop-baris-1">{{ instansi.kop_surat_baris_1 or 'PEMERINTAH DAERAH' }}</p>
+            <p class="kop-baris-2">{{ instansi.kop_surat_baris_2 or 'INSTANSI/DINAS' }}</p>
+            {% if instansi.kop_surat_baris_3 %}
+            <p class="kop-baris-3">{{ instansi.kop_surat_baris_3 }}</p>
+            {% endif %}
+            <p class="kop-alamat">{{ instansi.kop_surat_alamat or 'Alamat Lengkap Instansi, Kodepos' }}</p>
+        </div>
+    </div>
+
+    <h2 class="report-title">{{ title }}</h2>
+
+    {% block content %}
+    <!-- Custom content injected here -->
+    {% endblock %}
+
+</body>
+
+</html>

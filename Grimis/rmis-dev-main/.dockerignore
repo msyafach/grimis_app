@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+
+# Virtual Environment
+.venv
+venv
+env
+ENV
+
+# Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation
+docs/
+
+# Misc
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Large files and directories
+mr-api-main/
+scripts/ 

@@ -1,0 +1,20 @@
+services:
+  backend:
+    build:
+      context: ./Grimis/rmis-dev-main
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./Grimis/rmis-dev-main/.env
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./Grimis/grmisi-fe-main
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

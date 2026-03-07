@@ -1,0 +1,69 @@
+{% extends "pdf/base.html" %}
+
+{% block content %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th width="4%">No.</th>
+            <th width="15%">Konteks Sasaran</th>
+            <th width="15%">Kamus Risiko</th>
+            <th width="15%">Penyebab Risiko</th>
+            <th width="20%">Dampak</th>
+            <th width="8%">Kemungkinan</th>
+            <th width="8%">Dampak</th>
+            <th width="8%">Besaran</th>
+            <th width="7%">Level</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for risk in data %}
+        <tr>
+            <td class="text-center">{{ loop.index }}</td>
+            <td>
+                {{ risk.sasaran.sasaran or '-' }}<br>
+                <small><i>(Indikator: {{ risk.indikator.indikator or '-' }})</i></small>
+            </td>
+            <td>{{ risk.kamus.nama_risiko or '-' }}</td>
+            <td>
+                <ul>
+                    {% for cause in risk.penyebab_risiko %}
+                    <li>{{ cause.penyebab }}</li>
+                    {% else %}
+                    <li>Tidak ada</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>
+                <ul>
+                    {% for impact in risk.dampak_risiko %}
+                    <li>{{ impact.dampak }}</li>
+                    {% else %}
+                    <li>Tidak ada</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td class="text-center">{{ risk.skor_inherent.kemungkinan or '-' }}</td>
+            <td class="text-center">{{ risk.skor_inherent.dampak or '-' }}</td>
+            <td class="text-center bg-light">
+                <strong>{{ risk.skor_inherent.besaran or '-' }}</strong>
+            </td>
+            <td class="text-center">
+                {% if risk.skor_inherent.label %}
+                <span class="badge" style="background-color: {{ risk.skor_inherent.warna or '#999' }}">
+                    {{ risk.skor_inherent.label }}
+                </span>
+                {% else %}
+                -
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="9" class="text-center" style="padding: 20px;">
+                Belum ada data Registrasi Risiko pada unit kerja dan periode ini.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
