@@ -119,6 +119,15 @@ async def register_user(user: UserCreate, current_user: dict = Depends(get_curre
 
 @router.post("/login", response_model=TokenResponse)
 async def login(user_credentials: UserLogin):
+    # Verify reCAPTCHA if provided
+    if user_credentials.recaptcha_token:
+        from app.utils.auth import verify_recaptcha
+        if not await verify_recaptcha(user_credentials.recaptcha_token):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid reCAPTCHA token"
+            )
+
     db = await Database.get_db()
     user = await db.users.find_one({"username": user_credentials.username})
     

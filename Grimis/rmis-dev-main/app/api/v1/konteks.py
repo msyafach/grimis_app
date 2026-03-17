@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from typing import List, Optional
 from datetime import datetime
 from bson import ObjectId
+import pandas as pd
+import io
 
 from app.schemas.risk import (
     KonteksCreate,
@@ -100,18 +102,119 @@ async def create_konteks(
                 detail="You can only create contexts for your assigned KLP"
             )
 
+    # Check auto_approve setting
+    from app.schemas.risk import ApprovalStatus
+    instansi = await db.instansi.find_one({"_id": ObjectId(konteks.id_instansi)})
+    status_approval = ApprovalStatus.DRAFT
+    if instansi and instansi.get("auto_approve"):
+        status_approval = ApprovalStatus.APPROVED
+
     konteks_dict = konteks.dict()
     konteks_dict["created_at"] = datetime.utcnow()
     konteks_dict["jenis_konteks"] = jenis_konteks["jenis"]
     konteks_dict["nama_jenis_konteks"] = jenis_konteks["nama"]
     konteks_dict["nama_klp"] = induk_unit["nama_induk_unit"]
     konteks_dict["is_disabled"] = False  # Default to enabled
+    konteks_dict["status_approval"] = status_approval
 
     result = await db.konteks.insert_one(konteks_dict)
     created = await db.konteks.find_one({"_id": result.inserted_id})
     created["id"] = str(created.pop("_id"))
 
     return KonteksResponse(**created)
+
+@router.post("/import")
+async def import_konteks(
+    id_instansi: str = Query(..., description="Institution ID"),
+    id_induk_unit_kerja: str = Query(..., description="Parent work unit ID"),
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Import context from Excel file.
+    Expected columns: kode, nama, id_jenis_konteks
+    """
+    if current_user["role"] not in [UserRole.SUPER_ADMIN, UserRole.ADMIN_KLP]:
+        raise HTTPException(
+            status_code=403,
+            detail="Only SUPER_ADMIN and ADMIN_KLP can import contexts"
+        )
+
+    db = await Database.get_db()
+    
+    # Read excel file
+    contents = await file.read()
+    df = pd.read_excel(io.BytesIO(contents))
+    
+    # Basic validation of columns
+    required_columns = ["kode", "nama", "id_jenis_konteks"]
+    for col in required_columns:
+        if col not in df.columns:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Missing required column: {col}"
+            )
+            
+    # Process each row
+    imported_count = 0
+    errors = []
+    
+    for index, row in df.iterrows():
+        try:
+            # Check if code already exists
+            existing = await db.konteks.find_one({
+                "kode": str(row["kode"]),
+                "id_instansi": id_instansi
+            })
+            if existing:
+                errors.append(f"Row {index+2}: Code {row['kode']} already exists")
+                continue
+                
+            # Get struktur to validate jenis_konteks
+            struktur = await db.struktur_organisasi.find_one({
+                "id_instansi": id_instansi,
+                "id_induk_unit_kerja": id_induk_unit_kerja,
+                "jenis_konteks.id": str(row["id_jenis_konteks"])
+            })
+            if not struktur:
+                errors.append(f"Row {index+2}: Jenis Konteks {row['id_jenis_konteks']} not found in structure")
+                continue
+                
+            # Get jenis_konteks details
+            jk_details = next(
+                (jk for jk in struktur["jenis_konteks"] if jk["id"] == str(row["id_jenis_konteks"])),
+                None
+            )
+            
+            # Check auto_approve setting
+            from app.schemas.risk import ApprovalStatus
+            instansi_obj = await db.instansi.find_one({"_id": ObjectId(id_instansi)})
+            status_approval = ApprovalStatus.DRAFT
+            if instansi_obj and instansi_obj.get("auto_approve"):
+                status_approval = ApprovalStatus.APPROVED
+                
+            # Create context entry
+            konteks_dict = {
+                "kode": str(row["kode"]),
+                "nama": str(row["nama"]),
+                "id_jenis_konteks": str(row["id_jenis_konteks"]),
+                "id_instansi": id_instansi,
+                "id_induk_unit_kerja": id_induk_unit_kerja,
+                "jenis_konteks": jk_details["jenis"],
+                "nama_jenis_konteks": jk_details["nama"],
+                "status_approval": status_approval,
+                "created_at": datetime.utcnow()
+            }
+            
+            await db.konteks.insert_one(konteks_dict)
+            imported_count += 1
+        except Exception as e:
+            errors.append(f"Row {index+2}: {str(e)}")
+            
+    return {
+        "message": f"Successfully imported {imported_count} records",
+        "errors": errors
+    }
 
 @router.get("", response_model=List[KonteksResponse])
 async def get_konteks(

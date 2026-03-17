@@ -59,6 +59,7 @@ class UserResponse(UserBase):
 class UserLogin(BaseModel):
     username: str
     password: str
+    recaptcha_token: Optional[str] = None
 
 class TokenResponse(BaseModel):
     access_token: str

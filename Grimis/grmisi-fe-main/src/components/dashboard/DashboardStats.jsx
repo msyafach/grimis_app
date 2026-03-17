@@ -34,6 +34,7 @@ const DashboardStats = () => {
 
   const fetchData = useCallback(async () => {
     if (!idInstansi || !tahunId || !idIndukUnitKerja) {
+      setLoading(false);
       return;
     }
 

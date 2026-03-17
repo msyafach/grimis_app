@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from typing import List, Optional
 from datetime import datetime
 from bson import ObjectId
+import pandas as pd
+import io
 
 from app.schemas.risk import (
     KamusRisikoCreate,
@@ -74,16 +76,108 @@ async def create_kamus_risiko(
                 detail="You can only create risks for your assigned KLP"
             )
 
+    # Check auto_approve setting
+    from app.schemas.risk import ApprovalStatus
+    instansi = await db.instansi.find_one({"_id": ObjectId(risiko.id_instansi)})
+    status_approval = ApprovalStatus.DRAFT
+    if instansi and instansi.get("auto_approve"):
+        status_approval = ApprovalStatus.APPROVED
+
     risiko_dict = risiko.dict()
     risiko_dict["created_at"] = datetime.utcnow()
     risiko_dict["nama_klp"] = kategori["nama_klp"]
     risiko_dict["nama_kategori"] = kategori["nama"]
+    risiko_dict["status_approval"] = status_approval
 
     result = await db.kamus_risiko.insert_one(risiko_dict)
     created = await db.kamus_risiko.find_one({"_id": result.inserted_id})
     created["id"] = str(created["_id"])
 
     return KamusRisikoResponse(**created)
+
+@router.post("/import")
+async def import_kamus_risiko(
+    id_instansi: str = Query(..., description="Institution ID"),
+    id_induk_unit_kerja: str = Query(..., description="Parent work unit ID"),
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Import risk dictionary from Excel file.
+    Expected columns: kode, nama, id_kategori_risiko
+    """
+    if current_user["role"] not in [UserRole.SUPER_ADMIN, UserRole.ADMIN_KLP]:
+        raise HTTPException(
+            status_code=403,
+            detail="Only SUPER_ADMIN and ADMIN_KLP can import risk dictionary"
+        )
+
+    db = await Database.get_db()
+    
+    # Read excel file
+    contents = await file.read()
+    df = pd.read_excel(io.BytesIO(contents))
+    
+    # Basic validation of columns
+    required_columns = ["kode", "nama", "id_kategori_risiko"]
+    for col in required_columns:
+        if col not in df.columns:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Missing required column: {col}"
+            )
+            
+    # Process each row
+    imported_count = 0
+    errors = []
+    
+    for index, row in df.iterrows():
+        try:
+            # Check if code already exists
+            existing = await db.kamus_risiko.find_one({
+                "kode": str(row["kode"]),
+                "id_instansi": id_instansi
+            })
+            if existing:
+                errors.append(f"Row {index+2}: Code {row['kode']} already exists")
+                continue
+                
+            # Get kategori risiko
+            kategori = await db.kategori_risiko.find_one({
+                "_id": ObjectId(str(row["id_kategori_risiko"]))
+            })
+            if not kategori:
+                errors.append(f"Row {index+2}: Kategori {row['id_kategori_risiko']} not found")
+                continue
+                
+            # Check auto_approve setting
+            from app.schemas.risk import ApprovalStatus
+            instansi = await db.instansi.find_one({"_id": ObjectId(id_instansi)})
+            status_approval = ApprovalStatus.DRAFT
+            if instansi and instansi.get("auto_approve"):
+                status_approval = ApprovalStatus.APPROVED
+                
+            # Create risk dictionary entry
+            risiko_dict = {
+                "kode": str(row["kode"]),
+                "nama": str(row["nama"]),
+                "id_kategori_risiko": str(row["id_kategori_risiko"]),
+                "id_instansi": id_instansi,
+                "nama_klp": kategori["nama_klp"],
+                "nama_kategori": kategori["nama"],
+                "status_approval": status_approval,
+                "created_at": datetime.utcnow()
+            }
+            
+            await db.kamus_risiko.insert_one(risiko_dict)
+            imported_count += 1
+        except Exception as e:
+            errors.append(f"Row {index+2}: {str(e)}")
+            
+    return {
+        "message": f"Successfully imported {imported_count} records",
+        "errors": errors
+    }
 
 @router.get("", response_model=List[KamusRisikoResponse])
 async def get_kamus_risiko(

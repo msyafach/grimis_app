@@ -1,4 +1,16 @@
 services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   backend:
     build:
       context: ./Grimis/rmis-dev-main
@@ -7,7 +19,31 @@ services:
       - "8000:8000"
     env_file:
       - ./Grimis/rmis-dev-main/.env
+    environment:
+      - MONGODB_URL=mongodb://mongo:27017
+      - DB_NAME=grimis
+    depends_on:
+      mongo:
+        condition: service_healthy
     restart: unless-stopped
+
+  seeder:
+    build:
+      context: ./Grimis/rmis-dev-main
+      dockerfile: Dockerfile
+    env_file:
+      - ./Grimis/rmis-dev-main/.env
+    environment:
+      - MONGODB_URL=mongodb://mongo:27017
+      - DB_NAME=grimis
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: >
+      sh -c "cd /app &&
+             python scripts/seed_demo_users.py &&
+             python scripts/seed_spip_data.py"
+    restart: "no"
 
   frontend:
     build:
@@ -18,3 +54,6 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
+volumes:
+  mongo_data:

@@ -18,6 +18,7 @@ COPY --from=builder /usr/local/bin/ /usr/local/bin/
 
 # Copy application code - only necessary files
 COPY app/ app/
+COPY scripts/ scripts/
 COPY .env.example .env.example
 
 # Set environment variables

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
-import { FiAlignLeft, FiArrowLeft, FiArrowRight, FiChevronRight, FiMaximize, FiMinimize, FiMoon, FiPlus, FiSun } from "react-icons/fi";
+import { FiAlignLeft, FiArrowLeft, FiArrowRight, FiChevronRight, FiMaximize, FiMinimize, FiMoon, FiPlus, FiSun, FiMenu } from "react-icons/fi";
 import LanguagesModal from './LanguagesModal';
 import NotificationsModal from './NotificationsModal';
 import ProfileModal from './ProfileModal';
@@ -47,19 +47,12 @@ const Header = () => {
     useEffect(() => {
         const handleResize = () => {
             const newWindowWidth = window.innerWidth;
-            if (newWindowWidth <= 1024) {
-                document.documentElement.classList.remove('minimenu');
-                document.querySelector('.navigation-down-1600').style.display = 'none';
-            }
-            else if (newWindowWidth >= 1025 && newWindowWidth <= 1400) {
+            if (newWindowWidth >= 1025 && newWindowWidth <= 1400) {
                 document.documentElement.classList.add('minimenu');
-                document.querySelector('.navigation-up-1600').style.display = 'none';
-                document.querySelector('.navigation-down-1600').style.display = 'block';
-            }
-            else {
+                setNavigationExpend(true);
+            } else if (newWindowWidth > 1400) {
                 document.documentElement.classList.remove('minimenu');
-                document.querySelector('.navigation-up-1600').style.display = 'block';
-                document.querySelector('.navigation-down-1600').style.display = 'none';
+                setNavigationExpend(false);
             }
         };
 
@@ -137,50 +130,20 @@ const Header = () => {
 
                 {/* <!--! [Start] Header Left !--> */}
                 <div className="header-left d-flex align-items-center gap-2">
-                    {/* <!--! [Start] nxl-head-mobile-toggler !--> */}
-                    <a href="#" className="nxl-head-mobile-toggler" onClick={(e) => { e.preventDefault(), setNavigationOpen(true) }} id="mobile-collapse">
+                    {/* Mobile hamburger — only shown on small screens */}
+                    <a href="#" className="nxl-head-mobile-toggler d-lg-none" onClick={(e) => { e.preventDefault(); setNavigationOpen(true); }} id="mobile-collapse">
                         <div className={`hamburger hamburger--arrowturn ${navigationOpen ? "is-active" : ""}`}>
                             <div className="hamburger-box">
                                 <div className="hamburger-inner"></div>
                             </div>
                         </div>
                     </a>
-                    {/* <!--! [Start] nxl-head-mobile-toggler !-->
-                    <!--! [Start] nxl-navigation-toggle !--> */}
-                    <div className="nxl-navigation-toggle navigation-up-1600">
-                        <a href="#" onClick={(e) => handleNavigationExpendUp(e, "show")} id="menu-mini-button" ref={miniButtonRef} style={{ display: navigationExpend ? "none" : "block" }}>
-                            <FiAlignLeft size={24} />
-                        </a>
-                        <a href="#" onClick={(e) => handleNavigationExpendUp(e, "hide")} id="menu-expend-button" ref={expendButtonRef} style={{ display: navigationExpend ? "block" : "none" }}>
-                            <FiArrowRight size={24} />
-                        </a>
-                    </div>
-                    <div className="nxl-navigation-toggle navigation-down-1600">
-                        <a href="#" onClick={(e) => handleNavigationExpendDown(e, "hide")} id="menu-mini-button" ref={miniButtonRef} style={{ display: navigationExpend ? "block" : "none" }}>
-                            <FiAlignLeft size={24} />
-                        </a>
-                        <a href="#" onClick={(e) => handleNavigationExpendDown(e, "show")} id="menu-expend-button" ref={expendButtonRef} style={{ display: navigationExpend ? "none" : "block" }}>
-                            <FiArrowRight size={24} />
-                        </a>
-                    </div>
-                    {/* <!--! [End] nxl-navigation-toggle !-->
-                    <!--! [Start] nxl-lavel-mega-menu-toggle !--> */}
-                    <div className="nxl-lavel-mega-menu-toggle d-flex d-lg-none">
-                        <a href="#" onClick={(e) => { e.preventDefault(), setOpenMegaMenu(true) }} id="nxl-lavel-mega-menu-open">
-                            <FiAlignLeft size={24} />
-                        </a>
-                    </div>
-                    {/* <!--! [End] nxl-lavel-mega-menu-toggle !-->
-                    <!--! [Start] nxl-lavel-mega-menu !--> */}
-                    <div className="nxl-drp-link nxl-lavel-mega-menu">
-                        <div className="nxl-lavel-mega-menu-toggle d-flex d-lg-none">
-                            <a href="#" onClick={(e) => { e.preventDefault(), setOpenMegaMenu(false) }} id="nxl-lavel-mega-menu-hide">
-                                <i className="me-2"><FiArrowLeft /></i>
-                                <span>Back</span>
-                            </a>
-                        </div>
-                        {/* <!--! [Start] nxl-lavel-mega-menu-wrapper !--> */}
 
+                    {/* Desktop sidebar toggle — single button, hidden on mobile */}
+                    <div className="nxl-navigation-toggle d-none d-lg-flex">
+                        <a href="#" onClick={(e) => { e.preventDefault(); setNavigationExpend(!navigationExpend); document.documentElement.classList.toggle('minimenu'); }}>
+                            {navigationExpend ? <FiArrowRight size={24} /> : <FiMenu size={24} />}
+                        </a>
                     </div>
                 </div>
                 {/* <!--! [End] Header Left !-->

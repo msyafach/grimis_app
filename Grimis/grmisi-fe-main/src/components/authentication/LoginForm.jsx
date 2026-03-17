@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { FiEye, FiEyeOff } from 'react-icons/fi';
+import { useState, useCallback } from 'react';
+import { FiEye, FiEyeOff, FiRefreshCw } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import API_ENDPOINTS from '../../config/apiConfig';
@@ -7,18 +7,44 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import FullScreenLoader from '../shared/FullScreenLoader';
 
+const generateCaptcha = () => {
+    const a = Math.floor(Math.random() * 9) + 1;
+    const b = Math.floor(Math.random() * 9) + 1;
+    const useAdd = Math.random() > 0.5;
+    return useAdd
+        ? { question: `${a} + ${b}`, answer: a + b }
+        : { question: `${Math.max(a, b)} - ${Math.min(a, b)}`, answer: Math.max(a, b) - Math.min(a, b) };
+};
+
 const LoginForm = ({ registerPath, resetPath }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [captcha, setCaptcha] = useState(generateCaptcha);
+    const [captchaInput, setCaptchaInput] = useState('');
+    const [captchaError, setCaptchaError] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
+
+    const refreshCaptcha = useCallback(() => {
+        setCaptcha(generateCaptcha());
+        setCaptchaInput('');
+        setCaptchaError('');
+    }, []);
 
     const handleLogin = async (event) => {
         event.preventDefault();
         setError('');
+        setCaptchaError('');
+
+        if (parseInt(captchaInput, 10) !== captcha.answer) {
+            setCaptchaError('Jawaban CAPTCHA salah. Silakan coba lagi.');
+            refreshCaptcha();
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -111,6 +137,43 @@ const LoginForm = ({ registerPath, resetPath }) => {
                         </button>
                     </div>
                     {error && <div className="alert alert-danger">{error}</div>}
+                </div>
+                <div className="mb-4">
+                    <label className="form-label">Verifikasi <span className="text-danger">*</span></label>
+                    <div className="d-flex align-items-center gap-2">
+                        <div
+                            className="d-flex align-items-center justify-content-center rounded-3 fw-bold fs-16 user-select-none"
+                            style={{
+                                background: 'linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%)',
+                                border: '1px dashed #6c7fd8',
+                                minWidth: '110px',
+                                height: '38px',
+                                letterSpacing: '2px',
+                                fontFamily: 'monospace',
+                                color: '#3a4a8a',
+                            }}
+                        >
+                            {captcha.question} = ?
+                        </div>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={refreshCaptcha}
+                            title="Refresh CAPTCHA"
+                        >
+                            <FiRefreshCw size={14} />
+                        </button>
+                        <input
+                            type="number"
+                            className={`form-control form-control-sm ${captchaError ? 'is-invalid' : ''}`}
+                            placeholder="Jawaban"
+                            value={captchaInput}
+                            onChange={(e) => setCaptchaInput(e.target.value)}
+                            required
+                            style={{ maxWidth: '90px' }}
+                        />
+                    </div>
+                    {captchaError && <div className="text-danger fs-12 mt-1">{captchaError}</div>}
                 </div>
                 <div className="mt-5">
                     <button type="submit" className="btn btn-lg btn-primary w-100">

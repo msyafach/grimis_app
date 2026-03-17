@@ -29,7 +29,22 @@ class Database:
         await cls.db.konteks.create_index([
             ("id_jenis_konteks", 1)
         ])
-        
+
+        # Performance indexes for dashboard queries
+        await cls.db.identifikasi_risiko.create_index([
+            ("id_instansi", 1), ("tahun", 1), ("id_induk_unit_kerja", 1)
+        ])
+        await cls.db.analisis_risiko.create_index([
+            ("identifikasi_risiko_id", 1), ("tahun", 1)
+        ])
+        await cls.db.analisis_risiko.create_index([
+            ("id_instansi", 1), ("tahun", 1)
+        ])
+        await cls.db.peta_risiko_template.create_index([
+            ("tahun", 1), ("id_induk_unit_kerja", 1)
+        ])
+        await cls.db.rtp.create_index([("evaluasi_risiko_id", 1)])
+
         return cls.db
 
     @classmethod

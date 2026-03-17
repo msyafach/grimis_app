@@ -70,27 +70,9 @@ const ProfileModal = () => {
         setShowLogoutModal(!showLogoutModal);
     };
 
-    // Dropdown hover effects
-    const handleMouseEnter = () => {
-        const dropdownMenu = document.querySelector('.nxl-user-dropdown');
-        if (dropdownMenu) {
-            dropdownMenu.classList.add('show');
-        }
-    };
-
-    const handleMouseLeave = () => {
-        const dropdownMenu = document.querySelector('.nxl-user-dropdown');
-        if (dropdownMenu) {
-            dropdownMenu.classList.remove('show');
-        }
-    };
-
     return (
         <>
-            <div className="dropdown nxl-h-item"
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-            >
+            <div className="dropdown nxl-h-item">
                 <a href="#" data-bs-toggle="dropdown" role="button" data-bs-auto-close="outside">
                     <img src="/images/avatar/0.webp" alt="user-image" className="img-fluid user-avtar me-0" />
                 </a>

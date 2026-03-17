@@ -103,80 +103,59 @@ async def get_risk_matrix_data(
         ):
             meta_dampak.append(md)
         
-        # Get inherit risk data - handle case where collection might not exist yet
-        meta_inherit = []
-        try:
-            async for mi in db.peta_risiko_heatmap_inherit.find(
-                {"template_id": template_id}
-            ):
-                meta_inherit.append(mi)
-        except Exception:
-            # Collection might not exist yet, use data from peta_risiko_matriks_heatmap
-            # Calculate risk counts for inherit risks
+        # Get inherit/residual/treated/actual risk data.
+        # If dedicated heatmap collections are empty, fall back to a single aggregation
+        # per risk type instead of 25 individual count_documents calls.
+        meta_inherit = [mi async for mi in db.peta_risiko_heatmap_inherit.find({"template_id": template_id})]
+        if not meta_inherit:
+            inherit_counts: Dict[tuple, int] = {}
+            async for doc in db.analisis_risiko.aggregate([
+                {"$match": {"tahun": tahun}},
+                {"$group": {"_id": {"f": "$skor_kemungkinan_inherit", "d": "$skor_dampak_inherit"}, "count": {"$sum": 1}}}
+            ]):
+                inherit_counts[(doc["_id"]["f"], doc["_id"]["d"])] = doc["count"]
             for cell in matriks_heatmap:
                 cell_copy = cell.copy()
-                cell_copy["value_skor"] = await db.analisis_risiko.count_documents({
-                    "tahun": tahun,
-                    "skor_kemungkinan_inherit": cell_copy.get("frekuensi", 0),
-                    "skor_dampak_inherit": cell_copy.get("dampak", 0)
-                })
+                cell_copy["value_skor"] = inherit_counts.get((cell_copy.get("frekuensi", 0), cell_copy.get("dampak", 0)), 0)
                 meta_inherit.append(cell_copy)
-        
-        # Get residual risk data - handle case where collection might not exist yet
-        meta_residual = []
-        try:
-            async for mr in db.peta_risiko_heatmap_residual.find(
-                {"template_id": template_id}
-            ):
-                meta_residual.append(mr)
-        except Exception:
-            # Collection might not exist yet, use data from peta_risiko_matriks_heatmap
-            # Calculate risk counts for residual risks
+
+        meta_residual = [mr async for mr in db.peta_risiko_heatmap_residual.find({"template_id": template_id})]
+        if not meta_residual:
+            residual_counts: Dict[tuple, int] = {}
+            async for doc in db.analisis_risiko.aggregate([
+                {"$match": {"tahun": tahun}},
+                {"$group": {"_id": {"f": "$skor_kemungkinan_residual", "d": "$skor_dampak_residual"}, "count": {"$sum": 1}}}
+            ]):
+                residual_counts[(doc["_id"]["f"], doc["_id"]["d"])] = doc["count"]
             for cell in matriks_heatmap:
                 cell_copy = cell.copy()
-                cell_copy["value_skor"] = await db.analisis_risiko.count_documents({
-                    "tahun": tahun,
-                    "skor_kemungkinan_residual": cell_copy.get("frekuensi", 0),
-                    "skor_dampak_residual": cell_copy.get("dampak", 0)
-                })
+                cell_copy["value_skor"] = residual_counts.get((cell_copy.get("frekuensi", 0), cell_copy.get("dampak", 0)), 0)
                 meta_residual.append(cell_copy)
-        
-        # Get treated risk data - handle case where collection might not exist yet
-        meta_treated = []
-        try:
-            async for mt in db.peta_risiko_heatmap_treated.find(
-                {"template_id": template_id}
-            ):
-                meta_treated.append(mt)
-        except Exception:
-            # Collection might not exist yet, use data from peta_risiko_matriks_heatmap
-            # Calculate risk counts for treated risks
+
+        meta_treated = [mt async for mt in db.peta_risiko_heatmap_treated.find({"template_id": template_id})]
+        if not meta_treated:
+            treated_counts: Dict[tuple, int] = {}
+            async for doc in db.analisis_risiko.aggregate([
+                {"$match": {"tahun": tahun}},
+                {"$group": {"_id": {"f": "$skor_kemungkinan_treated", "d": "$skor_dampak_treated"}, "count": {"$sum": 1}}}
+            ]):
+                treated_counts[(doc["_id"]["f"], doc["_id"]["d"])] = doc["count"]
             for cell in matriks_heatmap:
                 cell_copy = cell.copy()
-                cell_copy["value_skor"] = await db.analisis_risiko.count_documents({
-                    "tahun": tahun,
-                    "skor_kemungkinan_treated": cell_copy.get("frekuensi", 0),
-                    "skor_dampak_treated": cell_copy.get("dampak", 0)
-                })
+                cell_copy["value_skor"] = treated_counts.get((cell_copy.get("frekuensi", 0), cell_copy.get("dampak", 0)), 0)
                 meta_treated.append(cell_copy)
-        
-        # Get actual risk data - handle case where collection might not exist yet
-        meta_actual = []
-        try:
-            async for ma in db.peta_risiko_heatmap_actual.find(
-                {"template_id": template_id}
-            ):
-                meta_actual.append(ma)
-        except Exception:
-            # Collection might not exist yet, use data from peta_risiko_matriks_heatmap
-            # Calculate risk counts for actual risks
+
+        meta_actual = [ma async for ma in db.peta_risiko_heatmap_actual.find({"template_id": template_id})]
+        if not meta_actual:
+            actual_counts: Dict[tuple, int] = {}
+            async for doc in db.analisis_risiko.aggregate([
+                {"$match": {"tahun": tahun}},
+                {"$group": {"_id": {"f": "$skor_kemungkinan_actual", "d": "$skor_dampak_actual"}, "count": {"$sum": 1}}}
+            ]):
+                actual_counts[(doc["_id"]["f"], doc["_id"]["d"])] = doc["count"]
             for cell in matriks_heatmap:
                 cell_copy = cell.copy()
-                cell_copy["value_skor"] = await db.analisis_risiko.count_documents({
-                    "tahun": tahun,
-                    "skor_kemungkinan_actual": cell_copy.get("frekuensi", 0),
-                    "skor_dampak_actual": cell_copy.get("dampak", 0)
-                })
+                cell_copy["value_skor"] = actual_counts.get((cell_copy.get("frekuensi", 0), cell_copy.get("dampak", 0)), 0)
                 meta_actual.append(cell_copy)
         
         # Create template info 
@@ -459,40 +438,36 @@ async def get_risk_stats(
         # Store risks that are below appetite and all analysis IDs
         risks_below_appetite = set()
         all_analysis_ids = []
-        
-        # Get all analisis_risiko documents separately for clarity
+
+        # Fetch all analyses in one query instead of N+1 individual find_one calls
+        identifikasi_ids = [i["id"] for i in identifikasi_list]
+        analyses_map: Dict[str, Any] = {}
+        async for analisis in db.analisis_risiko.find({
+            "identifikasi_risiko_id": {"$in": identifikasi_ids},
+            "tahun": tahun
+        }):
+            analyses_map[analisis["identifikasi_risiko_id"]] = analisis
+
         for identifikasi in identifikasi_list:
-            try:
-                analisis = await db.analisis_risiko.find_one({
-                    "identifikasi_risiko_id": identifikasi["id"],
-                    "tahun": tahun
-                })
-                
-                if analisis:
-                    analisis_id = str(analisis["_id"])
-                    all_analysis_ids.append(analisis_id)
-                    
-                    # Determine which risk level to use based on use_risk field
-                    use_risk = analisis.get("use_risk", "I").upper()
-                    level_risiko = 0
-                    
-                    if use_risk == "A" and analisis.get("level_risiko_actual", 0) > 0:
-                        level_risiko = analisis.get("level_risiko_actual", 0)
-                    elif use_risk == "T" and analisis.get("level_risiko_treated", 0) > 0:
-                        level_risiko = analisis.get("level_risiko_treated", 0)
-                    elif use_risk == "R" and analisis.get("level_risiko_residual", 0) > 0:
-                        level_risiko = analisis.get("level_risiko_residual", 0)
-                    else:
-                        level_risiko = analisis.get("level_risiko_inherit", 0)
-                    
-                    print(f"Risk ID: {identifikasi['id']}, Analysis ID: {analisis_id}, Use Risk: {use_risk}, Level: {level_risiko}, Selera: {selera_risiko}")
-                    
-                    # Risk is below appetite if level_risiko <= selera_risiko and level_risiko > 0
-                    if level_risiko > 0 and level_risiko <= selera_risiko:
-                        risks_below_appetite.add(analisis_id)
-                        print(f"Risk {identifikasi['id']} is below appetite threshold")
-            except Exception as e:
-                print(f"Error processing risk analysis for {identifikasi['id']}: {str(e)}")
+            analisis = analyses_map.get(identifikasi["id"])
+            if analisis:
+                analisis_id = str(analisis["_id"])
+                all_analysis_ids.append(analisis_id)
+
+                use_risk = analisis.get("use_risk", "I").upper()
+                level_risiko = 0
+
+                if use_risk == "A" and analisis.get("level_risiko_actual", 0) > 0:
+                    level_risiko = analisis.get("level_risiko_actual", 0)
+                elif use_risk == "T" and analisis.get("level_risiko_treated", 0) > 0:
+                    level_risiko = analisis.get("level_risiko_treated", 0)
+                elif use_risk == "R" and analisis.get("level_risiko_residual", 0) > 0:
+                    level_risiko = analisis.get("level_risiko_residual", 0)
+                else:
+                    level_risiko = analisis.get("level_risiko_inherit", 0)
+
+                if level_risiko > 0 and level_risiko <= selera_risiko:
+                    risks_below_appetite.add(analisis_id)
         
         # Calculate risks below appetite
         risiko_dibawah_selera = len(risks_below_appetite)
@@ -546,7 +521,7 @@ async def get_risk_stats(
                         "pipeline": [
                             {
                                 "$match": {
-                                    "$expr": {"$eq": [{"$toString": "$_id"}, "$$id_evaluasi"]}
+                                    "$expr": {"$eq": ["$_id", {"$toObjectId": "$$id_evaluasi"}]}
                                 }
                             },
                             {
@@ -558,7 +533,7 @@ async def get_risk_stats(
                                             "$match": {
                                                 "$expr": {
                                                     "$and": [
-                                                        {"$eq": [{"$toString": "$_id"}, "$$id_identifikasi"]},
+                                                        {"$eq": ["$_id", {"$toObjectId": "$$id_identifikasi"}]},
                                                         {"$eq": ["$tahun", tahun]},
                                                         {"$eq": ["$id_instansi", id_instansi]},
                                                         {"$eq": ["$id_induk_unit_kerja", id_induk_unit_kerja]},
@@ -608,7 +583,7 @@ async def get_risk_stats(
                         "pipeline": [
                             {
                                 "$match": {
-                                    "$expr": {"$eq": [{"$toString": "$_id"}, "$$id_evaluasi"]}
+                                    "$expr": {"$eq": ["$_id", {"$toObjectId": "$$id_evaluasi"}]}
                                 }
                             },
                             {
@@ -620,7 +595,7 @@ async def get_risk_stats(
                                             "$match": {
                                                 "$expr": {
                                                     "$and": [
-                                                        {"$eq": [{"$toString": "$_id"}, "$$id_identifikasi"]},
+                                                        {"$eq": ["$_id", {"$toObjectId": "$$id_identifikasi"}]},
                                                         {"$eq": ["$tahun", tahun]},
                                                         {"$eq": ["$id_instansi", id_instansi]},
                                                         {"$eq": ["$id_induk_unit_kerja", id_induk_unit_kerja]},
