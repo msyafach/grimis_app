@@ -8,6 +8,7 @@ from app.utils.auth import (
     get_current_user
 )
 from app.utils.recaptcha import verify_recaptcha
+from app.utils.permissions import get_user_permissions
 from bson import ObjectId
 from typing import List, Optional
 from datetime import datetime
@@ -934,4 +935,42 @@ async def change_password(
         }}
     )
     
-    return {"message": "Password changed successfully"} 
+    return {"message": "Password changed successfully"}
+
+
+@router.get("/users/{user_id}/permissions", response_model=List[str])
+async def get_user_permissions_endpoint(
+    user_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get permissions for a specific user.
+
+    Permissions:
+    - Users can only view their own permissions
+    - SUPER_ADMIN and ADMIN_KLP can view any user's permissions
+    """
+    db = await Database.get_db()
+
+    # Check if user exists
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    # Check permissions
+    if current_user["role"] not in [UserRole.SUPER_ADMIN, UserRole.ADMIN_KLP]:
+        # Users can only view their own permissions
+        if str(current_user["id"]) != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="You can only view your own permissions"
+            )
+
+    # Get permissions using the permission utility
+    permissions = await get_user_permissions(user_id)
+
+    # Convert Permission enums to strings
+    return [str(p.value) for p in permissions] 

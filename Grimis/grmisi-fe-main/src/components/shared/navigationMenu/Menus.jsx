@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { menuList } from "@/utils/fackData/menuList";
 import getIcon from "@/utils/getIcon";
 import { useAuth } from "../../../context/AuthContext";
+import { canAccessMenu } from "@/utils/permissionMenuFilter";
 
 const Menus = () => {
     const [openDropdown, setOpenDropdown] = useState(null);
@@ -73,8 +74,16 @@ const Menus = () => {
         }
     }, [pathName]);
 
-    // Filter menu based on user role
+    // Filter menu based on user permissions (with role-based fallback)
+    const { permissions } = useAuth();
+
     let filteredMenuList = menuList.filter(menu => {
+        // Use permission-based filtering if permissions are available
+        if (permissions && permissions.length > 0) {
+            return canAccessMenu(menu.name, permissions, user?.role);
+        }
+
+        // Fallback to role-based filtering for backwards compatibility
         if (menu.name === "organisasi" && user?.role !== "SUPER_ADMIN") {
             return false;
         }

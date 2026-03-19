@@ -55,6 +55,7 @@ const API_ENDPOINTS = {
     getUserById: (userId) => `${API_BASE_URL}/api/v1/users/users/${userId}`,
     updateUser: (userId) => `${API_BASE_URL}/api/v1/users/${userId}`,
     deleteUser: (userId) => `${API_BASE_URL}/api/v1/users/${userId}`,
+    getUserPermissions: (userId) => `${API_BASE_URL}/api/v1/users/${userId}/permissions`,
     putUserPreferences: (instansiId, indukUnitKerjaId) => `${API_BASE_URL}/api/v1/users/me/preferences?last_instansi_id=${instansiId}&last_induk_unit_kerja_id=${indukUnitKerjaId}`,
     checkWorkUnit: `${API_BASE_URL}/api/v1/users/me/check-work-unit`,
 
