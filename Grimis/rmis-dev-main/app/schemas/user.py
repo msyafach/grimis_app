@@ -36,6 +36,7 @@ class UserUpdate(BaseModel):
     last_induk_unit_kerja_id: Optional[str] = None
     instansi_id: Optional[str] = None
     induk_unit_kerja_ids: Optional[List[str]] = None
+    group_ids: Optional[List[str]] = Field(None, description="List of group IDs the user belongs to")
 
 class UserSelfUpdate(BaseModel):
     nama_depan: Optional[str] = None
@@ -55,6 +56,7 @@ class UserResponse(UserBase):
     last_induk_unit_kerja_id: Optional[str] = None
     instansi_id: Optional[str] = None
     induk_unit_kerja_ids: Optional[List[str]] = None
+    group_ids: Optional[List[str]] = Field(default_factory=list, description="List of group IDs the user belongs to")
     nama_instansi: Optional[str] = None
 
 class UserLogin(BaseModel):
