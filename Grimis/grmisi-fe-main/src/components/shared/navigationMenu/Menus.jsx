@@ -92,16 +92,15 @@ const Menus = () => {
         }
         // Filter settings-unit-kerja menu items based on role
         if (menu.name === "settings-unit-kerja") {
-            return {
-                ...menu,
-                dropdownMenu: menu.dropdownMenu.filter(item => {
-                    // Only SUPER_ADMIN and ADMIN_KLP can access Group Management
-                    if (item.name === "Manajemen Group" && user?.role !== "SUPER_ADMIN" && user?.role !== "ADMIN_KLP") {
-                        return false;
-                    }
-                    return true;
-                })
-            };
+            // Only SUPER_ADMIN and ADMIN_KLP can access Group Management
+            if (user?.role !== "SUPER_ADMIN" && user?.role !== "ADMIN_KLP") {
+                // Check if there are any menu items this user can access
+                const hasAccessibleItems = menu.dropdownMenu.some(item =>
+                    item.name !== "Manajemen Group"
+                );
+                return hasAccessibleItems;
+            }
+            return true;
         }
         // Hide kriteria-risiko menu for all roles
         if (menu.name === "kriteria-risiko") {
@@ -147,6 +146,13 @@ const Menus = () => {
             return {
                 ...menu,
                 dropdownMenu: menu.dropdownMenu.filter(item => item.name !== "Instansi")
+            };
+        }
+        // For settings-unit-kerja menu, filter out Manajemen Group if not SUPER_ADMIN or ADMIN_KLP
+        if (menu.name === "settings-unit-kerja" && user?.role !== "SUPER_ADMIN" && user?.role !== "ADMIN_KLP") {
+            return {
+                ...menu,
+                dropdownMenu: menu.dropdownMenu.filter(item => item.name !== "Manajemen Group")
             };
         }
         if (menu.name === "pengelolaan-risiko") {
