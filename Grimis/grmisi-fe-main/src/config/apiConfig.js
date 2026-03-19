@@ -328,6 +328,15 @@ const API_ENDPOINTS = {
         if (idIndukUnitKerja) url += `&id_induk_unit_kerja=${idIndukUnitKerja}`;
         return url;
     },
+
+    // Groups
+    createGroup: `${API_BASE_URL}/api/v1/groups`,
+    getGroups: `${API_BASE_URL}/api/v1/groups`,
+    getGroupById: (groupId) => `${API_BASE_URL}/api/v1/groups/${groupId}`,
+    updateGroup: (groupId) => `${API_BASE_URL}/api/v1/groups/${groupId}`,
+    deleteGroup: (groupId) => `${API_BASE_URL}/api/v1/groups/${groupId}`,
+    addMemberToGroup: (groupId, userId) => `${API_BASE_URL}/api/v1/groups/${groupId}/members/${userId}`,
+    removeMemberFromGroup: (groupId, userId) => `${API_BASE_URL}/api/v1/groups/${groupId}/members/${userId}`,
 };
 
 export default API_ENDPOINTS;

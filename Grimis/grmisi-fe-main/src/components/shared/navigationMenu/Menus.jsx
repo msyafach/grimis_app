@@ -81,6 +81,19 @@ const Menus = () => {
         if (menu.name === "settings-unit-kerja" && user?.role !== "ADMIN_KLP" && user?.role !== "SUPER_ADMIN") {
             return false;
         }
+        // Filter settings-unit-kerja menu items based on role
+        if (menu.name === "settings-unit-kerja") {
+            return {
+                ...menu,
+                dropdownMenu: menu.dropdownMenu.filter(item => {
+                    // Only SUPER_ADMIN and ADMIN_KLP can access Group Management
+                    if (item.name === "Manajemen Group" && user?.role !== "SUPER_ADMIN" && user?.role !== "ADMIN_KLP") {
+                        return false;
+                    }
+                    return true;
+                })
+            };
+        }
         // Hide kriteria-risiko menu for all roles
         if (menu.name === "kriteria-risiko") {
             return false;

@@ -152,6 +152,12 @@ export const menuList = [
                 name: "Manajemen Pengguna",
                 path: "/settings-unit-kerja/manajemen-pengguna",
                 subdropdownMenu: false
+            },
+            {
+                id: 2,
+                name: "Manajemen Group",
+                path: "/groups",
+                subdropdownMenu: false
             }
         ],
     },
