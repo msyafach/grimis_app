@@ -42,7 +42,7 @@ ROLE_PERMISSIONS = {
             Permission.MANAGE_EVALUATION,
             Permission.VERIFY_EVALUATION,
             Permission.VIEW_MONITORING,
-            Permission.VIEW_REPORTING,
+            Permission.MANAGE_REPORTING,
             Permission.VIEW_GROUPS,
             Permission.MANAGE_GROUPS,
         ]
@@ -69,7 +69,6 @@ ROLE_PERMISSIONS = {
             Permission.EDIT_EVALUATION,
             Permission.VIEW_MONITORING,
             Permission.MANAGE_MONITORING,
-            Permission.VIEW_REPORTING,
             Permission.MANAGE_REPORTING,
         ]
     },

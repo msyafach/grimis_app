@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_ENDPOINTS } from '../../config/api';
+import API_ENDPOINTS from '@/config/apiConfig';
 
 const GroupMemberList = ({ group, onClose }) => {
     const [groupData, setGroupData] = useState(null);
@@ -75,11 +75,6 @@ const GroupMemberList = ({ group, onClose }) => {
         }
     };
 
-    const getUserName = (userId) => {
-        const user = allUsers.find((u) => u.id === userId);
-        return user ? `${user.full_name} (${user.username})` : userId;
-    };
-
     const getAvailableUsers = () => {
         const memberIds = groupData?.member_ids || [];
         return allUsers.filter((u) => !memberIds.includes(u.id));
@@ -93,7 +88,7 @@ const GroupMemberList = ({ group, onClose }) => {
         return (
             <div style={{ padding: '20px', color: '#900' }}>
                 <p>{error}</p>
-                <button onClick={onClose} style={{ marginTop: '10px' }}>
+                <button className="btn btn-secondary" onClick={onClose} style={{ marginTop: '10px' }}>
                     Tutup
                 </button>
             </div>
@@ -103,8 +98,8 @@ const GroupMemberList = ({ group, onClose }) => {
     return (
         <div>
             <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ marginBottom: '8px' }}>Kelola Anggota: {groupData?.name}</h2>
-                <p style={{ color: '#666' }}>{groupData?.description}</p>
+                <h4 style={{ marginBottom: '8px' }}>Kelola Anggota: {groupData?.name}</h4>
+                <p className="text-muted">{groupData?.description}</p>
             </div>
 
             <div
@@ -115,9 +110,9 @@ const GroupMemberList = ({ group, onClose }) => {
                     marginBottom: '16px',
                 }}
             >
-                <h3>Daftar Anggota ({groupData?.member_count || 0})</h3>
+                <h5>Daftar Anggota ({groupData?.member_count || 0})</h5>
                 <button
-                    className="btn btn-primary"
+                    className="btn btn-primary btn-sm"
                     onClick={() => setShowAddMember(true)}
                 >
                     + Tambah Anggota
@@ -126,24 +121,15 @@ const GroupMemberList = ({ group, onClose }) => {
 
             {showAddMember && (
                 <div
-                    style={{
-                        backgroundColor: '#f5f5f5',
-                        padding: '16px',
-                        borderRadius: '8px',
-                        marginBottom: '16px',
-                    }}
+                    className="alert alert-info"
+                    style={{ marginBottom: '16px' }}
                 >
-                    <h4 style={{ marginBottom: '12px' }}>Tambah Anggota Baru</h4>
+                    <h6 style={{ marginBottom: '12px' }}>Tambah Anggota Baru</h6>
                     <select
+                        className="form-control"
                         value={selectedUserId}
                         onChange={(e) => setSelectedUserId(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '10px',
-                            border: '1px solid #ddd',
-                            borderRadius: '4px',
-                            marginBottom: '12px',
-                        }}
+                        style={{ marginBottom: '12px' }}
                     >
                         <option value="">-- Pilih Pengguna --</option>
                         {getAvailableUsers().map((user) => (
@@ -154,30 +140,17 @@ const GroupMemberList = ({ group, onClose }) => {
                     </select>
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                         <button
+                            className="btn btn-secondary btn-sm"
                             onClick={() => {
                                 setShowAddMember(false);
                                 setSelectedUserId('');
-                            }}
-                            style={{
-                                padding: '8px 16px',
-                                border: '1px solid #ddd',
-                                borderRadius: '4px',
-                                backgroundColor: 'white',
-                                cursor: 'pointer',
                             }}
                         >
                             Batal
                         </button>
                         <button
+                            className="btn btn-primary btn-sm"
                             onClick={handleAddMember}
-                            style={{
-                                padding: '8px 16px',
-                                border: 'none',
-                                borderRadius: '4px',
-                                backgroundColor: '#0066cc',
-                                color: 'white',
-                                cursor: 'pointer',
-                            }}
                         >
                             Tambahkan
                         </button>
@@ -197,82 +170,27 @@ const GroupMemberList = ({ group, onClose }) => {
                     <p>Klik "Tambah Anggota" untuk menambahkan pengguna.</p>
                 </div>
             ) : (
-                <div
-                    style={{
-                        border: '1px solid #ddd',
-                        borderRadius: '8px',
-                        overflow: 'hidden',
-                    }}
-                >
-                    <table
-                        style={{
-                            width: '100%',
-                            borderCollapse: 'collapse',
-                        }}
-                    >
-                        <thead>
-                            <tr style={{ backgroundColor: '#f5f5f5' }}>
-                                <th
-                                    style={{
-                                        padding: '12px',
-                                        textAlign: 'left',
-                                        borderBottom: '2px solid #ddd',
-                                    }}
-                                >
-                                    Nama Pengguna
-                                </th>
-                                <th
-                                    style={{
-                                        padding: '12px',
-                                        textAlign: 'left',
-                                        borderBottom: '2px solid #ddd',
-                                    }}
-                                >
-                                    Username
-                                </th>
-                                <th
-                                    style={{
-                                        padding: '12px',
-                                        textAlign: 'left',
-                                        borderBottom: '2px solid #ddd',
-                                    }}
-                                >
-                                    Role
-                                </th>
-                                <th
-                                    style={{
-                                        padding: '12px',
-                                        textAlign: 'right',
-                                        borderBottom: '2px solid #ddd',
-                                    }}
-                                >
-                                    Aksi
-                                </th>
+                <div className="table-responsive">
+                    <table className="table table-bordered">
+                        <thead className="thead-light">
+                            <tr>
+                                <th>Nama Pengguna</th>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th style={{ textAlign: 'right' }}>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {(groupData?.members || []).map((member) => (
-                                <tr
-                                    key={member.id}
-                                    style={{ borderBottom: '1px solid #eee' }}
-                                >
-                                    <td style={{ padding: '12px' }}>{member.full_name}</td>
-                                    <td style={{ padding: '12px' }}>{member.username}</td>
-                                    <td style={{ padding: '12px' }}>
-                                        <span
-                                            style={{
-                                                backgroundColor: '#e0e0e0',
-                                                padding: '4px 8px',
-                                                borderRadius: '4px',
-                                                fontSize: '12px',
-                                            }}
-                                        >
-                                            {member.role}
-                                        </span>
+                                <tr key={member.id}>
+                                    <td>{member.full_name}</td>
+                                    <td>{member.username}</td>
+                                    <td>
+                                        <span className="badge badge-secondary">{member.role}</span>
                                     </td>
-                                    <td style={{ padding: '12px', textAlign: 'right' }}>
+                                    <td style={{ textAlign: 'right' }}>
                                         <button
-                                            className="btn-sm btn-danger"
+                                            className="btn btn-danger btn-sm"
                                             onClick={() => handleRemoveMember(member.id)}
                                         >
                                             Hapus
@@ -287,15 +205,8 @@ const GroupMemberList = ({ group, onClose }) => {
 
             <div style={{ marginTop: '24px', textAlign: 'right' }}>
                 <button
+                    className="btn btn-secondary"
                     onClick={onClose}
-                    style={{
-                        padding: '10px 20px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        backgroundColor: 'white',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                    }}
                 >
                     Tutup
                 </button>

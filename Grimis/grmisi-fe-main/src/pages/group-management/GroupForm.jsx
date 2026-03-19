@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_ENDPOINTS } from '../../config/api';
+import API_ENDPOINTS from '@/config/apiConfig';
 
 const GroupForm = ({ group, onClose }) => {
     const [formData, setFormData] = useState({
@@ -28,10 +28,8 @@ const GroupForm = ({ group, onClose }) => {
 
         try {
             if (group) {
-                // Edit mode
                 await axios.put(`${API_ENDPOINTS.groups}/${group.id}`, formData);
             } else {
-                // Create mode
                 await axios.post(API_ENDPOINTS.groups, formData);
             }
             onClose();
@@ -52,37 +50,22 @@ const GroupForm = ({ group, onClose }) => {
 
     return (
         <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ marginBottom: '8px' }}>{group ? 'Edit Group' : 'Tambah Group Baru'}</h2>
-                <p style={{ color: '#666' }}>
-                    {group ? 'Perbarui informasi group' : 'Buat group baru untuk mengelola akses pengguna'}
-                </p>
-            </div>
-
             {error && (
                 <div
-                    style={{
-                        backgroundColor: '#fee',
-                        border: '1px solid #fcc',
-                        borderRadius: '4px',
-                        padding: '12px',
-                        marginBottom: '16px',
-                        color: '#900',
-                    }}
+                    className="alert alert-danger"
+                    style={{ marginBottom: '16px' }}
                 >
                     {error}
                 </div>
             )}
 
-            <div style={{ marginBottom: '16px' }}>
-                <label
-                    htmlFor="name"
-                    style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}
-                >
+            <div className="form-group">
+                <label htmlFor="name" className="form-label">
                     Nama Group <span style={{ color: 'red' }}>*</span>
                 </label>
                 <input
                     type="text"
+                    className="form-control"
                     id="name"
                     name="name"
                     value={formData.name}
@@ -91,26 +74,16 @@ const GroupForm = ({ group, onClose }) => {
                     minLength={1}
                     maxLength={100}
                     placeholder="Contoh: Admin KLP"
-                    style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        fontSize: '14px',
-                        boxSizing: 'border-box',
-                    }}
                 />
-                <small style={{ color: '#666' }}>Nama group harus unik (maksimal 100 karakter)</small>
+                <small className="form-text text-muted">Nama group harus unik (maksimal 100 karakter)</small>
             </div>
 
-            <div style={{ marginBottom: '24px' }}>
-                <label
-                    htmlFor="description"
-                    style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}
-                >
+            <div className="form-group">
+                <label htmlFor="description" className="form-label">
                     Deskripsi
                 </label>
                 <textarea
+                    className="form-control"
                     id="description"
                     name="description"
                     value={formData.description}
@@ -118,56 +91,24 @@ const GroupForm = ({ group, onClose }) => {
                     rows={3}
                     maxLength={500}
                     placeholder="Deskripsi singkat tentang tujuan group ini..."
-                    style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        fontSize: '14px',
-                        resize: 'vertical',
-                        boxSizing: 'border-box',
-                    }}
                 />
-                <small style={{ color: '#666' }}>Opsional (maksimal 500 karakter)</small>
+                <small className="form-text text-muted">Opsional (maksimal 500 karakter)</small>
             </div>
 
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    gap: '12px',
-                    paddingTop: '16px',
-                    borderTop: '1px solid #eee',
-                }}
-            >
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '20px' }}>
                 <button
                     type="button"
+                    className="btn btn-secondary"
                     onClick={onClose}
-                    style={{
-                        padding: '10px 20px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        backgroundColor: 'white',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                    }}
                 >
                     Batal
                 </button>
                 <button
                     type="submit"
+                    className="btn btn-primary"
                     disabled={loading}
-                    style={{
-                        padding: '10px 20px',
-                        border: 'none',
-                        borderRadius: '4px',
-                        backgroundColor: loading ? '#ccc' : '#0066cc',
-                        color: 'white',
-                        cursor: loading ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                    }}
                 >
-                    {loading ? 'Menyimpan...' : group ? 'Perbarui' : 'Simpan'}
+                    {loading ? 'Menyimpan...' : (group ? 'Perbarui' : 'Simpan')}
                 </button>
             </div>
         </form>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_ENDPOINTS } from '../../config/api';
+import API_ENDPOINTS from '@/config/apiConfig';
 
 const PERMISSION_CATEGORIES = {
     dashboard: {
@@ -119,12 +119,10 @@ const PermissionSelector = ({ group, onClose }) => {
         );
 
         if (allSelected) {
-            // Deselect all in category
             setSelectedPermissions((prev) =>
                 prev.filter((p) => !category.permissions.includes(p))
             );
         } else {
-            // Select all in category
             setSelectedPermissions((prev) => {
                 const newPermissions = prev.filter(
                     (p) => !category.permissions.includes(p)
@@ -211,58 +209,32 @@ const PermissionSelector = ({ group, onClose }) => {
 
     return (
         <div>
-            <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ marginBottom: '8px' }}>Kelola Izin: {groupData?.name}</h2>
-                <p style={{ color: '#666' }}>{groupData?.description}</p>
-            </div>
-
             {error && (
-                <div
-                    style={{
-                        backgroundColor: '#fee',
-                        border: '1px solid #fcc',
-                        borderRadius: '4px',
-                        padding: '12px',
-                        marginBottom: '16px',
-                        color: '#900',
-                    }}
-                >
+                <div className="alert alert-danger" style={{ marginBottom: '16px' }}>
                     {error}
                 </div>
             )}
 
-            <div
-                style={{
-                    maxHeight: '500px',
-                    overflowY: 'auto',
-                    marginBottom: '24px',
-                }}
-            >
+            <div style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '24px' }}>
                 {Object.entries(PERMISSION_CATEGORIES).map(([key, category]) => {
                     const isExpanded = expandedCategories.includes(key);
                     const isSelected = isCategorySelected(key);
-                    const isIndeterminate =
-                        !isSelected &&
-                        category.permissions.some((p) => selectedPermissions.includes(p));
 
                     return (
                         <div
                             key={key}
-                            style={{
-                                border: '1px solid #ddd',
-                                borderRadius: '8px',
-                                marginBottom: '12px',
-                                overflow: 'hidden',
-                            }}
+                            className="card mb-2"
+                            style={{ marginBottom: '8px' }}
                         >
                             <div
+                                className="card-header"
                                 style={{
-                                    backgroundColor: '#f5f5f5',
                                     padding: '12px 16px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
                                     cursor: 'pointer',
+                                    backgroundColor: '#f8f9fa',
                                 }}
                                 onClick={() => handleToggleExpand(key)}
                             >
@@ -274,14 +246,11 @@ const PermissionSelector = ({ group, onClose }) => {
                                             e.stopPropagation();
                                             handleToggleCategory(key);
                                         }}
-                                        style={{
-                                            width: '18px',
-                                            height: '18px',
-                                            cursor: 'pointer',
-                                        }}
+                                        className="form-check-input"
+                                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                                     />
                                     <strong>{category.label}</strong>
-                                    <span style={{ color: '#666', fontSize: '14px' }}>
+                                    <span className="text-muted" style={{ fontSize: '14px' }}>
                                         ({category.permissions.length} izin)
                                     </span>
                                 </div>
@@ -296,19 +265,12 @@ const PermissionSelector = ({ group, onClose }) => {
                             </div>
 
                             {isExpanded && (
-                                <div
-                                    style={{
-                                        padding: '12px 16px',
-                                        backgroundColor: 'white',
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            display: 'grid',
-                                            gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                                            gap: '8px',
-                                        }}
-                                    >
+                                <div className="card-body" style={{ padding: '12px 16px' }}>
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                                        gap: '8px',
+                                    }}>
                                         {category.permissions.map((permission) => (
                                             <label
                                                 key={permission}
@@ -317,20 +279,13 @@ const PermissionSelector = ({ group, onClose }) => {
                                                     alignItems: 'center',
                                                     gap: '8px',
                                                     cursor: 'pointer',
-                                                    padding: '8px',
-                                                    borderRadius: '4px',
-                                                    ':hover': { backgroundColor: '#f0f0f0' },
                                                 }}
                                             >
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedPermissions.includes(permission)}
                                                     onChange={() => handleTogglePermission(permission)}
-                                                    style={{
-                                                        width: '16px',
-                                                        height: '16px',
-                                                        cursor: 'pointer',
-                                                    }}
+                                                    className="form-check-input"
                                                 />
                                                 <span style={{ fontSize: '14px' }}>
                                                     {getPermissionLabel(permission)}
@@ -354,37 +309,22 @@ const PermissionSelector = ({ group, onClose }) => {
                     borderTop: '1px solid #eee',
                 }}
             >
-                <span style={{ color: '#666' }}>
+                <span className="text-muted">
                     {selectedPermissions.length} izin dipilih
                 </span>
                 <div style={{ display: 'flex', gap: '12px' }}>
                     <button
                         type="button"
+                        className="btn btn-secondary"
                         onClick={onClose}
-                        style={{
-                            padding: '10px 20px',
-                            border: '1px solid #ddd',
-                            borderRadius: '4px',
-                            backgroundColor: 'white',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                        }}
                     >
                         Batal
                     </button>
                     <button
                         type="button"
+                        className="btn btn-primary"
                         onClick={handleSave}
                         disabled={loading}
-                        style={{
-                            padding: '10px 20px',
-                            border: 'none',
-                            borderRadius: '4px',
-                            backgroundColor: loading ? '#ccc' : '#0066cc',
-                            color: 'white',
-                            cursor: loading ? 'not-allowed' : 'pointer',
-                            fontSize: '14px',
-                        }}
                     >
                         {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
                     </button>

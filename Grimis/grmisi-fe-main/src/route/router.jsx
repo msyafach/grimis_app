@@ -150,12 +150,6 @@ import PengaturanKopSuratForm from "../pages/pengaturan/kop-surat/PengaturanKopS
 // Add import for Notifications History
 import NotificationsIndex from "../pages/notifications/index";
 
-// Add import for Group Management
-import GroupManagement from "../pages/group-management";
-import GroupTambah from "../pages/group-management/tambah";
-import GroupEdit from "../pages/group-management/edit";
-import GroupDetail from "../pages/group-management/detail";
-
 export const router = createBrowserRouter([
     {
         path: "/",
@@ -1064,36 +1058,12 @@ export const router = createBrowserRouter([
                 ),
             },
 
-            // Group Management routes
+            // Group Management routes (handled by modal-based component)
             {
-                path: "/groups",
+                path: "/settings/group-management",
                 element: (
                     <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
                         <GroupManagement />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/groups/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <GroupTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/groups/edit/:id",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <GroupEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/groups/detail/:id",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <GroupDetail />
                     </ProtectedRoute>
                 ),
             },

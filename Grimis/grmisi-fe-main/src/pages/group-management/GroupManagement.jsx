@@ -1,22 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import PageHeader from '@/components/shared/pageHeader/PageHeader';
+import Footer from '@/components/shared/Footer';
 import axios from 'axios';
-import {
-    Container,
-    Header,
-    Content,
-    ActionButton,
-    Table,
-    TableHeader,
-    TableRow,
-    TableCell,
-    TableBody,
-    EmptyState,
-    LoadingState,
-    ErrorState,
-    Badge,
-    SearchInput,
-} from '../../components/shared';
-import { API_ENDPOINTS } from '../../config/api';
+import API_ENDPOINTS from '@/config/apiConfig';
 import GroupForm from './GroupForm';
 import GroupMemberList from './GroupMemberList';
 import PermissionSelector from './PermissionSelector';
@@ -113,128 +99,190 @@ const GroupManagement = () => {
     };
 
     return (
-        <Container>
-            <Header>
-                <h1>Manajemen Group</h1>
-                <ActionButton onClick={handleCreate}>+ Tambah Group</ActionButton>
-            </Header>
+        <>
+            <PageHeader>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <h1 style={{ margin: 0 }}>Manajemen Group</h1>
+                    <button
+                        className="btn btn-primary"
+                        onClick={handleCreate}
+                        style={{ padding: '10px 20px', fontSize: '14px' }}
+                    >
+                        + Tambah Group
+                    </button>
+                </div>
+            </PageHeader>
 
-            <Content>
-                <SearchInput
-                    placeholder="Cari group..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+            <div className='main-content' style={{ minHeight: 'calc(100vh - 120px)', padding: '20px' }}>
+                <div className='row'>
+                    <div className='col-12'>
+                        <div style={{ marginBottom: '20px' }}>
+                            <input
+                                type="text"
+                                placeholder="Cari group..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '10px 12px',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '4px',
+                                    fontSize: '14px',
+                                }}
+                            />
+                        </div>
 
-                {loading ? (
-                    <LoadingState message="Memuat data group..." />
-                ) : error ? (
-                    <ErrorState message={error} onRetry={fetchGroups} />
-                ) : filteredGroups.length === 0 ? (
-                    <EmptyState
-                        title={searchTerm ? 'Group tidak ditemukan' : 'Belum ada group'}
-                        message={
-                            searchTerm
-                                ? 'Coba dengan kata kunci yang berbeda'
-                                : 'Mulai dengan membuat group baru'
-                        }
-                        action={searchTerm ? null : handleCreate}
-                        actionLabel="Tambah Group"
-                    />
-                ) : (
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableCell>Nama Group</TableCell>
-                                <TableCell>Deskripsi</TableCell>
-                                <TableCell>Jumlah Anggota</TableCell>
-                                <TableCell>Dibuat</TableCell>
-                                <TableCell>Aksi</TableCell>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredGroups.map((group) => (
-                                <TableRow key={group.id}>
-                                    <TableCell>
-                                        <strong>{group.name}</strong>
-                                    </TableCell>
-                                    <TableCell>{group.description || '-'}</TableCell>
-                                    <TableCell>
-                                        <Badge variant="primary">{group.member_count} anggota</Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        {new Date(group.created_at).toLocaleDateString('id-ID')}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                            <button
-                                                className="btn-sm btn-primary"
-                                                onClick={() => handleEdit(group)}
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                className="btn-sm btn-secondary"
-                                                onClick={() => handleManageMembers(group)}
-                                            >
-                                                Anggota
-                                            </button>
-                                            <button
-                                                className="btn-sm btn-secondary"
-                                                onClick={() => handleManagePermissions(group)}
-                                            >
-                                                Izin
-                                            </button>
-                                            <button
-                                                className="btn-sm btn-danger"
-                                                onClick={() => handleDelete(group.id, group.name)}
-                                            >
-                                                Hapus
-                                            </button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                )}
-            </Content>
+                        {loading ? (
+                            <div style={{ textAlign: 'center', padding: '40px' }}>
+                                <div className="spinner-border text-primary" role="status">
+                                    <span className="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        ) : error ? (
+                            <div style={{
+                                backgroundColor: '#fee',
+                                border: '1px solid #fcc',
+                                borderRadius: '4px',
+                                padding: '16px',
+                                color: '#900',
+                                marginBottom: '16px',
+                            }}>
+                                {error}
+                                <button
+                                    onClick={fetchGroups}
+                                    style={{
+                                        marginLeft: '10px',
+                                        padding: '6px 12px',
+                                        backgroundColor: '#900',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                    }}
+                                >
+                                    Coba Lagi
+                                </button>
+                            </div>
+                        ) : filteredGroups.length === 0 ? (
+                            <div style={{
+                                textAlign: 'center',
+                                padding: '40px',
+                                color: '#666',
+                            }}>
+                                <p>{searchTerm ? 'Group tidak ditemukan' : 'Belum ada group'}</p>
+                                <p>{searchTerm ? 'Coba dengan kata kunci yang berbeda' : 'Mulai dengan membuat group baru'}</p>
+                                {!searchTerm && (
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={handleCreate}
+                                        style={{ marginTop: '16px' }}
+                                    >
+                                        Tambah Group
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="card">
+                                <div className="card-body">
+                                    <table className="table table-responsive">
+                                        <thead>
+                                            <tr>
+                                                <th>Nama Group</th>
+                                                <th>Deskripsi</th>
+                                                <th>Jumlah Anggota</th>
+                                                <th>Dibuat</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredGroups.map((group) => (
+                                                <tr key={group.id}>
+                                                    <td><strong>{group.name}</strong></td>
+                                                    <td>{group.description || '-'}</td>
+                                                    <td>
+                                                        <span className="badge badge-primary">{group.member_count} anggota</span>
+                                                    </td>
+                                                    <td>
+                                                        {new Date(group.created_at).toLocaleDateString('id-ID')}
+                                                    </td>
+                                                    <td>
+                                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                                            <button
+                                                                className="btn btn-sm btn-primary"
+                                                                onClick={() => handleEdit(group)}
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                className="btn btn-sm btn-secondary"
+                                                                onClick={() => handleManageMembers(group)}
+                                                            >
+                                                                Anggota
+                                                            </button>
+                                                            <button
+                                                                className="btn btn-sm btn-info"
+                                                                onClick={() => handleManagePermissions(group)}
+                                                            >
+                                                                Izin
+                                                            </button>
+                                                            <button
+                                                                className="btn btn-sm btn-danger"
+                                                                onClick={() => handleDelete(group.id, group.name)}
+                                                            >
+                                                                Hapus
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
 
             {showModal && (
                 <div
-                    className="modal-overlay"
+                    className="modal fade show"
                     style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
+                        display: 'block',
                         backgroundColor: 'rgba(0,0,0,0.5)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 1000,
                     }}
                     onClick={handleModalClose}
                 >
                     <div
-                        className="modal-content"
-                        style={{
-                            backgroundColor: 'white',
-                            borderRadius: '8px',
-                            padding: '24px',
-                            maxWidth: '800px',
-                            width: '90%',
-                            maxHeight: '90vh',
-                            overflow: 'auto',
-                        }}
+                        className="modal-dialog modal-dialog-centered modal-lg"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {renderModal()}
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">
+                                    {modalMode === 'create' && 'Tambah Group Baru'}
+                                    {modalMode === 'edit' && 'Edit Group'}
+                                    {modalMode === 'members' && 'Kelola Anggota'}
+                                    {modalMode === 'permissions' && 'Kelola Izin'}
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="close"
+                                    onClick={handleModalClose}
+                                >
+                                    <span>&times;</span>
+                                </button>
+                            </div>
+                            <div className="modal-body">
+                                {renderModal()}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
-        </Container>
+
+            <Footer />
+        </>
     );
 };
 
