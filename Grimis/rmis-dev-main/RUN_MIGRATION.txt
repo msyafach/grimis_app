@@ -1,0 +1,27 @@
+# Fixed the import path in migrate_default_groups.py
+
+The script now uses:
+```python
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(script_dir)  # This is rmis-dev-main
+sys.path.insert(0, project_root)
+```
+
+## How to run the migration script:
+
+### Option 1: From project root
+```bash
+cd Grimis/rmis-dev-main
+python app/utils/migrate_default_groups.py
+```
+
+### Option 2: As a module
+```bash
+cd Grimis/rmis-dev-main
+python -m app.utils.migrate_default_groups
+```
+
+### Option 3: From within the container
+```bash
+docker compose exec backend python app/utils/migrate_default_groups.py
+```

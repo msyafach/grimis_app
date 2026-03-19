@@ -156,7 +156,7 @@ export const menuList = [
             {
                 id: 2,
                 name: "Manajemen Group",
-                path: "/groups",
+                path: "/settings/group-management",
                 subdropdownMenu: false
             }
         ],

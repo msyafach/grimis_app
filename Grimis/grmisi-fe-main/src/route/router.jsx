@@ -70,6 +70,8 @@ import ManajemenPenggunaTambah from "../pages/users/manajemen-pengguna-tambah";
 import ManajemenPenggunaEdit from "../pages/users/manajemen-pengguna-edit";
 import ManajemenPenggunaDetail from "../pages/users/detail";
 
+import GroupManagement from "../pages/group-management/GroupManagement";
+
 import IdentifikasiRisikoIndex from "../pages/pengelolaan-risiko";
 import IdentifikasiRisikoTambah from "../pages/pengelolaan-risiko/identifikasi/tambah";
 import IdentifikasiRisikoEdit from "../pages/pengelolaan-risiko/identifikasi/edit";
@@ -950,6 +952,16 @@ export const router = createBrowserRouter([
                 element: (
                     <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
                         <ManajemenPenggunaDetail />
+                    </ProtectedRoute>
+                ),
+            },
+
+            // Group Management
+            {
+                path: "/settings/group-management",
+                element: (
+                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
+                        <GroupManagement />
                     </ProtectedRoute>
                 ),
             },

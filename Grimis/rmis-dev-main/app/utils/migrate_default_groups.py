@@ -6,6 +6,14 @@ It maps each role to a corresponding group with equivalent permissions.
 This facilitates the migration from role-based to group-based access control.
 
 Run this script once to initialize the default groups in your database.
+
+Usage:
+    cd Grimis/rmis-dev-main
+    python -m app.utils.migrate_default_groups
+
+Or:
+    cd Grimis/rmis-dev-main
+    python app/utils/migrate_default_groups.py
 """
 
 import asyncio
@@ -14,8 +22,10 @@ import sys
 import os
 from datetime import datetime
 
-# Add parent directory to path to import app modules
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add the rmis-dev-main directory to path to import app modules
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(script_dir)  # This is rmis-dev-main
+sys.path.insert(0, project_root)
 
 from app.schemas.group import Permission
 import decouple
