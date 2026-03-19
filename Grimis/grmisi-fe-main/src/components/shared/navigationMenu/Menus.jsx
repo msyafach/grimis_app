@@ -77,10 +77,13 @@ const Menus = () => {
     // Filter menu based on user permissions (with role-based fallback)
     const { permissions } = useAuth();
 
+    // Ensure permissions is always an array
+    const safePermissions = Array.isArray(permissions) ? permissions : [];
+
     let filteredMenuList = menuList.filter(menu => {
         // Use permission-based filtering if permissions are available
-        if (permissions && permissions.length > 0) {
-            return canAccessMenu(menu.name, permissions, user?.role);
+        if (safePermissions && safePermissions.length > 0) {
+            return canAccessMenu(menu.name, safePermissions, user?.role);
         }
 
         // Fallback to role-based filtering for backwards compatibility

@@ -92,17 +92,20 @@ export const canAccessMenu = (menuPath, userPermissions, userRole) => {
         return true;
     }
 
+    // Ensure userPermissions is an array
+    const safePermissions = Array.isArray(userPermissions) ? userPermissions : [];
+
     // If we have permissions (group-based), use them
-    if (userPermissions && userPermissions.length > 0) {
+    if (safePermissions && safePermissions.length > 0) {
         const requiredPermissions = MENU_PERMISSION_MAP[menuPath];
 
         // If no specific permission required, allow access
-        if (!requiredPermissions) {
+        if (!requiredPermissions || !Array.isArray(requiredPermissions)) {
             return true;
         }
 
         // Check if user has any of the required permissions
-        return requiredPermissions.some(perm => userPermissions.includes(perm));
+        return requiredPermissions.some(perm => safePermissions.includes(perm));
     }
 
     // Fallback to role-based checking
@@ -115,13 +118,17 @@ export const canAccessMenu = (menuPath, userPermissions, userRole) => {
         return true;
     }
 
+    // Ensure denied and allowed are arrays
+    const deniedList = Array.isArray(roleConfig.denied) ? roleConfig.denied : [];
+    const allowedList = Array.isArray(roleConfig.allowed) ? roleConfig.allowed : [];
+
     // Check if menu is in denied list
-    if (roleConfig.denied.some(denied => menuPath.startsWith(denied))) {
+    if (deniedList.some(denied => menuPath.startsWith(denied))) {
         return false;
     }
 
     // Check if menu is in allowed list
-    return roleConfig.allowed.some(allowed => menuPath.startsWith(allowed) || menuPath === allowed);
+    return allowedList.some(allowed => menuPath.startsWith(allowed) || menuPath === allowed);
 };
 
 /**
@@ -132,22 +139,28 @@ export const canAccessMenu = (menuPath, userPermissions, userRole) => {
  * @returns {Array} - Filtered menu list
  */
 export const filterMenuByPermissions = (menuList, userPermissions, userRole) => {
-    return menuList.filter(menu => {
+    // Ensure userPermissions is an array
+    const safePermissions = Array.isArray(userPermissions) ? userPermissions : [];
+
+    return menuList.map(menu => {
         // Check main menu access
-        const hasAccess = canAccessMenu(menu.name, userPermissions, userRole);
+        const hasAccess = canAccessMenu(menu.name, safePermissions, userRole);
 
         if (!hasAccess) {
-            return false;
+            return null; // Will be filtered out
         }
 
+        // Create a copy to avoid modifying original
+        const newMenu = { ...menu };
+
         // Filter submenu items
-        if (menu.dropdownMenu) {
-            menu.dropdownMenu = menu.dropdownMenu.filter(subMenu => {
+        if (menu.dropdownMenu && Array.isArray(menu.dropdownMenu)) {
+            newMenu.dropdownMenu = menu.dropdownMenu.filter(subMenu => {
                 const subMenuPath = `${menu.name}/${subMenu.path.split('/').pop()}`.toLowerCase();
-                return canAccessMenu(subMenuPath, userPermissions, userRole);
+                return canAccessMenu(subMenuPath, safePermissions, userRole);
             });
         }
 
-        return true;
-    });
+        return newMenu;
+    }).filter(menu => menu !== null); // Remove null entries
 };
