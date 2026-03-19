@@ -40,10 +40,10 @@ services:
       mongo:
         condition: service_healthy
     command: >
-      sh -c "cd /app &&
-             python scripts/seed_demo_users.py &&
-             python scripts/seed_spip_data.py"
+      sh -c "echo 'Seeder service disabled - run manually if needed'"
     restart: "no"
+    profiles:
+      - seed
 
   frontend:
     build:
@@ -57,3 +57,5 @@ services:
 
 volumes:
   mongo_data:
+    # MongoDB data persists here. To reset data: docker compose down -v
+    # Note: Using 'docker compose down' without -v preserves data
