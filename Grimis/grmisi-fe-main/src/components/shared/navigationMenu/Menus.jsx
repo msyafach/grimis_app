@@ -88,24 +88,33 @@ const Menus = () => {
         if (user?.role === "ADMIN_KLP" && menu.name === "pengelolaan-risiko") {
             return false;
         }
-        if (user?.role === "PEMILIK_RISIKO" && menu.name === "parameters") {
-            return false;
+        // PEMILIK_RISIKO and PENGELOLA_RISIKO can access dashboards, pengelolaan-risiko, and parameters
+        if ((user?.role === "PEMILIK_RISIKO" || user?.role === "PENGELOLA_RISIKO")) {
+            return menu.name === "dashboards" || menu.name === "pengelolaan-risiko" || menu.name === "parameters";
         }
         if ((user?.role === "PEGAWAI" || user?.role === "PENGAWAS_INTERN") && (menu.name === "organisasi" || menu.name === "settings-unit-kerja" || menu.name === "approval" || menu.name === "proses-akhir-tahun")) {
             return false;
         }
-        // Only show approval menu for SUPER_ADMIN and PEMILIK_RISIKO
-        if (menu.name === "approval" && user?.role !== "SUPER_ADMIN" && user?.role !== "PEMILIK_RISIKO") {
+        // Only show approval menu for SUPER_ADMIN, ADMIN_KLP, and PEMILIK_RISIKO
+        if (menu.name === "approval" && user?.role !== "SUPER_ADMIN" && user?.role !== "ADMIN_KLP" && user?.role !== "PEMILIK_RISIKO" && user?.role !== "PENGELOLA_RISIKO") {
             return false;
-        }
-        if (user?.role === "PENGELOLA_RISIKO") {
-            return menu.name === "dashboards" || menu.name === "pengelolaan-risiko";
         }
         return true;
     });
 
     filteredMenuList = filteredMenuList.map(menu => {
         if (menu.name === "parameters") {
+            // For PEMILIK_RISIKO and PENGELOLA_RISIKO, only show Kamus Risiko and Konteks (for proposals)
+            if (user?.role === "PEMILIK_RISIKO" || user?.role === "PENGELOLA_RISIKO") {
+                return {
+                    ...menu,
+                    dropdownMenu: menu.dropdownMenu.filter(item =>
+                        item.name === "Kamus Risiko" ||
+                        item.name === "Konteks Sasaran" ||
+                        item.name === "Konteks Probis"
+                    )
+                };
+            }
             return {
                 ...menu,
                 dropdownMenu: menu.dropdownMenu.filter(item => item.name !== "Bagan Risiko")

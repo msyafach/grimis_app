@@ -17,3 +17,4 @@ reportlab==4.4.1
 pandas
 openpyxl
 jinja2
+google-recaptcha==2.0.0

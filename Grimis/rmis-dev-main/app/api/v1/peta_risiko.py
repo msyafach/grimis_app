@@ -132,50 +132,62 @@ async def get_or_create_template(db: Database, id_instansi: str, tahun: int, id_
     result = await db.peta_risiko_template.insert_one(template_data)
     return str(result.inserted_id)
 
-async def get_color_code(db: Database, template_id: str, value: Union[int, str]) -> str:
-    """Get color code based on risk level value from the template's heatmap"""
+def get_color_code(value: Union[int, str]) -> str:
+    """Get color code based on risk level value"""
     # Convert value to int if it's a string
     if isinstance(value, str):
         try:
             value = int(value)
         except ValueError:
-            # Default for non-numeric values
-            return "#999999"
+            # Default to red for non-numeric values
+            return "#D0021B"
             
-    # Try to find a cell with this value in the heatmap
-    heatmap_cell = await db.peta_risiko_matriks_heatmap.find_one({
-        "template_id": template_id,
-        "value": str(value)
-    })
-    
-    if heatmap_cell and "kode_warna" in heatmap_cell:
-        return heatmap_cell["kode_warna"]
-        
-    # Fallback to defaults if not found in heatmap
     if value >= 1 and value <= 15:
-        return "#33cc00"  # Green
+        return "#33cc00"  # Green for low risk (1-15)
     elif value >= 16 and value <= 20:
-        return "#f5a623"  # Orange
+        return "#f5a623"  # Orange for medium risk (16-20)
     else:
-        return "#D0021B"  # Red
+        return "#D0021B"  # Red for high risk (21-25)
 
-async def get_custom_risk_value(db: Database, template_id: str, dampak: int, frekuensi: int) -> int:
-    """Get custom risk value based on impact (dampak) and frequency (frekuensi) from the template's heatmap"""
-    # Find the cell in the heatmap
-    heatmap_cell = await db.peta_risiko_matriks_heatmap.find_one({
-        "template_id": template_id,
-        "dampak": dampak,
-        "frekuensi": frekuensi
-    })
+# Add this function after the get_color_code function
+def get_custom_risk_value(dampak: int, frekuensi: int) -> int:
+    """Get custom risk value based on impact (dampak) and frequency (frekuensi)"""
+    # Define risk values based on the provided pattern
+    risk_matrix = {
+        # Dampak 1
+        (1, 1): 1,
+        (1, 2): 2,
+        (1, 3): 3,
+        (1, 4): 6,
+        (1, 5): 7,
+        # Dampak 2
+        (2, 1): 4,
+        (2, 2): 5,
+        (2, 3): 8,
+        (2, 4): 9,
+        (2, 5): 12,
+        # Dampak 3
+        (3, 1): 10,
+        (3, 2): 11,
+        (3, 3): 13,
+        (3, 4): 14,
+        (3, 5): 18,
+        # Dampak 4
+        (4, 1): 15,
+        (4, 2): 16,
+        (4, 3): 17,
+        (4, 4): 20,
+        (4, 5): 21,
+        # Dampak 5
+        (5, 1): 19,
+        (5, 2): 22,
+        (5, 3): 23,
+        (5, 4): 24,
+        (5, 5): 25
+    }
     
-    if heatmap_cell and "value" in heatmap_cell:
-        try:
-            return int(heatmap_cell["value"])
-        except (ValueError, TypeError):
-            pass
-            
-    # Fallback to multiplication
-    return dampak * frekuensi
+    # Return value from matrix if exists, otherwise fall back to multiplication
+    return risk_matrix.get((dampak, frekuensi), dampak * frekuensi)
 
 # 1. Template Management
 @router.post("/template/generate", response_model=PetaRisikoTemplateResponse)

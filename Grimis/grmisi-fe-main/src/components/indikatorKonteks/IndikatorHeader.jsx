@@ -7,6 +7,9 @@ const IndikatorHeader = () => {
     const { user } = useAuth();
     const isPegawaiOrPengawas = user?.role == "PEGAWAI" || user?.role == "PENGAWAS_INTERN";
 
+    // Admin roles can add directly, Pemilik/Pengelola Risiko can propose
+    const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN_KLP";
+
     return (
         <>
             {konteksSasaranId && (
@@ -18,7 +21,7 @@ const IndikatorHeader = () => {
                     {!isPegawaiOrPengawas && (
                         <Link to={`/parameters/konteks-sasaran/indikator/${konteksSasaranId}/tambah`} className="btn btn-primary">
                             <FiPlus size={16} className='me-2' />
-                            <span>Tambah Indikator Sasaran</span>
+                            <span>{isAdmin ? "Tambah Indikator Sasaran" : "Usulkan Indikator Sasaran"}</span>
                         </Link>
                     )}
                 </div>
@@ -30,10 +33,12 @@ const IndikatorHeader = () => {
                         <FiArrowLeft size={16} className='me-2' />
                         <span>Kembali</span>
                     </Link>
-                    <Link to={`/parameters/konteks-probis/indikator/${konteksProbisId}/tambah`} className="btn btn-primary">
-                        <FiPlus size={16} className='me-2' />
-                        <span>Tambah Indikator Probis</span>
-                    </Link>
+                    {!isPegawaiOrPengawas && (
+                        <Link to={`/parameters/konteks-probis/indikator/${konteksProbisId}/tambah`} className="btn btn-primary">
+                            <FiPlus size={16} className='me-2' />
+                            <span>{isAdmin ? "Tambah Indikator Probis" : "Usulkan Indikator Probis"}</span>
+                        </Link>
+                    )}
                 </div>
             )}
         </>

@@ -9,11 +9,14 @@ import { showToast } from '@/utils/toast';
 import { translate, setLanguage } from '@/utils/i18n';
 import FormIndikatorKonteks from './FormIndikatorKonteks';
 import { useInstansi } from '../../context/InstansiContext';
+import { useAuth } from '@/context/AuthContext';
 import API_ENDPOINTS from '../../config/apiConfig';
 
 setLanguage('id');
 
 const IndikatorKonteksTambahContent = ({ title = "Tambah Indikator", resetKey }) => {
+    const { user } = useAuth();
+    const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN_KLP";
     const { isRemoved, handleRefresh, handleExpand, handleDelete } = useCardTitleActions();
     const navigate = useNavigate();
     const { konteksSasaranId } = useParams();
@@ -23,6 +26,7 @@ const IndikatorKonteksTambahContent = ({ title = "Tambah Indikator", resetKey })
         "nama": "",
         "id_konteks": "",
         "id_instansi": "",
+        "status_approval": isAdmin ? "TERVERIFIKASI" : "MENUNGGU_VERIFIKASI",
     });
 
     const handleInputIndikatorKonteks = (e) => {
@@ -41,7 +45,8 @@ const IndikatorKonteksTambahContent = ({ title = "Tambah Indikator", resetKey })
             await axios.post(API_ENDPOINTS.postIndikator, formData, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            showToast("success", "Indikator Berhasil Ditambahkan!");
+            const successMessage = isAdmin ? "Indikator Berhasil Ditambahkan!" : "Usulan Indikator Berhasil Diajukan!";
+            showToast("success", successMessage);
             resetKey((prevKey) => prevKey + 1);
         } catch (error) {
             const errorMessage = error.response?.data?.detail || "Terjadi kesalahan. Silakan coba lagi.";

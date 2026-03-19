@@ -17,7 +17,6 @@ class InstansiBase(BaseModel):
     kop_surat_baris_3: Optional[str] = None
     kop_surat_alamat: Optional[str] = None
     logo_instansi: Optional[str] = None
-    auto_approve: bool = Field(default=False, description="Whether to automatically approve proposals")
 
 class InstansiCreate(InstansiBase):
     pass

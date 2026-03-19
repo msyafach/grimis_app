@@ -10,14 +10,17 @@ import { translate, setLanguage } from '@/utils/i18n';
 import FormKamusRisiko from './FormKamusRisiko';
 import ContentLoaderWrapper from '../shared/ContentLoaderWrapper';
 import { useInstansi } from '../../context/InstansiContext';
+import { useAuth } from '@/context/AuthContext';
 import API_ENDPOINTS from '../../config/apiConfig';
 
 setLanguage('id');
 
 const KamusRisikoTambahContent = ({ title = "Tambah Kamus Risiko", resetKey }) => {
+    const { user } = useAuth();
     const { isRemoved, handleRefresh, handleExpand, handleDelete } = useCardTitleActions();
     const navigate = useNavigate();
     const { idInstansi } = useInstansi();
+    const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN_KLP";
     const [kategoriRisiko, setKategoriRisiko] = useState([]);
     const [selectedKategoriRisiko, setSelectedKategoriRisiko] = useState(null);
     const [formData, setFormData] = useState({
@@ -25,6 +28,7 @@ const KamusRisikoTambahContent = ({ title = "Tambah Kamus Risiko", resetKey }) =
         "nama": "",
         "id_instansi": idInstansi,
         "id_kategori_risiko": "",
+        "status_approval": isAdmin ? "TERVERIFIKASI" : "MENUNGGU_VERIFIKASI",
     });
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
@@ -79,7 +83,8 @@ const KamusRisikoTambahContent = ({ title = "Tambah Kamus Risiko", resetKey }) =
             await axios.post(API_ENDPOINTS.postKamusRisiko, formData, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            showToast("success", "Kamus Risiko  Berhasil Ditambahkan!");
+            const successMessage = isAdmin ? "Kamus Risiko Berhasil Ditambahkan!" : "Usulan Kamus Risiko Berhasil Diajukan!";
+            showToast("success", successMessage);
             resetKey((prevKey) => prevKey + 1);
         } catch (error) {
             const errorResponse = error.response?.data?.detail || "Terjadi kesalahan. Silakan coba lagi.";

@@ -1,14 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
 from datetime import datetime
 from bson import ObjectId
-import pandas as pd
-import io
 
 from app.schemas.risk import (
     IndikatorCreate,
     IndikatorUpdate,
-    IndikatorResponse
+    IndikatorResponse,
+    ApprovalStatus
 )
 from app.schemas.user import UserRole
 from app.database import Database
@@ -34,10 +33,15 @@ async def create_indikator(
     - Only SASARAN contexts can have indicators
     - PROBIS contexts cannot have indicators
     """
-    if current_user["role"] not in [UserRole.SUPER_ADMIN, UserRole.ADMIN_KLP]:
+    if current_user["role"] not in [
+        UserRole.SUPER_ADMIN,
+        UserRole.ADMIN_KLP,
+        UserRole.PEMILIK_RISIKO,
+        UserRole.PENGELOLA_RISIKO
+    ]:
         raise HTTPException(
             status_code=403,
-            detail="Only SUPER_ADMIN and ADMIN_KLP can create indicators"
+            detail="Only SUPER_ADMIN, ADMIN_KLP, PEMILIK_RISIKO, and PENGELOLA_RISIKO can create indicators"
         )
 
     db = await Database.get_db()
@@ -97,105 +101,22 @@ async def create_indikator(
                 detail="You can only create indicators for your assigned KLP"
             )
 
-    # Check auto_approve setting
-    from app.schemas.risk import ApprovalStatus
-    instansi = await db.instansi.find_one({"_id": ObjectId(indikator.id_instansi)})
-    status_approval = ApprovalStatus.DRAFT
-    if instansi and instansi.get("auto_approve"):
-        status_approval = ApprovalStatus.APPROVED
-
     indikator_dict = indikator.dict()
     indikator_dict["created_at"] = datetime.utcnow()
     indikator_dict["nama_konteks"] = konteks["nama"]
-    indikator_dict["status_approval"] = status_approval
+
+    # Set status_approval based on user role
+    if current_user["role"] in [UserRole.PEMILIK_RISIKO, UserRole.PENGELOLA_RISIKO]:
+        indikator_dict["status_approval"] = indikator.status_approval or ApprovalStatus.MENUNGGU_VERIFIKASI
+    else:
+        # Admin creates are auto-approved
+        indikator_dict["status_approval"] = indikator.status_approval or ApprovalStatus.TERVERIFIKASI
 
     result = await db.indikator.insert_one(indikator_dict)
     created = await db.indikator.find_one({"_id": result.inserted_id})
     created["id"] = str(created.pop("_id"))
 
     return IndikatorResponse(**created)
-
-@router.post("/import")
-async def import_indikator(
-    id_instansi: str = Query(..., description="Institution ID"),
-    file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user)
-):
-    """
-    Import indicators from Excel file.
-    Expected columns: kode, nama, id_konteks
-    """
-    if current_user["role"] not in [UserRole.SUPER_ADMIN, UserRole.ADMIN_KLP]:
-        raise HTTPException(
-            status_code=403,
-            detail="Only SUPER_ADMIN and ADMIN_KLP can import indicators"
-        )
-
-    db = await Database.get_db()
-    
-    # Read excel file
-    contents = await file.read()
-    df = pd.read_excel(io.BytesIO(contents))
-    
-    # Basic validation of columns
-    required_columns = ["kode", "nama", "id_konteks"]
-    for col in required_columns:
-        if col not in df.columns:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Missing required column: {col}"
-            )
-            
-    # Process each row
-    imported_count = 0
-    errors = []
-    
-    for index, row in df.iterrows():
-        try:
-            # Check if code already exists
-            existing = await db.indikator_sasaran.find_one({
-                "kode": str(row["kode"]),
-                "id_konteks": str(row["id_konteks"])
-            })
-            if existing:
-                errors.append(f"Row {index+2}: Code {row['kode']} already exists for this context")
-                continue
-                
-            # Get konteks to validate
-            konteks = await db.konteks.find_one({
-                "_id": ObjectId(str(row["id_konteks"]))
-            })
-            if not konteks:
-                errors.append(f"Row {index+2}: Konteks {row['id_konteks']} not found")
-                continue
-                
-            # Check auto_approve setting
-            from app.schemas.risk import ApprovalStatus
-            instansi_obj = await db.instansi.find_one({"_id": ObjectId(id_instansi)})
-            status_approval = ApprovalStatus.DRAFT
-            if instansi_obj and instansi_obj.get("auto_approve"):
-                status_approval = ApprovalStatus.APPROVED
-                
-            # Create indicator entry
-            indikator_dict = {
-                "kode": str(row["kode"]),
-                "nama": str(row["nama"]),
-                "id_konteks": str(row["id_konteks"]),
-                "id_instansi": id_instansi,
-                "nama_konteks": konteks["nama"],
-                "status_approval": status_approval,
-                "created_at": datetime.utcnow()
-            }
-            
-            await db.indikator.insert_one(indikator_dict)
-            imported_count += 1
-        except Exception as e:
-            errors.append(f"Row {index+2}: {str(e)}")
-            
-    return {
-        "message": f"Successfully imported {imported_count} records",
-        "errors": errors
-    }
 
 @router.get("", response_model=List[IndikatorResponse])
 async def get_indikator(
@@ -411,4 +332,69 @@ async def delete_indikator(
             detail="Indicator not found"
         )
 
-    return {"message": "Indicator deleted successfully"} 
+    return {"message": "Indicator deleted successfully"}
+
+
+@router.post("/{indikator_id}/approve")
+async def approve_indikator(
+    indikator_id: str,
+    status_approval: ApprovalStatus,
+    catatan: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Approve or reject an indicator proposal.
+
+    Parameters:
+    - indikator_id (str): ID of the indicator proposal
+    - status_approval (ApprovalStatus): Approval status (TERVERIFIKASI, GAGAL_VERIFIKASI, DISETUJUI_DENGAN_PENYESUAIAN)
+    - catatan (str, optional): Notes for the approval
+
+    Notes:
+    - Only SUPER_ADMIN and ADMIN_KLP can approve proposals
+    - MENUNGGU_VERIFIKASI status cannot be set here (it's the default for new proposals)
+    """
+    if current_user["role"] not in [UserRole.SUPER_ADMIN, UserRole.ADMIN_KLP]:
+        raise HTTPException(
+            status_code=403,
+            detail="Only SUPER_ADMIN and ADMIN_KLP can approve indicator proposals"
+        )
+
+    # Prevent setting MENUNGGU_VERIFIKASI via approval endpoint
+    if status_approval == ApprovalStatus.MENUNGGU_VERIFIKASI:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot set status to MENUNGGU_VERIFIKASI via approval endpoint"
+        )
+
+    db = await Database.get_db()
+
+    indikator = await db.indikator.find_one({"_id": ObjectId(indikator_id)})
+    if not indikator:
+        raise HTTPException(
+            status_code=404,
+            detail="Indicator proposal not found"
+        )
+
+    update_data = {
+        "status_approval": status_approval,
+        "updated_at": datetime.utcnow()
+    }
+
+    if catatan:
+        update_data["catatan_approval"] = catatan
+
+    await db.indikator.update_one(
+        {"_id": ObjectId(indikator_id)},
+        {"$set": update_data}
+    )
+
+    updated = await db.indikator.find_one({"_id": ObjectId(indikator_id)})
+    updated["id"] = str(updated["_id"])
+
+    # Get context name
+    konteks = await db.konteks.find_one({"_id": ObjectId(updated["id_konteks"])})
+    if konteks:
+        updated["nama_konteks"] = konteks["nama"]
+
+    return IndikatorResponse(**updated) 

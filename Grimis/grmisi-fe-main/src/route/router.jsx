@@ -125,6 +125,9 @@ import LaporanKejadianForm from "../pages/laporan-kejadian/LaporanKejadianForm";
 import LaporanKejadianDetail from "../pages/laporan-kejadian/LaporanKejadianDetail";
 import LaporanKejadianIndex from "../pages/approval/laporan-kejadian/index";
 
+// Add import for Kamus Risiko Approval
+import KamusRisikoApprovalIndex from "../pages/approval/kamus-risiko/index";
+
 // Add import for Monitoring Risiko pages
 import MonitoringRisiko from "../pages/pengelolaan-risiko/MonitoringRisiko";
 import MonitoringRisikoDetail from "../pages/pengelolaan-risiko/MonitoringRisikoDetail";
@@ -341,7 +344,7 @@ export const router = createBrowserRouter([
             {
                 path: "/parameters/konteks-sasaran/indikator/:konteksSasaranId/tambah",
                 element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
+                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO']}>
                         <KonteksSasaranIndikatorTambah />
                     </ProtectedRoute>
                 ),
@@ -407,7 +410,7 @@ export const router = createBrowserRouter([
             {
                 path: "/parameters/kamus-risiko/tambah",
                 element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
+                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO']}>
                         <KamusRisikoTambah />
                     </ProtectedRoute>
                 ),
@@ -425,6 +428,14 @@ export const router = createBrowserRouter([
                 element: (
                     <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
                         <KamusRisikoDetail />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "/approval/kamus-risiko",
+                element: (
+                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
+                        <KamusRisikoApprovalIndex />
                     </ProtectedRoute>
                 ),
             },

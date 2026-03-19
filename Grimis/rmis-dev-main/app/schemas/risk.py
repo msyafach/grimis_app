@@ -5,10 +5,48 @@ from enum import Enum
 from pydantic import validator
 from pydantic import EmailStr
 
+# === ENUMS - Must be defined before any classes that reference them ===
+
+# Approval Status enum
+class ApprovalStatus(str, Enum):
+    MENUNGGU_VERIFIKASI = "MENUNGGU_VERIFIKASI"  # Menunggu Proses Verifikasi (Admin belum melakukan verifikasi)
+    GAGAL_VERIFIKASI = "GAGAL_VERIFIKASI"  # Gagal Verifikasi (Admin menolak pengajuan usulan risiko)
+    TERVERIFIKASI = "TERVERIFIKASI"  # Terverifikasi (Admin menerima usulan kamus yang diajukan)
+    DISETUJUI_DENGAN_PENYESUAIAN = "DISETUJUI_DENGAN_PENYESUAIAN"  # Disetujui dengan penyesuaian
+    APPROVED = "APPROVED"
+
+class MonitoringStatus(str, Enum):
+    PENDING = "PENDING"  # 0 in PHP
+    VERIFIED = "VERIFIED"  # 1 in PHP
+    REJECTED = "REJECTED"  # 2 in PHP
+
+class RTPResponRisiko(str, Enum):
+    REDUCE_IMPACT = "REDUCE_IMPACT"  # 1 in PHP
+    REDUCE_FREQUENCY = "REDUCE_FREQUENCY"  # 2 in PHP
+
+class AttachmentType(str, Enum):
+    PENGENDALIAN_FISIK = "PENGENDALIAN_FISIK"
+    PENGENDALIAN_DOKUMEN = "PENGENDALIAN_DOKUMEN"
+    PENGENDALIAN_APLIKASI = "PENGENDALIAN_APLIKASI"
+    PENGENDALIAN = "PENGENDALIAN"  # Add generic PENGENDALIAN for backward compatibility
+    RTP = "RTP"
+
+class KomentarType(str, Enum):
+    IDENTIFIKASI = "IDENTIFIKASI"
+    ANALISIS = "ANALISIS"
+    EVALUASI = "EVALUASI"
+    RTP = "RTP"
+    MONITORING = "MONITORING"
+
 # Jenis Konteks enum (masih digunakan di organization.py)
 class JenisKonteks(str, Enum):
     SASARAN = "SASARAN"
     PROBIS = "PROBIS"
+
+# Jenis Peta Risiko enum
+class JenisPetaRisiko(str, Enum):
+    FREKUENSI = "FREKUENSI"
+    DAMPAK = "DAMPAK"
 
 # JenisKonteksBase
 # JenisKonteksCreate
@@ -72,6 +110,7 @@ class KonteksCreate(BaseModel):
     id_jenis_konteks: str  # ID dari jenis_konteks di struktur_organisasi
     id_instansi: str
     id_induk_unit_kerja: str
+    status_approval: Optional[ApprovalStatus] = ApprovalStatus.MENUNGGU_VERIFIKASI
 
 class KonteksUpdate(BaseModel):
     nama: Optional[str] = None
@@ -89,6 +128,7 @@ class KonteksResponse(BaseModel):
     nama_klp: str
     total_indikator: int = 0
     is_disabled: bool = False
+    status_approval: Optional[ApprovalStatus] = ApprovalStatus.MENUNGGU_VERIFIKASI
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
 
@@ -100,6 +140,7 @@ class IndikatorBase(BaseModel):
 class IndikatorCreate(IndikatorBase):
     id_konteks: str
     id_instansi: str
+    status_approval: Optional[ApprovalStatus] = ApprovalStatus.MENUNGGU_VERIFIKASI
 
 class IndikatorUpdate(BaseModel):
     nama: Optional[str] = None
@@ -108,6 +149,7 @@ class IndikatorResponse(IndikatorBase):
     id: str
     id_konteks: str
     nama_konteks: str
+    status_approval: Optional[ApprovalStatus] = ApprovalStatus.MENUNGGU_VERIFIKASI
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
 
@@ -119,16 +161,19 @@ class KamusRisikoBase(BaseModel):
 
 class KamusRisikoCreate(KamusRisikoBase):
     id_instansi: str
+    status_approval: Optional[ApprovalStatus] = ApprovalStatus.MENUNGGU_VERIFIKASI
 
 class KamusRisikoUpdate(BaseModel):
     nama: Optional[str] = None
     id_kategori_risiko: Optional[str] = None
+    status_approval: Optional[str] = None  # For approval action
 
 class KamusRisikoResponse(KamusRisikoBase):
     id: str
     id_instansi: str
     nama_klp: str
     nama_kategori: str
+    status_approval: Optional[ApprovalStatus] = ApprovalStatus.MENUNGGU_VERIFIKASI
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
 
@@ -179,37 +224,6 @@ class MetodeSpipResponse(MetodeSpipBase):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
 
-# First define all enums
-class ApprovalStatus(str, Enum):
-    DRAFT = "DRAFT"
-    SUBMITTED = "SUBMITTED"
-    VERIFIED = "VERIFIED"
-    REJECTED = "REJECTED"
-    APPROVED_WITH_ADJUSTMENT = "APPROVED_WITH_ADJUSTMENT"
-    APPROVED = "APPROVED"
-
-class MonitoringStatus(str, Enum):
-    PENDING = "PENDING"  # 0 in PHP
-    VERIFIED = "VERIFIED"  # 1 in PHP
-    REJECTED = "REJECTED"  # 2 in PHP
-
-class RTPResponRisiko(str, Enum):
-    REDUCE_IMPACT = "REDUCE_IMPACT"  # 1 in PHP
-    REDUCE_FREQUENCY = "REDUCE_FREQUENCY"  # 2 in PHP
-
-class AttachmentType(str, Enum):
-    PENGENDALIAN_FISIK = "PENGENDALIAN_FISIK"
-    PENGENDALIAN_DOKUMEN = "PENGENDALIAN_DOKUMEN"
-    PENGENDALIAN_APLIKASI = "PENGENDALIAN_APLIKASI"
-    PENGENDALIAN = "PENGENDALIAN"  # Add generic PENGENDALIAN for backward compatibility
-    RTP = "RTP"
-
-class KomentarType(str, Enum):
-    IDENTIFIKASI = "IDENTIFIKASI"
-    ANALISIS = "ANALISIS"
-    EVALUASI = "EVALUASI"
-    RTP = "RTP"
-    MONITORING = "MONITORING"
 
 # Comment schemas
 class CommentBase(BaseModel):

@@ -18,26 +18,38 @@ export const InstansiProvider = ({ children }) => {
 
             try {
                 const token = localStorage.getItem('access_token');
-                if (!token) return;
+                if (!token) {
+                    // Tidak ada token, biarkan - user mungkin belum login
+                    return;
+                }
 
                 // Verifikasi apakah instansi masih ada di database
                 try {
-                    await axios.get(API_ENDPOINTS.getInstansiById(storedId), {
+                    const response = await axios.get(API_ENDPOINTS.getInstansiById(storedId), {
                         headers: { Authorization: `Bearer ${token}` }
                     });
-                    // Instansi valid, tidak perlu melakukan apa-apa
+                    // Instansi valid - simpan nama jika ada
+                    if (response.data?.nama_instansi) {
+                        localStorage.setItem('nama_instansi', response.data.nama_instansi);
+                    }
                 } catch (err) {
-                    // Instansi tidak ditemukan, hapus dari localStorage
-                    console.warn("Instansi ID tidak valid, menghapus dari localStorage");
-                    localStorage.removeItem('id_instansi');
-                    setIdInstansi('');
+                    // Hanya hapus jika error sebenarnya (bukan network error atau 404)
+                    if (err.response && err.response.status === 404) {
+                        console.warn("Instansi ID tidak valid, menghapus dari localStorage");
+                        localStorage.removeItem('id_instansi');
+                        setIdInstansi('');
+                    }
+                    // Jika network error atau lainnya, biarkan saja
                 }
             } catch (err) {
-                console.error("Gagal memverifikasi ID instansi:", err);
+                // Abaikan error lainnya - tidak perlu hapus localStorage
+                console.debug("Verifikasi instansi dilewati:", err.message);
             }
         };
 
-        verifyInstansiId();
+        // Delay verifikasi agar token sudah ready
+        const timer = setTimeout(verifyInstansiId, 100);
+        return () => clearTimeout(timer);
     }, []);
 
     useEffect(() => {

@@ -21,7 +21,8 @@ class UserBase(BaseModel):
     role: UserRole
 
 class UserCreate(UserBase):
-    password: str
+    password: Optional[str] = Field(None, description="Leave empty to auto-generate random password", max_length=70)
+    send_email: bool = Field(True, description="Send welcome email with credentials")
     instansi_id: Optional[str] = Field(None, description="Required for all roles except SUPER_ADMIN")
     induk_unit_kerja_ids: Optional[List[str]] = Field(None, description="List of parent work unit IDs the user has access to")
 
@@ -63,4 +64,12 @@ class UserLogin(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
-    token_type: str = "bearer" 
+    token_type: str = "bearer"
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr = Field(..., description="Email of the user requesting password reset")
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(..., description="The reset token received via email")
+    new_password: str = Field(..., description="New password to set", min_length=6)
+    confirm_password: str = Field(..., description="Confirm the new password") 

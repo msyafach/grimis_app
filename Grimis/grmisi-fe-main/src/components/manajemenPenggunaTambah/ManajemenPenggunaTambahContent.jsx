@@ -49,6 +49,8 @@ const ManajemenPenggunaTambahContent = ({ title = "Tambah Pengguna", resetKey })
     const [selectedIndukUnitKerja, setSelectedIndukUnitKerja] = useState([]);
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const [allIndukUnitKerjaIds, setAllIndukUnitKerjaIds] = useState([]);
+    const [autoGeneratePassword, setAutoGeneratePassword] = useState(true);
+    const [sendEmail, setSendEmail] = useState(true);
 
     // Fetch current user info
     useEffect(() => {
@@ -229,24 +231,32 @@ const ManajemenPenggunaTambahContent = ({ title = "Tambah Pengguna", resetKey })
             showToast("error", "Peran harus dipilih!");
             return false;
         }
-        
+
         if (formData.role !== "SUPER_ADMIN") {
             if (!formData.instansi_id) {
                 showToast("error", "Instansi harus dipilih!");
                 return false;
             }
-            
+
             // For non-ADMIN_KLP users, require at least one induk unit kerja
             if (formData.role !== "ADMIN_KLP" && (!formData.induk_unit_kerja_ids || formData.induk_unit_kerja_ids.length === 0)) {
                 showToast("error", "Minimal satu Induk Unit Kerja harus dipilih!");
                 return false;
             }
         }
-        
-        if (passwordError) {
+
+        // Validate password only if not auto-generating
+        if (!autoGeneratePassword && passwordError) {
             showToast("error", passwordError);
             return false;
         }
+
+        // If not auto-generating, password is required
+        if (!autoGeneratePassword && !formData.password) {
+            showToast("error", "Password harus diisi!");
+            return false;
+        }
+
         return true;
     };
 
@@ -262,10 +272,25 @@ const ManajemenPenggunaTambahContent = ({ title = "Tambah Pengguna", resetKey })
 
         try {
             const token = localStorage.getItem('access_token');
-            await axios.post(API_ENDPOINTS.registerUser, formData, {
+
+            // Prepare data - remove password if auto-generate is enabled
+            const submitData = {
+                ...formData,
+                send_email: sendEmail
+            };
+
+            if (autoGeneratePassword) {
+                delete submitData.password;
+            }
+
+            await axios.post(API_ENDPOINTS.registerUser, submitData, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            showToast("success", "Pengguna Berhasil Ditambahkan!");
+
+            const successMessage = sendEmail
+                ? "Pengguna Berhasil Ditambahkan! Email dengan password telah dikirim."
+                : "Pengguna Berhasil Ditambahkan!";
+            showToast("success", successMessage);
             resetKey((prevKey) => prevKey + 1);
             navigate('/settings-unit-kerja/manajemen-pengguna');
         } catch (error) {
@@ -378,26 +403,58 @@ const ManajemenPenggunaTambahContent = ({ title = "Tambah Pengguna", resetKey })
                                 </div>
 
                                 <div className="mb-4">
-                                    <label className="form-label">Password <span className="text-danger">*</span></label>
-                                    <div className="input-group">
+                                    <div className="form-check">
                                         <input
-                                            type={showPassword ? "text" : "password"}
-                                            className="form-control form-control-sm rounded-3"
-                                            name="password"
-                                            placeholder="Password"
-                                            value={formData.password}
-                                            onChange={handleInputChange}
-                                            required
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            id="autoGeneratePassword"
+                                            checked={autoGeneratePassword}
+                                            onChange={(e) => setAutoGeneratePassword(e.target.checked)}
                                         />
-                                        <button
-                                            type="button"
-                                            className="input-group-text"
-                                            onClick={togglePasswordVisibility}
-                                        >
-                                            {showPassword ? <FiEyeOff /> : <FiEye />}
-                                        </button>
+                                        <label className="form-check-label" htmlFor="autoGeneratePassword">
+                                            Generate Password Otomatis
+                                        </label>
                                     </div>
-                                    {passwordError && <div className="text-danger">{passwordError}</div>}
+                                </div>
+
+                                {!autoGeneratePassword && (
+                                    <div className="mb-4">
+                                        <label className="form-label">Password <span className="text-danger">*</span></label>
+                                        <div className="input-group">
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                className="form-control form-control-sm rounded-3"
+                                                name="password"
+                                                placeholder="Password"
+                                                value={formData.password}
+                                                onChange={handleInputChange}
+                                                required
+                                            />
+                                            <button
+                                                type="button"
+                                                className="input-group-text"
+                                                onClick={togglePasswordVisibility}
+                                            >
+                                                {showPassword ? <FiEyeOff /> : <FiEye />}
+                                            </button>
+                                        </div>
+                                        {passwordError && <div className="text-danger">{passwordError}</div>}
+                                    </div>
+                                )}
+
+                                <div className="mb-4">
+                                    <div className="form-check">
+                                        <input
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            id="sendEmail"
+                                            checked={sendEmail}
+                                            onChange={(e) => setSendEmail(e.target.checked)}
+                                        />
+                                        <label className="form-check-label" htmlFor="sendEmail">
+                                            Kirim Email dengan Password ke Pengguna
+                                        </label>
+                                    </div>
                                 </div>
 
                                 <div className="mb-4">

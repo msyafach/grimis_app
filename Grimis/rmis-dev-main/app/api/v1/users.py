@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from app.schemas.user import UserCreate, UserResponse, UserLogin, TokenResponse, UserRole, UserUpdate, UserSelfUpdate, ChangePasswordRequest
 from app.database import Database
 from app.utils.auth import (
-    get_password_hash, 
-    verify_password, 
+    get_password_hash,
+    verify_password,
     create_access_token,
     get_current_user
 )
+from app.utils.recaptcha import verify_recaptcha
 from bson import ObjectId
 from typing import List, Optional
 from datetime import datetime
@@ -118,19 +119,15 @@ async def register_user(user: UserCreate, current_user: dict = Depends(get_curre
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/login", response_model=TokenResponse)
-async def login(user_credentials: UserLogin):
-    # Verify reCAPTCHA if provided
+async def login(request: Request, user_credentials: UserLogin):
+    # Verify reCAPTCHA first
     if user_credentials.recaptcha_token:
-        from app.utils.auth import verify_recaptcha
-        if not await verify_recaptcha(user_credentials.recaptcha_token):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid reCAPTCHA token"
-            )
+        client_ip = request.client.host if request.client else None
+        await verify_recaptcha(user_credentials.recaptcha_token, client_ip)
 
     db = await Database.get_db()
     user = await db.users.find_one({"username": user_credentials.username})
-    
+
     if not user or not verify_password(user_credentials.password, user["password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -140,7 +137,7 @@ async def login(user_credentials: UserLogin):
     access_token = create_access_token(
         data={"sub": user["username"], "role": user["role"]}
     )
-    
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/me", response_model=UserResponse)

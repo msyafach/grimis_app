@@ -130,10 +130,11 @@ async def calculate_risk_score(skor_kemungkinan: float, skor_dampak: float) -> f
     """Calculate risk score from probability and impact scores"""
     return skor_kemungkinan * skor_dampak
 
-async def calculate_risk_level(db: Database, template_id: str, skor_kemungkinan: Union[float, int], skor_dampak: Union[float, int]) -> int:
-    """Calculate risk level based on kemungkinan and dampak scores for a specific template
+async def calculate_risk_level(skor_kemungkinan: Union[float, int], skor_dampak: Union[float, int]) -> int:
+    """Calculate risk level based on kemungkinan and dampak scores
     
     The level is determined by looking up the value in the peta_risiko_matriks_heatmap table.
+    Supports both integer and float input values.
     """
     # Ensure values are treated as floats for calculation
     skor_kemungkinan = float(skor_kemungkinan)
@@ -143,9 +144,11 @@ async def calculate_risk_level(db: Database, template_id: str, skor_kemungkinan:
     if skor_kemungkinan == 0 or skor_dampak == 0:
         return 0
     
-    # Look up the risk level from the heatmap table for this specific template
+    # Get database connection
+    db = await Database.get_db()
+    
+    # Look up the risk level from the heatmap table
     heatmap_cell = await db.peta_risiko_matriks_heatmap.find_one({
-        "template_id": template_id,
         "frekuensi": skor_kemungkinan,
         "dampak": skor_dampak
     })
@@ -253,9 +256,12 @@ async def get_selera_risiko(db: Database, identifikasi_risiko_id: str) -> int:
         
     return struktur["selera_risiko"]
 
-async def calculate_all_risk_levels(db: Database, template_id: str, data: dict, selera_risiko: Optional[int] = None) -> dict:
-    """Calculate all risk levels for an analysis using a specific template"""
+async def calculate_all_risk_levels(data: dict, selera_risiko: Optional[int] = None) -> dict:
+    """Calculate all risk levels for an analysis"""
     result = data.copy()
+    
+    # Get database connection
+    db = await Database.get_db()
     
     # If selera_risiko not provided, get from the identifikasi_risiko
     if selera_risiko is None and "identifikasi_risiko_id" in data:
@@ -266,7 +272,7 @@ async def calculate_all_risk_levels(db: Database, template_id: str, data: dict, 
     skor_dampak_inherit = float(data.get("skor_dampak_inherit", 0))
     
     if skor_kemungkinan_inherit > 0 and skor_dampak_inherit > 0:
-        level_risiko_inherit = await calculate_risk_level(db, template_id, skor_kemungkinan_inherit, skor_dampak_inherit)
+        level_risiko_inherit = await calculate_risk_level(skor_kemungkinan_inherit, skor_dampak_inherit)
         result["level_risiko_inherit"] = level_risiko_inherit
         result["memenuhi_inherit"] = await calculate_memenuhi(level_risiko_inherit, selera_risiko)
     else:
@@ -293,7 +299,7 @@ async def calculate_all_risk_levels(db: Database, template_id: str, data: dict, 
     if skor_kemungkinan_residual > 0 and skor_dampak_residual > 0:
         # Only calculate if there are attachments
         if attachment_count > 0:
-            level_risiko_residual = await calculate_risk_level(db, template_id, float(skor_kemungkinan_residual), float(skor_dampak_residual))
+            level_risiko_residual = await calculate_risk_level(float(skor_kemungkinan_residual), float(skor_dampak_residual))
             result["level_risiko_residual"] = level_risiko_residual
             result["memenuhi_residual"] = await calculate_memenuhi(level_risiko_residual, selera_risiko)
         # For new records or records without attachments, don't change level_risiko_residual
@@ -311,7 +317,7 @@ async def calculate_all_risk_levels(db: Database, template_id: str, data: dict, 
     skor_dampak_treated = float(data.get("skor_dampak_treated", 0))
     
     if skor_kemungkinan_treated > 0 and skor_dampak_treated > 0:
-        level_risiko_treated = await calculate_risk_level(db, template_id, skor_kemungkinan_treated, skor_dampak_treated)
+        level_risiko_treated = await calculate_risk_level(skor_kemungkinan_treated, skor_dampak_treated)
         result["level_risiko_treated"] = level_risiko_treated
         result["memenuhi_treated"] = await calculate_memenuhi(level_risiko_treated, selera_risiko)
     else:
@@ -323,7 +329,7 @@ async def calculate_all_risk_levels(db: Database, template_id: str, data: dict, 
     skor_dampak_actual = float(data.get("skor_dampak_actual", 0))
     
     if skor_kemungkinan_actual > 0 and skor_dampak_actual > 0:
-        level_risiko_actual = await calculate_risk_level(db, template_id, skor_kemungkinan_actual, skor_dampak_actual)
+        level_risiko_actual = await calculate_risk_level(skor_kemungkinan_actual, skor_dampak_actual)
         result["level_risiko_actual"] = level_risiko_actual
         result["memenuhi_actual"] = await calculate_memenuhi(level_risiko_actual, selera_risiko)
     else:
@@ -456,12 +462,8 @@ async def create_analisis_risiko(
     if analisis_dict.get("dampak_id_inherit") and not analisis_dict.get("dampak_id_actual"):
         analisis_dict["dampak_id_actual"] = analisis_dict["dampak_id_inherit"]
     
-    # Get template_id for the given year and unit
-    from app.api.v1.peta_risiko import get_or_create_template
-    template_id = await get_or_create_template(db, analisis.id_instansi, analisis.tahun, analisis.id_induk_unit_kerja)
-    
     # Calculate all risk levels and memenuhi flags
-    analisis_dict = await calculate_all_risk_levels(db, template_id, analisis_dict, selera_risiko)
+    analisis_dict = await calculate_all_risk_levels(analisis_dict, selera_risiko)
 
     result = await db.analisis_risiko.insert_one(analisis_dict)
     created = await db.analisis_risiko.find_one({"_id": result.inserted_id})
@@ -846,12 +848,7 @@ async def get_analisis_risiko_list(
         
         # Get selera_risiko and recalculate risk levels
         selera_risiko = await get_selera_risiko(db, doc["identifikasi_risiko_id"])
-        
-        # Get template_id for the given year and unit
-        from app.api.v1.peta_risiko import get_or_create_template
-        template_id = await get_or_create_template(db, doc["id_instansi"], doc["tahun"], doc["id_induk_unit_kerja"])
-        
-        doc = await calculate_all_risk_levels(db, template_id, doc, selera_risiko)
+        doc = await calculate_all_risk_levels(doc, selera_risiko)
         
         results.append(AnalisisRisikoResponse(**doc))
     
@@ -1162,21 +1159,11 @@ async def get_analisis_by_identifikasi(
                     # Manually calculate based on inherit scores
                     kemungkinan = analisis.get("skor_kemungkinan_inherit", 0)
                     dampak = analisis.get("skor_dampak_inherit", 0)
-                    
-                    # Get template_id for the given year and unit
-                    from app.api.v1.peta_risiko import get_or_create_template
-                    template_id = await get_or_create_template(db, analisis["id_instansi"], analisis["tahun"], analisis["id_induk_unit_kerja"])
-                    
-                    analisis["level_risiko_actual"] = await calculate_risk_level(db, template_id, kemungkinan, dampak)
+                    analisis["level_risiko_actual"] = await calculate_risk_level(kemungkinan, dampak)
         
         # Get selera_risiko and recalculate risk levels
         selera_risiko = await get_selera_risiko(db, analisis["identifikasi_risiko_id"])
-        
-        # Get template_id for the given year and unit
-        from app.api.v1.peta_risiko import get_or_create_template
-        template_id = await get_or_create_template(db, analisis["id_instansi"], analisis["tahun"], analisis["id_induk_unit_kerja"])
-        
-        analisis = await calculate_all_risk_levels(db, template_id, analisis, selera_risiko)
+        analisis = await calculate_all_risk_levels(analisis, selera_risiko)
         
         analisis_list.append(AnalisisRisikoResponse(**analisis))
     
@@ -2035,11 +2022,7 @@ async def proses_akhir_tahun(
         
         # Calculate risk levels for the new analysis
         selera_risiko = await get_selera_risiko(db, new_identifikasi_id)
-        
-        # Use next year's template
-        template_id_next = str(new_template_id)
-        
-        new_analysis = await calculate_all_risk_levels(db, template_id_next, new_analysis, selera_risiko)
+        new_analysis = await calculate_all_risk_levels(new_analysis, selera_risiko)
         
         # Insert new analysis for next year
         result = await db.analisis_risiko.insert_one(new_analysis)
@@ -2167,7 +2150,7 @@ async def proses_akhir_tahun(
         # Create new attachment record for next year
         new_attachment = {
             "ref_id": new_ref_id, # Use new identification ID or evaluasi ID
-            "type": AttachmentType.PENGENDALIAN, # Change type to PENGENDALIAN as it becomes an existing control
+            "type": "RTP",  # Keep type as RTP instead of changing to PENGENDALIAN
             "name": rtp.get("name", ""),
             "keterangan": rtp.get("keterangan", ""),
             "file_path": rtp.get("file_path", "#"),

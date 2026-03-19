@@ -1,14 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
 from datetime import datetime
 from bson import ObjectId
-import pandas as pd
-import io
 
 from app.schemas.risk import (
     KonteksCreate,
     KonteksUpdate,
-    KonteksResponse
+    KonteksResponse,
+    ApprovalStatus
 )
 from app.schemas.user import UserRole
 from app.database import Database
@@ -34,10 +33,15 @@ async def create_konteks(
     - Context type must be either SASARAN or PROBIS
     - Only SASARAN contexts can have indicators
     """
-    if current_user["role"] not in [UserRole.SUPER_ADMIN, UserRole.ADMIN_KLP]:
+    if current_user["role"] not in [
+        UserRole.SUPER_ADMIN,
+        UserRole.ADMIN_KLP,
+        UserRole.PEMILIK_RISIKO,
+        UserRole.PENGELOLA_RISIKO
+    ]:
         raise HTTPException(
             status_code=403,
-            detail="Only SUPER_ADMIN and ADMIN_KLP can create contexts"
+            detail="Only SUPER_ADMIN, ADMIN_KLP, PEMILIK_RISIKO, and PENGELOLA_RISIKO can create contexts"
         )
 
     db = await Database.get_db()
@@ -102,119 +106,25 @@ async def create_konteks(
                 detail="You can only create contexts for your assigned KLP"
             )
 
-    # Check auto_approve setting
-    from app.schemas.risk import ApprovalStatus
-    instansi = await db.instansi.find_one({"_id": ObjectId(konteks.id_instansi)})
-    status_approval = ApprovalStatus.DRAFT
-    if instansi and instansi.get("auto_approve"):
-        status_approval = ApprovalStatus.APPROVED
-
     konteks_dict = konteks.dict()
     konteks_dict["created_at"] = datetime.utcnow()
     konteks_dict["jenis_konteks"] = jenis_konteks["jenis"]
     konteks_dict["nama_jenis_konteks"] = jenis_konteks["nama"]
     konteks_dict["nama_klp"] = induk_unit["nama_induk_unit"]
     konteks_dict["is_disabled"] = False  # Default to enabled
-    konteks_dict["status_approval"] = status_approval
+
+    # Set status_approval based on user role
+    if current_user["role"] in [UserRole.PEMILIK_RISIKO, UserRole.PENGELOLA_RISIKO]:
+        konteks_dict["status_approval"] = konteks.status_approval or ApprovalStatus.MENUNGGU_VERIFIKASI
+    else:
+        # Admin creates are auto-approved
+        konteks_dict["status_approval"] = konteks.status_approval or ApprovalStatus.TERVERIFIKASI
 
     result = await db.konteks.insert_one(konteks_dict)
     created = await db.konteks.find_one({"_id": result.inserted_id})
     created["id"] = str(created.pop("_id"))
 
     return KonteksResponse(**created)
-
-@router.post("/import")
-async def import_konteks(
-    id_instansi: str = Query(..., description="Institution ID"),
-    id_induk_unit_kerja: str = Query(..., description="Parent work unit ID"),
-    file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user)
-):
-    """
-    Import context from Excel file.
-    Expected columns: kode, nama, id_jenis_konteks
-    """
-    if current_user["role"] not in [UserRole.SUPER_ADMIN, UserRole.ADMIN_KLP]:
-        raise HTTPException(
-            status_code=403,
-            detail="Only SUPER_ADMIN and ADMIN_KLP can import contexts"
-        )
-
-    db = await Database.get_db()
-    
-    # Read excel file
-    contents = await file.read()
-    df = pd.read_excel(io.BytesIO(contents))
-    
-    # Basic validation of columns
-    required_columns = ["kode", "nama", "id_jenis_konteks"]
-    for col in required_columns:
-        if col not in df.columns:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Missing required column: {col}"
-            )
-            
-    # Process each row
-    imported_count = 0
-    errors = []
-    
-    for index, row in df.iterrows():
-        try:
-            # Check if code already exists
-            existing = await db.konteks.find_one({
-                "kode": str(row["kode"]),
-                "id_instansi": id_instansi
-            })
-            if existing:
-                errors.append(f"Row {index+2}: Code {row['kode']} already exists")
-                continue
-                
-            # Get struktur to validate jenis_konteks
-            struktur = await db.struktur_organisasi.find_one({
-                "id_instansi": id_instansi,
-                "id_induk_unit_kerja": id_induk_unit_kerja,
-                "jenis_konteks.id": str(row["id_jenis_konteks"])
-            })
-            if not struktur:
-                errors.append(f"Row {index+2}: Jenis Konteks {row['id_jenis_konteks']} not found in structure")
-                continue
-                
-            # Get jenis_konteks details
-            jk_details = next(
-                (jk for jk in struktur["jenis_konteks"] if jk["id"] == str(row["id_jenis_konteks"])),
-                None
-            )
-            
-            # Check auto_approve setting
-            from app.schemas.risk import ApprovalStatus
-            instansi_obj = await db.instansi.find_one({"_id": ObjectId(id_instansi)})
-            status_approval = ApprovalStatus.DRAFT
-            if instansi_obj and instansi_obj.get("auto_approve"):
-                status_approval = ApprovalStatus.APPROVED
-                
-            # Create context entry
-            konteks_dict = {
-                "kode": str(row["kode"]),
-                "nama": str(row["nama"]),
-                "id_jenis_konteks": str(row["id_jenis_konteks"]),
-                "id_instansi": id_instansi,
-                "id_induk_unit_kerja": id_induk_unit_kerja,
-                "jenis_konteks": jk_details["jenis"],
-                "nama_jenis_konteks": jk_details["nama"],
-                "status_approval": status_approval,
-                "created_at": datetime.utcnow()
-            }
-            
-            await db.konteks.insert_one(konteks_dict)
-            imported_count += 1
-        except Exception as e:
-            errors.append(f"Row {index+2}: {str(e)}")
-            
-    return {
-        "message": f"Successfully imported {imported_count} records",
-        "errors": errors
-    }
 
 @router.get("", response_model=List[KonteksResponse])
 async def get_konteks(
@@ -553,4 +463,88 @@ async def delete_konteks(
             detail="Context not found"
         )
 
-    return {"message": "Context and its indicators deleted successfully"} 
+    return {"message": "Context and its indicators deleted successfully"}
+
+
+@router.post("/{konteks_id}/approve")
+async def approve_konteks(
+    konteks_id: str,
+    status_approval: ApprovalStatus,
+    catatan: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Approve or reject a context proposal.
+
+    Parameters:
+    - konteks_id (str): ID of the context proposal
+    - status_approval (ApprovalStatus): Approval status (TERVERIFIKASI, GAGAL_VERIFIKASI, DISETUJUI_DENGAN_PENYESUAIAN)
+    - catatan (str, optional): Notes for the approval
+
+    Notes:
+    - Only SUPER_ADMIN and ADMIN_KLP can approve proposals
+    - MENUNGGU_VERIFIKASI status cannot be set here (it's the default for new proposals)
+    """
+    if current_user["role"] not in [UserRole.SUPER_ADMIN, UserRole.ADMIN_KLP]:
+        raise HTTPException(
+            status_code=403,
+            detail="Only SUPER_ADMIN and ADMIN_KLP can approve context proposals"
+        )
+
+    # Prevent setting MENUNGGU_VERIFIKASI via approval endpoint
+    if status_approval == ApprovalStatus.MENUNGGU_VERIFIKASI:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot set status to MENUNGGU_VERIFIKASI via approval endpoint"
+        )
+
+    db = await Database.get_db()
+
+    konteks = await db.konteks.find_one({"_id": ObjectId(konteks_id)})
+    if not konteks:
+        raise HTTPException(
+            status_code=404,
+            detail="Context proposal not found"
+        )
+
+    update_data = {
+        "status_approval": status_approval,
+        "updated_at": datetime.utcnow()
+    }
+
+    if catatan:
+        update_data["catatan_approval"] = catatan
+
+    await db.konteks.update_one(
+        {"_id": ObjectId(konteks_id)},
+        {"$set": update_data}
+    )
+
+    updated = await db.konteks.find_one({"_id": ObjectId(konteks_id)})
+    updated["id"] = str(updated["_id"])
+
+    # Get jenis_konteks details
+    struktur = await db.struktur_organisasi.find_one({
+        "id_instansi": updated["id_instansi"],
+        "jenis_konteks.id": updated["id_jenis_konteks"]
+    })
+    if struktur:
+        jenis_konteks = next(
+            (jk for jk in struktur["jenis_konteks"] if jk["id"] == updated["id_jenis_konteks"]),
+            None
+        )
+        if jenis_konteks:
+            updated["nama_jenis_konteks"] = jenis_konteks["nama"]
+
+    # Get induk_unit_kerja details for nama_klp
+    induk_unit = await db.induk_unit_kerja.find_one({
+        "_id": ObjectId(struktur["id_induk_unit_kerja"]) if struktur else None
+    })
+    if induk_unit:
+        updated["nama_klp"] = induk_unit["nama_induk_unit"]
+
+    # Get total indicators if SASARAN type
+    if updated["jenis_konteks"] == "SASARAN":
+        updated["total_indikator"] = await db.indikator.count_documents({"id_konteks": konteks_id})
+
+    return KonteksResponse(**updated) 

@@ -1,20 +1,12 @@
-import { useState, useCallback } from 'react';
-import { FiEye, FiEyeOff, FiRefreshCw } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import axios from 'axios';
 import API_ENDPOINTS from '../../config/apiConfig';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import FullScreenLoader from '../shared/FullScreenLoader';
 
-const generateCaptcha = () => {
-    const a = Math.floor(Math.random() * 9) + 1;
-    const b = Math.floor(Math.random() * 9) + 1;
-    const useAdd = Math.random() > 0.5;
-    return useAdd
-        ? { question: `${a} + ${b}`, answer: a + b }
-        : { question: `${Math.max(a, b)} - ${Math.min(a, b)}`, answer: Math.max(a, b) - Math.min(a, b) };
-};
+// Google reCAPTCHA site key (demo/test key from Google)
+const RECAPTCHA_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
 
 const LoginForm = ({ registerPath, resetPath }) => {
     const [username, setUsername] = useState('');
@@ -22,26 +14,79 @@ const LoginForm = ({ registerPath, resetPath }) => {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [captcha, setCaptcha] = useState(generateCaptcha);
-    const [captchaInput, setCaptchaInput] = useState('');
-    const [captchaError, setCaptchaError] = useState('');
+    const [recaptchaToken, setRecaptchaToken] = useState(null);
+    const recaptchaWidgetRef = useRef(null);
     const { login } = useAuth();
-    const navigate = useNavigate();
 
-    const refreshCaptcha = useCallback(() => {
-        setCaptcha(generateCaptcha());
-        setCaptchaInput('');
-        setCaptchaError('');
+    // Load reCAPTCHA script
+    useEffect(() => {
+        const loadRecaptchaScript = () => {
+            if (document.getElementById('recaptcha-script')) {
+                return;
+            }
+            const script = document.createElement('script');
+            script.id = 'recaptcha-script';
+            script.src = `https://www.google.com/recaptcha/api.js?render=explicit&onload=onRecaptchaLoad`;
+            script.async = true;
+            script.defer = true;
+            document.body.appendChild(script);
+        };
+
+        // Global callback for reCAPTCHA load
+        window.onRecaptchaLoad = () => {
+            if (document.getElementById('recaptcha-container')) {
+                recaptchaWidgetRef.current = window.grecaptcha.render('recaptcha-container', {
+                    sitekey: RECAPTCHA_SITE_KEY,
+                    callback: handleRecaptchaSuccess,
+                    'expired-callback': handleRecaptchaExpired,
+                    'error-callback': handleRecaptchaError,
+                });
+            }
+        };
+
+        loadRecaptchaScript();
+
+        return () => {
+            // Cleanup widget on unmount
+            if (recaptchaWidgetRef.current && window.grecaptcha) {
+                window.grecaptcha.reset(recaptchaWidgetRef.current);
+            }
+        };
     }, []);
+
+    const handleRecaptchaSuccess = (token) => {
+        setRecaptchaToken(token);
+        setError('');
+    };
+
+    const handleRecaptchaExpired = () => {
+        setRecaptchaToken(null);
+        setError('CAPTCHA telah kadaluarsa. Silakan verifikasi ulang.');
+        // Auto reset reCAPTCHA
+        if (recaptchaWidgetRef.current && window.grecaptcha) {
+            window.grecaptcha.reset(recaptchaWidgetRef.current);
+        }
+    };
+
+    const handleRecaptchaError = (error) => {
+        console.error('reCAPTCHA Error:', error);
+        setError('reCAPTCHA verification error. Silakan muat ulang halaman.');
+    };
+
+    const resetRecaptcha = () => {
+        setRecaptchaToken(null);
+        if (recaptchaWidgetRef.current && window.grecaptcha) {
+            window.grecaptcha.reset(recaptchaWidgetRef.current);
+        }
+    };
 
     const handleLogin = async (event) => {
         event.preventDefault();
         setError('');
-        setCaptchaError('');
 
-        if (parseInt(captchaInput, 10) !== captcha.answer) {
-            setCaptchaError('Jawaban CAPTCHA salah. Silakan coba lagi.');
-            refreshCaptcha();
+        // Check if reCAPTCHA is verified
+        if (!recaptchaToken) {
+            setError('Silakan verifikasi CAPTCHA terlebih dahulu.');
             return;
         }
 
@@ -51,6 +96,7 @@ const LoginForm = ({ registerPath, resetPath }) => {
             const response = await axios.post(API_ENDPOINTS.authLogin, {
                 username,
                 password,
+                recaptcha_token: recaptchaToken,
             });
 
             const { access_token } = response.data;
@@ -60,7 +106,10 @@ const LoginForm = ({ registerPath, resetPath }) => {
             window.location.href = '/';
         } catch (error) {
             console.error('Login Error:', error);
-            setError('Invalid username or password');
+            const errorMessage = error.response?.data?.detail || 'Invalid username or password';
+            setError(errorMessage);
+            // Reset reCAPTCHA on login error
+            resetRecaptcha();
         } finally {
             setLoading(false);
         }
@@ -140,40 +189,7 @@ const LoginForm = ({ registerPath, resetPath }) => {
                 </div>
                 <div className="mb-4">
                     <label className="form-label">Verifikasi <span className="text-danger">*</span></label>
-                    <div className="d-flex align-items-center gap-2">
-                        <div
-                            className="d-flex align-items-center justify-content-center rounded-3 fw-bold fs-16 user-select-none"
-                            style={{
-                                background: 'linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%)',
-                                border: '1px dashed #6c7fd8',
-                                minWidth: '110px',
-                                height: '38px',
-                                letterSpacing: '2px',
-                                fontFamily: 'monospace',
-                                color: '#3a4a8a',
-                            }}
-                        >
-                            {captcha.question} = ?
-                        </div>
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={refreshCaptcha}
-                            title="Refresh CAPTCHA"
-                        >
-                            <FiRefreshCw size={14} />
-                        </button>
-                        <input
-                            type="number"
-                            className={`form-control form-control-sm ${captchaError ? 'is-invalid' : ''}`}
-                            placeholder="Jawaban"
-                            value={captchaInput}
-                            onChange={(e) => setCaptchaInput(e.target.value)}
-                            required
-                            style={{ maxWidth: '90px' }}
-                        />
-                    </div>
-                    {captchaError && <div className="text-danger fs-12 mt-1">{captchaError}</div>}
+                    <div id="recaptcha-container" className="d-flex justify-content-center"></div>
                 </div>
                 <div className="mt-5">
                     <button type="submit" className="btn btn-lg btn-primary w-100">

@@ -1,13 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
-from fastapi.responses import StreamingResponse
 from typing import Optional, List
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field, EmailStr, validator
 import jwt
 import uuid
 from bson import ObjectId
-import qrcode
-import io
 
 from app.schemas.risk import MonitoringStatus
 from app.database import Database
@@ -158,39 +155,6 @@ async def generate_anonymous_link(
         "expires_at": expiry,
         "tahun": tahun  # Include the year in the response
     }
-
-@router.get("/qrcode")
-async def get_incident_report_qrcode(
-    reference_id: str = Query(..., description="The reference ID for incident reporting"),
-    current_user: dict = Depends(get_current_user)
-):
-    """
-    Generate a QR code for the incident reporting link.
-    """
-    import os
-    # The URL that the QR code will point to (frontend URL)
-    # In a real app, this should be the full URL to the frontend reporting page
-    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
-    report_url = f"{frontend_url}/laporan-kejadian/{reference_id}"
-    
-    # Generate QR code
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(report_url)
-    qr.make(fit=True)
-    
-    img = qr.make_image(fill_color="black", back_color="white")
-    
-    # Save image to byte stream
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    buf.seek(0)
-    
-    return StreamingResponse(buf, media_type="image/png")
 
 @router.get("/validate-token")
 async def validate_anonymous_token(

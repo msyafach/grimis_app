@@ -1,34 +1,11 @@
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Depends, HTTPException, status, Query
 from decouple import config
 from app.database import Database
-import os
-import requests
-
-async def verify_recaptcha(token: str) -> bool:
-    """Verify Google reCAPTCHA token"""
-    secret_key = os.getenv("RECAPTCHA_SECRET_KEY")
-    if not secret_key:
-        # If no secret key is provided, bypass verification for development
-        # In production, this should always be checked
-        return True
-        
-    try:
-        response = requests.post(
-            "https://www.google.com/recaptcha/api/siteverify",
-            data={
-                "secret": secret_key,
-                "response": token
-            }
-        )
-        result = response.json()
-        return result.get("success", False)
-    except Exception:
-        return False
 
 # Get secret key from environment variable
 SECRET_KEY = config('JWT_SECRET_KEY')

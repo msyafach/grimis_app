@@ -11,11 +11,14 @@ import FormKonteksProbis from './FormKonteksProbis';
 import ContentLoaderWrapper from '../shared/ContentLoaderWrapper';
 import { useInstansi } from '../../context/InstansiContext';
 import { useIndukUnitKerja } from '../../context/IndukUnitKerjaContext';
+import { useAuth } from '@/context/AuthContext';
 import API_ENDPOINTS from '../../config/apiConfig';
 
 setLanguage('id');
 
 const KonteksProbisTambahContent = ({ title = "Tambah Konteks Probis", resetKey }) => {
+    const { user } = useAuth();
+    const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN_KLP";
     const { isRemoved, handleRefresh, handleExpand, handleDelete } = useCardTitleActions();
     const navigate = useNavigate();
     const { idInstansi } = useInstansi();
@@ -28,6 +31,7 @@ const KonteksProbisTambahContent = ({ title = "Tambah Konteks Probis", resetKey 
         "id_jenis_konteks": "",
         "id_instansi": "",
         "id_induk_unit_kerja": "",
+        "status_approval": isAdmin ? "TERVERIFIKASI" : "MENUNGGU_VERIFIKASI",
     });
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
@@ -69,7 +73,8 @@ const KonteksProbisTambahContent = ({ title = "Tambah Konteks Probis", resetKey 
             await axios.post(API_ENDPOINTS.postKonteksProbis, formData, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            showToast("success", "Konteks Probis Berhasil Ditambahkan!");
+            const successMessage = isAdmin ? "Konteks Probis Berhasil Ditambahkan!" : "Usulan Konteks Probis Berhasil Diajukan!";
+            showToast("success", successMessage);
             resetKey((prevKey) => prevKey + 1);
         } catch (error) {
             const errorMessage = error.response?.data?.detail || "Terjadi kesalahan. Silakan coba lagi.";

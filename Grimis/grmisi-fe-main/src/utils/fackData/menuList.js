@@ -167,6 +167,12 @@ export const menuList = [
                 path: "/approval/laporan-kejadian",
                 subdropdownMenu: false
             },
+            {
+                id: 2,
+                name: "Approval Kamus Risiko",
+                path: "/approval/kamus-risiko",
+                subdropdownMenu: false
+            },
         ]
     }
 ]

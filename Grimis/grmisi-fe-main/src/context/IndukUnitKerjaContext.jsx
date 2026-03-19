@@ -33,9 +33,12 @@ export const IndukUnitKerjaProvider = ({ children }) => {
                             headers: { Authorization: `Bearer ${token}` }
                         });
                     } catch (err) {
-                        // Jika instansi tidak ditemukan, hapus dari localStorage
-                        console.warn("Instansi ID tidak valid, menghapus dari localStorage");
-                        localStorage.removeItem('id_instansi');
+                        // Hanya hapus jika error 404 (tidak ditemukan)
+                        if (err.response && err.response.status === 404) {
+                            console.warn("Instansi ID tidak valid, menghapus dari localStorage");
+                            localStorage.removeItem('id_instansi');
+                        }
+                        // Biarkan jika network error atau lainnya
                     }
                 }
                 
@@ -46,10 +49,13 @@ export const IndukUnitKerjaProvider = ({ children }) => {
                             headers: { Authorization: `Bearer ${token}` }
                         });
                     } catch (err) {
-                        // Jika induk unit kerja tidak ditemukan, hapus dari localStorage
-                        console.warn("Induk Unit Kerja ID tidak valid, menghapus dari localStorage");
-                        localStorage.removeItem('id_induk_unit_kerja');
-                        setIdIndukUnitKerja('');
+                        // Hanya hapus jika error 404 (tidak ditemukan)
+                        if (err.response && err.response.status === 404) {
+                            console.warn("Induk Unit Kerja ID tidak valid, menghapus dari localStorage");
+                            localStorage.removeItem('id_induk_unit_kerja');
+                            setIdIndukUnitKerja('');
+                        }
+                        // Biarkan jika network error atau lainnya
                     }
                 }
             } catch (err) {
