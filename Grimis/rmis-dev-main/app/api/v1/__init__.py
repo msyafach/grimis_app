@@ -20,6 +20,7 @@ from .health import router as health_router
 from .dashboard import router as dashboard_router
 from .laporan_kejadian import router as laporan_kejadian_router
 from .notifications import router as notifications_router
+from .groups import router as groups_router
 from app.api.v1 import (
     bagan_risiko,
     metode_spip,
@@ -152,6 +153,13 @@ api_router.include_router(
     notifications_router,
     prefix="/notifications",
     tags=["Notifications"]
+)
+
+# Register groups router (Group-based Access Control)
+api_router.include_router(
+    groups_router,
+    prefix="/groups",
+    tags=["Groups"]
 )
 
 # ... other routers ... 
