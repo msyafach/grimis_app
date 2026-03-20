@@ -47,6 +47,13 @@ export const AuthProvider = ({ children }) => {
             setLoading(false); // Status loading selesai
         } catch (error) {
             console.error('Error fetching user data:', error);
+            // If unauthorized (401), clear the token and redirect to login
+            if (error.response?.status === 401) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('user_role');
+                localStorage.removeItem('id_induk_unit_kerja');
+                window.location.href = '/authentication/login';
+            }
             setLoading(false); // Menghentikan status loading jika gagal
         }
     };
