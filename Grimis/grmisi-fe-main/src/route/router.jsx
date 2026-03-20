@@ -71,6 +71,7 @@ import ManajemenPenggunaEdit from "../pages/users/manajemen-pengguna-edit";
 import ManajemenPenggunaDetail from "../pages/users/detail";
 
 import GroupManagement from "../pages/group-management/GroupManagement";
+import AuditTrail from "../pages/audit-trail/index";
 
 import IdentifikasiRisikoIndex from "../pages/pengelolaan-risiko";
 import IdentifikasiRisikoTambah from "../pages/pengelolaan-risiko/identifikasi/tambah";
@@ -956,6 +957,16 @@ export const router = createBrowserRouter([
                 element: (
                     <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
                         <GroupManagement />
+                    </ProtectedRoute>
+                ),
+            },
+
+            // Audit Trail (like AWS CloudTrail)
+            {
+                path: "/settings/audit-trail",
+                element: (
+                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
+                        <AuditTrail />
                     </ProtectedRoute>
                 ),
             },

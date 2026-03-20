@@ -85,56 +85,45 @@ async def get_current_user_from_token(token: str = Query(None)) -> Dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication token is missing",
         )
-    
+
+    return await validate_token(token)
+
+
+async def validate_token(token: str) -> Optional[Dict]:
+    """
+    Validate a JWT token and return user info.
+    Returns None if token is invalid (does not raise exceptions).
+    Used by middleware and other non-essential auth checks.
+    """
+    if not token:
+        return None
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        
+
         exp = payload.get("exp")
         if not exp or datetime.fromtimestamp(exp) < datetime.utcnow():
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has expired",
-            )
-            
+            return None
+
         username: str = payload.get("sub")
         role: str = payload.get("role")
-        
+
         if username is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-            )
+            return None
 
         # Get user data from database
         db = await Database.get_db()
         user = await db.users.find_one({"username": username})
         if not user:
-            raise HTTPException(
-                status_code=404,
-                detail="User not found"
-            )
-        
-        # Get assigned instansi if available
-        assigned_instansi = None
-        if user.get("instansi_id"):
-            instansi = await db.instansi.find_one({"_id": user["instansi_id"]})
-            if instansi:
-                assigned_instansi = {
-                    "id": str(instansi["_id"]),
-                    "nama_instansi": instansi.get("nama_instansi", "")
-                }
-        
+            return None
+
         return {
             "id": str(user["_id"]),
             "username": username,
             "role": role,
             "nama_depan": user["nama_depan"],
-            "nama_belakang": user["nama_belakang"],
-            "assigned_instansi": assigned_instansi
+            "nama_belakang": user["nama_belakang"]
         }
-        
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-        ) 
+
+    except (JWTError, Exception):
+        return None 

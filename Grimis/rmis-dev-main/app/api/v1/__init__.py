@@ -21,6 +21,7 @@ from .dashboard import router as dashboard_router
 from .laporan_kejadian import router as laporan_kejadian_router
 from .notifications import router as notifications_router
 from .groups import router as groups_router
+from .audit_trail import router as audit_trail_router
 from app.api.v1 import (
     bagan_risiko,
     metode_spip,
@@ -160,6 +161,13 @@ api_router.include_router(
     groups_router,
     prefix="/groups",
     tags=["Groups"]
+)
+
+# Register audit trail router (Audit logging like AWS CloudTrail)
+api_router.include_router(
+    audit_trail_router,
+    prefix="/audit-trail",
+    tags=["Audit Trail"]
 )
 
 # ... other routers ... 

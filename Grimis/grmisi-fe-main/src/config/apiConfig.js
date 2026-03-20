@@ -341,6 +341,16 @@ const API_ENDPOINTS = {
     deleteGroup: (groupId) => `${API_BASE_URL}/api/v1/groups/${groupId}`,
     addMemberToGroup: (groupId, userId) => `${API_BASE_URL}/api/v1/groups/${groupId}/members/${userId}`,
     removeMemberFromGroup: (groupId, userId) => `${API_BASE_URL}/api/v1/groups/${groupId}/members/${userId}`,
+
+    // Audit Trail (like AWS CloudTrail)
+    getAuditLogs: `${API_BASE_URL}/api/v1/audit-trail/logs`,
+    getAuditLogById: (logId) => `${API_BASE_URL}/api/v1/audit-trail/logs/${logId}`,
+    getAuditSummary: `${API_BASE_URL}/api/v1/audit-trail/summary`,
+    getMyActivity: `${API_BASE_URL}/api/v1/audit-trail/my-activity`,
+    getResourceHistory: (resourceType, resourceId) => `${API_BASE_URL}/api/v1/audit-trail/resource/${resourceType}/${resourceId}`,
+    getAuditActions: `${API_BASE_URL}/api/v1/audit-trail/actions`,
+    getAuditResourceTypes: `${API_BASE_URL}/api/v1/audit-trail/resource-types`,
+    cleanupAuditLogs: `${API_BASE_URL}/api/v1/audit-trail/cleanup`,
 };
 
 export default API_ENDPOINTS;

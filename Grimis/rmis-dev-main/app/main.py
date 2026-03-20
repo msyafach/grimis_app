@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import api_router
+from app.middleware.audit_middleware import AuditLogMiddleware
 
 app = FastAPI(
     title="Risk Management API",
@@ -16,5 +17,8 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all HTTP methods
     allow_headers=["*"],  # Allow all headers
 )
+
+# Add Audit Log middleware (captures all API requests like AWS CloudTrail)
+app.add_middleware(AuditLogMiddleware)
 
 app.include_router(api_router, prefix="/api/v1") 
