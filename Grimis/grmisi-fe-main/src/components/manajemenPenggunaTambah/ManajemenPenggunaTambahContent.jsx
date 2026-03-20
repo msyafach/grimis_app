@@ -35,7 +35,8 @@ const ManajemenPenggunaTambahContent = ({ title = "Tambah Pengguna", resetKey })
         password: '',
         role: '',
         instansi_id: '',
-        induk_unit_kerja_ids: []
+        induk_unit_kerja_ids: [],
+        group_ids: []
     });
 
     const [passwordError, setPasswordError] = useState("");
@@ -51,6 +52,8 @@ const ManajemenPenggunaTambahContent = ({ title = "Tambah Pengguna", resetKey })
     const [allIndukUnitKerjaIds, setAllIndukUnitKerjaIds] = useState([]);
     const [autoGeneratePassword, setAutoGeneratePassword] = useState(true);
     const [sendEmail, setSendEmail] = useState(true);
+    const [groupList, setGroupList] = useState([]);
+    const [selectedGroups, setSelectedGroups] = useState([]);
 
     // Fetch current user info
     useEffect(() => {
@@ -77,6 +80,27 @@ const ManajemenPenggunaTambahContent = ({ title = "Tambah Pengguna", resetKey })
         };
 
         fetchCurrentUser();
+    }, []);
+
+    // Fetch groups list
+    useEffect(() => {
+        const fetchGroups = async () => {
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await axios.get(API_ENDPOINTS.getGroups, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const options = response.data.map(group => ({
+                    value: group.id,
+                    label: group.name
+                }));
+                setGroupList(options);
+            } catch (error) {
+                console.error("Error fetching groups:", error);
+            }
+        };
+
+        fetchGroups();
     }, []);
 
     // Fetch instansi list (only for SUPER_ADMIN)
@@ -339,6 +363,14 @@ const ManajemenPenggunaTambahContent = ({ title = "Tambah Pengguna", resetKey })
         });
     };
 
+    const handleGroupChange = (selectedOptions) => {
+        setSelectedGroups(selectedOptions);
+        setFormData({
+            ...formData,
+            group_ids: selectedOptions.map(option => option.value)
+        });
+    };
+
     if (isRemoved) return null;
 
     return (
@@ -515,6 +547,18 @@ const ManajemenPenggunaTambahContent = ({ title = "Tambah Pengguna", resetKey })
                                         )}
                                     </>
                                 )}
+
+                                {/* Group Selection - Available for all roles */}
+                                <div className="mb-4">
+                                    <label className="form-label">Group</label>
+                                    <MultiSelectDropdown
+                                        options={groupList}
+                                        selectedOptions={selectedGroups}
+                                        onChange={handleGroupChange}
+                                        placeholder="Pilih Group..."
+                                    />
+                                    <small className="text-muted">Pengguna dapat ditugaskan ke satu atau lebih group</small>
+                                </div>
 
                                 <div className="d-flex justify-content-end gap-2 mt-3 mb-4">
                                     <button className="btn bg-soft-danger text-danger" type="button" onClick={handleBack}>

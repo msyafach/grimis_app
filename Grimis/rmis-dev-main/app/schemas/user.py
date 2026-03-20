@@ -25,6 +25,7 @@ class UserCreate(UserBase):
     send_email: bool = Field(True, description="Send welcome email with credentials")
     instansi_id: Optional[str] = Field(None, description="Required for all roles except SUPER_ADMIN")
     induk_unit_kerja_ids: Optional[List[str]] = Field(None, description="List of parent work unit IDs the user has access to")
+    group_ids: Optional[List[str]] = Field(None, description="List of group IDs the user belongs to")
 
 class UserUpdate(BaseModel):
     nama_depan: Optional[str] = None

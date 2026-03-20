@@ -112,11 +112,33 @@ async def register_user(user: UserCreate, current_user: dict = Depends(get_curre
             user_dict["last_induk_unit_kerja_id"] = user.induk_unit_kerja_ids[0]
     
     result = await db.users.insert_one(user_dict)
-    
+    new_user_id = str(result.inserted_id)
+
+    # Handle group assignments if group_ids are provided
+    if user.group_ids and len(user.group_ids) > 0:
+        for group_id in user.group_ids:
+            try:
+                # Validate group exists
+                group = await db.groups.find_one({"_id": ObjectId(group_id)})
+                if group:
+                    # Add user to group
+                    await db.groups.update_one(
+                        {"_id": ObjectId(group_id)},
+                        {"$addToSet": {"member_ids": new_user_id}}
+                    )
+                    # Add group to user's group_ids
+                    await db.users.update_one(
+                        {"_id": ObjectId(new_user_id)},
+                        {"$addToSet": {"group_ids": group_id}}
+                    )
+            except:
+                # Skip invalid group IDs
+                continue
+
     access_token = create_access_token(
         data={"sub": user.username, "role": user.role}
     )
-    
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/login", response_model=TokenResponse)
