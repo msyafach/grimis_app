@@ -2,6 +2,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import API_ENDPOINTS from '../config/apiConfig'; // Mengimpor API config yang berisi endpoint
+import { useSessionTimeout } from '../hooks/useSessionTimeout';
 
 const API_BASE_URL = "http://localhost:8000";
 
@@ -11,6 +12,12 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null); // Menyimpan data pengguna
     const [permissions, setPermissions] = useState([]); // Menyimpan permissions user
     const [loading, setLoading] = useState(true); // Status loading untuk menunggu pengambilan data
+
+    // Check if user is authenticated (has token and user data)
+    const isAuthenticated = !!user && !!localStorage.getItem('access_token');
+
+    // Initialize session timeout hook (5 minutes of inactivity)
+    useSessionTimeout(isAuthenticated);
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');

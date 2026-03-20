@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiFacebook, FiGithub, FiTwitter } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import API_ENDPOINTS from '../../config/apiConfig';
+import { initSessionActivity, checkSessionExpired } from '../../utils/auth';
 
 const LoginForm = ({ registerPath, resetPath }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [sessionExpiredMessage, setSessionExpiredMessage] = useState('');
+
+    // Check if session expired on component mount
+    useEffect(() => {
+        if (checkSessionExpired()) {
+            setSessionExpiredMessage('Sesi Anda telah berakhir karena tidak aktif selama 5 menit. Silakan login kembali.');
+        }
+    }, []);
 
     const handleLogin = async (event) => {
         event.preventDefault();
@@ -21,6 +30,9 @@ const LoginForm = ({ registerPath, resetPath }) => {
             // Simpan token atau lanjutkan sesuai kebutuhan
             const { access_token } = response.data;
             localStorage.setItem('access_token', access_token);  // Menyimpan token di localStorage (jika perlu)
+
+            // Initialize session activity timestamp
+            initSessionActivity();
 
             // Redirect ke halaman lain setelah login sukses
             window.location.href = '/';  // Sesuaikan dengan rute aplikasi kamu
@@ -59,6 +71,7 @@ const LoginForm = ({ registerPath, resetPath }) => {
                     />
                 </div>
                 {error && <div className="alert alert-danger">{error}</div>}
+                {sessionExpiredMessage && <div className="alert alert-warning">{sessionExpiredMessage}</div>}
                 <div className="d-flex align-items-center justify-content-between">
                     <div>
                         <div className="custom-control custom-checkbox">

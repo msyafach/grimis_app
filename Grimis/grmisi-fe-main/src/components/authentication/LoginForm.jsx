@@ -4,6 +4,7 @@ import axios from 'axios';
 import API_ENDPOINTS from '../../config/apiConfig';
 import { useAuth } from '../../context/AuthContext';
 import FullScreenLoader from '../shared/FullScreenLoader';
+import { initSessionActivity, checkSessionExpired } from '../../utils/auth';
 
 // Google reCAPTCHA site key (demo/test key from Google)
 const RECAPTCHA_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
@@ -17,6 +18,14 @@ const LoginForm = ({ registerPath, resetPath }) => {
     const [recaptchaToken, setRecaptchaToken] = useState(null);
     const recaptchaWidgetRef = useRef(null);
     const { login } = useAuth();
+
+    // Check if session expired on component mount
+    useEffect(() => {
+        const expiredMessage = checkSessionExpired();
+        if (expiredMessage) {
+            setError('Sesi Anda telah berakhir karena tidak aktif selama 5 menit. Silakan login kembali.');
+        }
+    }, []);
 
     // Load reCAPTCHA script
     useEffect(() => {
@@ -125,6 +134,10 @@ const LoginForm = ({ registerPath, resetPath }) => {
             const userData = response.data;
             localStorage.setItem('user_role', userData.role);
             localStorage.setItem('id_induk_unit_kerja', userData.last_induk_unit_kerja_id || '');
+
+            // Initialize session activity timestamp
+            initSessionActivity();
+
             login(userData);
         } catch (error) {
             console.error('Error fetching user data:', error);
