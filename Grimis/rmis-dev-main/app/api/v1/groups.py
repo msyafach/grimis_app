@@ -9,7 +9,8 @@ from app.schemas.group import (
     GroupResponse,
     GroupWithMembers,
     GroupMemberResponse,
-    Permission
+    Permission,
+    PermissionUpdate
 )
 from app.schemas.user import UserRole
 from app.database import Database
@@ -20,7 +21,7 @@ router = APIRouter()
 
 async def user_has_permission(user: dict, required_permission: Permission) -> bool:
     """Check if user has required permission through their groups"""
-    if user["role"] == UserRole.SUPER_ADMIN:
+    if user.get("role") == UserRole.SUPER_ADMIN:
         return True
 
     db = await Database.get_db()
@@ -54,7 +55,7 @@ async def create_group(
     - Users with MANAGE_GROUPS permission can create groups
     """
     # Check permission
-    if current_user["role"] != UserRole.SUPER_ADMIN:
+    if current_user.get("role") != UserRole.SUPER_ADMIN:
         has_perm = await user_has_permission(current_user, Permission.MANAGE_GROUPS)
         if not has_perm:
             raise HTTPException(
@@ -96,6 +97,15 @@ async def get_groups(
     - SUPER_ADMIN can view all groups
     - Users with VIEW_GROUPS permission can view groups
     """
+    # Check permission
+    if current_user.get("role") != UserRole.SUPER_ADMIN:
+        has_perm = await user_has_permission(current_user, Permission.VIEW_GROUPS)
+        if not has_perm:
+            raise HTTPException(
+                status_code=403,
+                detail="Not enough permissions to view groups"
+            )
+
     db = await Database.get_db()
 
     query = {}
@@ -179,7 +189,7 @@ async def update_group(
         raise HTTPException(status_code=404, detail="Group not found")
 
     # Check permission
-    if current_user["role"] != UserRole.SUPER_ADMIN:
+    if current_user.get("role") != UserRole.SUPER_ADMIN:
         has_perm = await user_has_permission(current_user, Permission.MANAGE_GROUPS)
         if not has_perm:
             raise HTTPException(
@@ -252,7 +262,7 @@ async def delete_group(
         raise HTTPException(status_code=404, detail="Group not found")
 
     # Check permission
-    if current_user["role"] != UserRole.SUPER_ADMIN:
+    if current_user.get("role") != UserRole.SUPER_ADMIN:
         has_perm = await user_has_permission(current_user, Permission.MANAGE_GROUPS)
         if not has_perm:
             raise HTTPException(
@@ -306,7 +316,7 @@ async def add_member_to_group(
         raise HTTPException(status_code=404, detail="User not found")
 
     # Check permission
-    if current_user["role"] != UserRole.SUPER_ADMIN:
+    if current_user.get("role") != UserRole.SUPER_ADMIN:
         has_perm = await user_has_permission(current_user, Permission.MANAGE_GROUPS)
         if not has_perm:
             raise HTTPException(
@@ -350,7 +360,7 @@ async def remove_member_from_group(
         raise HTTPException(status_code=404, detail="Group not found")
 
     # Check permission
-    if current_user["role"] != UserRole.SUPER_ADMIN:
+    if current_user.get("role") != UserRole.SUPER_ADMIN:
         has_perm = await user_has_permission(current_user, Permission.MANAGE_GROUPS)
         if not has_perm:
             raise HTTPException(
@@ -397,7 +407,7 @@ async def get_group_permissions(
 @router.put("/{group_id}/permissions")
 async def update_group_permissions(
     group_id: str,
-    permissions: List[Permission],
+    data: PermissionUpdate,
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -415,7 +425,7 @@ async def update_group_permissions(
         raise HTTPException(status_code=404, detail="Group not found")
 
     # Check permission
-    if current_user["role"] != UserRole.SUPER_ADMIN:
+    if current_user.get("role") != UserRole.SUPER_ADMIN:
         has_perm = await user_has_permission(current_user, Permission.MANAGE_GROUPS)
         if not has_perm:
             raise HTTPException(
@@ -425,7 +435,7 @@ async def update_group_permissions(
 
     await db.groups.update_one(
         {"_id": ObjectId(group_id)},
-        {"$set": {"permissions": permissions, "updated_at": datetime.utcnow()}}
+        {"$set": {"permissions": data.permissions, "updated_at": datetime.utcnow()}}
     )
 
     return {"message": "Permissions updated successfully"}

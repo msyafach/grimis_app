@@ -19,7 +19,12 @@ const GroupManagement = () => {
     const fetchGroups = async () => {
         try {
             setLoading(true);
-            const response = await axios.get(API_ENDPOINTS.groups);
+            const token = localStorage.getItem('access_token');
+            const response = await axios.get(API_ENDPOINTS.groups, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             setGroups(response.data);
             setError(null);
         } catch (err) {
@@ -64,7 +69,12 @@ const GroupManagement = () => {
         }
 
         try {
-            await axios.delete(`${API_ENDPOINTS.groups}/${groupId}`);
+            const token = localStorage.getItem('access_token');
+            await axios.delete(`${API_ENDPOINTS.groups}/${groupId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             await fetchGroups();
         } catch (err) {
             alert('Gagal menghapus group. Pastikan group tidak memiliki anggota.');
@@ -78,8 +88,8 @@ const GroupManagement = () => {
         fetchGroups();
     };
 
-    const filteredGroups = groups.filter((group) =>
-        group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const filteredGroups = (Array.isArray(groups) ? groups : []).filter((group) =>
+        group.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         group.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 

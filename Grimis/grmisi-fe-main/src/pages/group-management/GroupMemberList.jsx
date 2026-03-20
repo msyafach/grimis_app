@@ -13,7 +13,12 @@ const GroupMemberList = ({ group, onClose }) => {
     const fetchGroupData = async () => {
         try {
             setLoading(true);
-            const response = await axios.get(`${API_ENDPOINTS.groups}/${group.id}`);
+            const token = localStorage.getItem('access_token');
+            const response = await axios.get(`${API_ENDPOINTS.groups}/${group.id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             setGroupData(response.data);
             setError(null);
         } catch (err) {
@@ -26,7 +31,12 @@ const GroupMemberList = ({ group, onClose }) => {
 
     const fetchUsers = async () => {
         try {
-            const response = await axios.get(API_ENDPOINTS.users);
+            const token = localStorage.getItem('access_token');
+            const response = await axios.get(API_ENDPOINTS.users, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             setAllUsers(response.data);
         } catch (err) {
             console.error('Error fetching users:', err);
@@ -45,8 +55,15 @@ const GroupMemberList = ({ group, onClose }) => {
         }
 
         try {
+            const token = localStorage.getItem('access_token');
             await axios.post(
-                `${API_ENDPOINTS.groups}/${group.id}/members/${selectedUserId}`
+                `${API_ENDPOINTS.groups}/${group.id}/members/${selectedUserId}`,
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
             );
             setShowAddMember(false);
             setSelectedUserId('');
@@ -64,8 +81,14 @@ const GroupMemberList = ({ group, onClose }) => {
         }
 
         try {
+            const token = localStorage.getItem('access_token');
             await axios.delete(
-                `${API_ENDPOINTS.groups}/${group.id}/members/${userId}`
+                `${API_ENDPOINTS.groups}/${group.id}/members/${userId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
             );
             await fetchGroupData();
             await fetchUsers();
@@ -77,7 +100,7 @@ const GroupMemberList = ({ group, onClose }) => {
 
     const getAvailableUsers = () => {
         const memberIds = groupData?.member_ids || [];
-        return allUsers.filter((u) => !memberIds.includes(u.id));
+        return (Array.isArray(allUsers) ? allUsers : []).filter((u) => !memberIds.includes(u.id));
     };
 
     if (loading) {

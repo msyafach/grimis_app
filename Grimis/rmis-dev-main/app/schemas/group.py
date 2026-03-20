@@ -16,8 +16,18 @@ class Permission(str, Enum):
     # Organization Management (Instansi, Unit Kerja)
     MANAGE_ORGANIZATION = "manage:organization"
     VIEW_ORGANIZATION = "view:organization"
+    MANAGE_STRUCTURAL_UNITS = "manage:structural_units"
+    VIEW_STRUCTURAL_UNITS = "view:structural_units"
 
-    # Parameters Management
+    # Parameters Management (Konteks Sasaran, Konteks Probis, Kamus Risiko)
+    MANAGE_CONTEXT_TARGET = "manage:context_target"
+    VIEW_CONTEXT_TARGET = "view:context_target"
+    MANAGE_CONTEXT_PROBIS = "manage:context_probis"
+    VIEW_CONTEXT_PROBIS = "view:context_probis"
+    MANAGE_RISK_DICTIONARY = "manage:risk_dictionary"
+    VIEW_RISK_DICTIONARY = "view:risk_dictionary"
+
+    # Legacy Parameters
     MANAGE_PARAMETERS = "manage:parameters"
     VIEW_PARAMETERS = "view:parameters"
     PROPOSE_PARAMETERS = "propose:parameters"
@@ -34,25 +44,39 @@ class Permission(str, Enum):
     CREATE_IDENTIFICATION = "create:identification"
     EDIT_IDENTIFICATION = "edit:identification"
     DELETE_IDENTIFICATION = "delete:identification"
+    MANAGE_RISK_IDENTIFICATION = "manage:risk_identification"
+    VIEW_RISK_IDENTIFICATION = "view:risk_identification"
 
-    # Risk Analysis
+    # Risk Analysis / Assessment
     MANAGE_ANALYSIS = "manage:analysis"
     VIEW_ANALYSIS = "view:analysis"
     CREATE_ANALYSIS = "create:analysis"
     EDIT_ANALYSIS = "edit:analysis"
+    CREATE_RISK_ASSESSMENT = "create:risk_assessment"
+    APPROVE_RISK_ASSESSMENT = "approve:risk_assessment"
 
-    # Risk Evaluation (RTP)
+    # Risk Treatment / Evaluation (RTP)
     MANAGE_EVALUATION = "manage:evaluation"
     VIEW_EVALUATION = "view:evaluation"
     CREATE_EVALUATION = "create:evaluation"
     EDIT_EVALUATION = "edit:evaluation"
     VERIFY_EVALUATION = "verify:evaluation"
+    MANAGE_RISK_TREATMENT = "manage:risk_treatment"
+    VIEW_RISK_TREATMENT = "view:risk_treatment"
 
     # Monitoring & Reporting
     MANAGE_MONITORING = "manage:monitoring"
     VIEW_MONITORING = "view:monitoring"
     CREATE_MONITORING = "create:monitoring"
     MANAGE_REPORTING = "manage:reporting"
+    VIEW_REPORTS = "view:reports"
+    EXPORT_REPORTS = "export:reports"
+
+    # Event Management (Kejadian)
+    MANAGE_EVENT = "manage:event"
+    VIEW_EVENT = "view:event"
+    APPROVE_EVENT = "approve:event"
+    APPROVE_KEJADIAN = "approve:kejadian"
 
     # User Management
     MANAGE_USERS = "manage:users"
@@ -65,6 +89,9 @@ class Permission(str, Enum):
     MANAGE_GROUPS = "manage:groups"
     VIEW_GROUPS = "view:groups"
 
+    # Risk Dictionary Approval
+    APPROVE_RISK_DICTIONARY = "approve:risk_dictionary"
+
     # Approval
     APPROVE_PROPOSALS = "approve:proposals"
     VIEW_APPROVALS = "view:approvals"
@@ -72,6 +99,7 @@ class Permission(str, Enum):
     # Settings
     MANAGE_SETTINGS = "manage:settings"
     VIEW_SETTINGS = "view:settings"
+    VIEW_AUDIT_LOGS = "view:audit_logs"
 
 
 class GroupBase(BaseModel):
@@ -117,6 +145,10 @@ class GroupMemberResponse(BaseModel):
     nama_belakang: str
     role: str
     added_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class PermissionUpdate(BaseModel):
+    permissions: List[Permission] = Field(default_factory=list, description="List of permissions for the group")
 
 
 class GroupWithMembers(GroupResponse):

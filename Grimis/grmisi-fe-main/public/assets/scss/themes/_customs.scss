@@ -8,3 +8,98 @@
     background-color: #03303b !important;
     border-color: #03303b !important;
 }
+
+/* ==========================================================================
+   UI/UX SMOOTH ANIMATIONS & MICRO-INTERACTIONS
+   ========================================================================== */
+
+/* 1. Global Smooth Transitions */
+$ease-smooth: cubic-bezier(0.25, 0.8, 0.25, 1);
+$ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+a, button, .btn, input, select, textarea, .form-control, .form-select, .nav-link, .dropdown-item, .list-group-item, .page-link, .badge {
+    transition: all 0.25s $ease-smooth !important;
+}
+
+/* 2. Button Micro-interactions */
+.btn {
+    transform: translateY(0);
+    will-change: transform, box-shadow;
+}
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
+}
+.btn:active:not(:disabled) {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 3. Card Hover Effects */
+.card {
+    transition: transform 0.3s $ease-smooth, box-shadow 0.3s $ease-smooth !important;
+    will-change: transform, box-shadow;
+}
+.card:hover {
+    box-shadow: 0 8px 24px rgba(10, 15, 30, 0.06) !important;
+}
+
+/* 4. Smooth Modals (Spring effect) */
+.modal.fade .modal-dialog {
+    transition: transform 0.4s $ease-bounce, opacity 0.3s $ease-smooth !important;
+    transform: scale(0.95) translateY(-15px) !important;
+    opacity: 0;
+}
+.modal.show .modal-dialog {
+    transform: scale(1) translateY(0) !important;
+    opacity: 1;
+}
+
+/* 5. Dropdowns & Tooltips */
+.dropdown-menu {
+    transform-origin: top center;
+    animation: dropdownPop 0.3s $ease-bounce forwards !important;
+    border: none !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+@keyframes dropdownPop {
+    0% {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 6. Form Inputs Focus Rings */
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(2, 21, 38, 0.15) !important;
+    border-color: #021526 !important;
+    transform: translateY(-1px);
+}
+
+/* 7. Table Rows */
+.table tbody tr {
+    transition: background-color 0.2s $ease-smooth !important;
+}
+.table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+/* 8. SweetAlert Override for smoothness */
+.swal2-popup {
+    animation: swal2-show 0.4s $ease-bounce !important;
+}
+@keyframes swal2-show {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

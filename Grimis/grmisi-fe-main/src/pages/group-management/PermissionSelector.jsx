@@ -95,7 +95,12 @@ const PermissionSelector = ({ group, onClose }) => {
 
     const fetchGroupData = async () => {
         try {
-            const response = await axios.get(`${API_ENDPOINTS.groups}/${group.id}`);
+            const token = localStorage.getItem('access_token');
+            const response = await axios.get(`${API_ENDPOINTS.groups}/${group.id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             setGroupData(response.data);
             setSelectedPermissions(response.data.permissions || []);
         } catch (err) {
@@ -150,8 +155,13 @@ const PermissionSelector = ({ group, onClose }) => {
         setError(null);
 
         try {
+            const token = localStorage.getItem('access_token');
             await axios.put(`${API_ENDPOINTS.groups}/${group.id}/permissions`, {
                 permissions: selectedPermissions,
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
             });
             onClose();
         } catch (err) {

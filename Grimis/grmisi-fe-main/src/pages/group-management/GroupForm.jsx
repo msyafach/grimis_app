@@ -27,10 +27,17 @@ const GroupForm = ({ group, onClose }) => {
         setError(null);
 
         try {
+            const token = localStorage.getItem('access_token');
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            };
+
             if (group) {
-                await axios.put(`${API_ENDPOINTS.groups}/${group.id}`, formData);
+                await axios.put(`${API_ENDPOINTS.groups}/${group.id}`, formData, config);
             } else {
-                await axios.post(API_ENDPOINTS.groups, formData);
+                await axios.post(API_ENDPOINTS.groups, formData, config);
             }
             onClose();
         } catch (err) {

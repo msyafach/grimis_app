@@ -45,6 +45,8 @@ const API_ENDPOINTS = {
         `${API_BASE_URL}/api/v1/monitoring-risiko/options/kamus-risiko?id_instansi=${id_instansi}&tahun=${tahun}${id_induk_unit_kerja ? `&id_induk_unit_kerja=${id_induk_unit_kerja}` : ''}`,
 
     // Users
+    users: `${API_BASE_URL}/api/v1/users/users`,
+    getUsers: `${API_BASE_URL}/api/v1/users/users`,
     registerUser: `${API_BASE_URL}/api/v1/users/register`,
     authLogin: `${API_BASE_URL}/api/v1/users/login`,
     getCurrentUser: `${API_BASE_URL}/api/v1/users/me`,
@@ -331,6 +333,7 @@ const API_ENDPOINTS = {
     },
 
     // Groups
+    groups: `${API_BASE_URL}/api/v1/groups`,
     createGroup: `${API_BASE_URL}/api/v1/groups`,
     getGroups: `${API_BASE_URL}/api/v1/groups`,
     getGroupById: (groupId) => `${API_BASE_URL}/api/v1/groups/${groupId}`,
