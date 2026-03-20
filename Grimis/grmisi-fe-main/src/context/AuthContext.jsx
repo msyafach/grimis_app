@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
 
             // Fetch user permissions
             if (data?.id) {
-                await fetchUserPermissions(token, data.id);
+                await fetchUserPermissions(token, data.id, data.role);
             }
 
             setLoading(false); // Status loading selesai
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Fetch user permissions from backend
-    const fetchUserPermissions = async (token, userId) => {
+    const fetchUserPermissions = async (token, userId, userRole) => {
         try {
             const response = await axios.get(API_ENDPOINTS.getUserPermissions(userId), {
                 headers: {
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error('Error fetching user permissions:', error);
             // Fallback: derive permissions from role (backwards compatibility)
-            setPermissions(derivePermissionsFromRole(data?.role));
+            setPermissions(derivePermissionsFromRole(userRole));
         }
     };
 
