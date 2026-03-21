@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PageHeader from '@/components/shared/pageHeader/PageHeader';
 import Footer from '@/components/shared/Footer';
 import axios from 'axios';
@@ -88,10 +88,12 @@ const GroupManagement = () => {
         fetchGroups();
     };
 
-    const filteredGroups = (Array.isArray(groups) ? groups : []).filter((group) =>
-        group.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        group.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredGroups = useMemo(() => {
+        return (Array.isArray(groups) ? groups : []).filter((group) =>
+            group.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            group.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [groups, searchTerm]);
 
     const renderModal = () => {
         switch (modalMode) {

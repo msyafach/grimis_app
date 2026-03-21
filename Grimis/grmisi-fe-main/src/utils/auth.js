@@ -4,12 +4,26 @@ export const isLoggedIn = () => {
     return token !== null;
 };
 
-// Fungsi untuk mendapatkan role pengguna dari token (bisa disesuaikan dengan data JWT)
+// Fungsi untuk mendapatkan role pengguna dari token dengan error handling
 export const getUserRole = () => {
-    const token = localStorage.getItem('access_token');
-    if (!token) return null;
-    const decodedToken = JSON.parse(atob(token.split('.')[1])); // Decode token
-    return decodedToken?.role; // Sesuaikan dengan cara role disimpan dalam token
+    try {
+        const token = localStorage.getItem('access_token');
+        if (!token) return null;
+
+        // Validate JWT format (should have 3 parts separated by dots)
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+            console.error('Invalid token format: expected 3 parts');
+            return null;
+        }
+
+        // Decode the payload (second part)
+        const decodedToken = JSON.parse(atob(parts[1]));
+        return decodedToken?.role || null;
+    } catch (error) {
+        console.error('Error decoding token:', error);
+        return null;
+    }
 };
 
 // Fungsi untuk memverifikasi apakah pengguna memiliki peran yang sesuai
