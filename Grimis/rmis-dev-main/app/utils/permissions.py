@@ -138,6 +138,10 @@ ROLE_PERMISSIONS = {
 async def get_user_permissions(user_id: str) -> List[Permission]:
     """
     Get all permissions for a user based on their groups.
+    Groups take precedence over role permissions (best practice for group-based access control).
+
+    If user belongs to groups, only group permissions are returned.
+    If user has no groups, role permissions are used as fallback.
 
     Args:
         user_id: The user's ID
@@ -159,33 +163,35 @@ async def get_user_permissions(user_id: str) -> List[Permission]:
     if user.get("role") == UserRole.SUPER_ADMIN:
         return list(Permission)
 
-    # Get permissions from all user's groups
+    # Get user's groups
     group_ids = user.get("group_ids", [])
-    permissions = set()
 
+    # If user belongs to groups → ONLY use group permissions (groups override role)
     if group_ids:
+        permissions = set()
         async for group in db.groups.find(
             {"_id": {"$in": [ObjectId(gid) for gid in group_ids]}},
             {"permissions": 1}
         ):
             for perm in group.get("permissions", []):
                 permissions.add(perm)
+        return list(permissions)
 
-    # Also add permissions from role (backwards compatibility)
+    # No groups → fallback to role permissions (backwards compatibility)
     role = user.get("role")
     if role in ROLE_PERMISSIONS:
         role_perms = ROLE_PERMISSIONS[role]
         if role_perms.get("all"):
             return list(Permission)
-        for perm in role_perms.get("permissions", []):
-            permissions.add(perm)
+        return list(role_perms.get("permissions", []))
 
-    return list(permissions)
+    return []
 
 
 async def user_has_permission(user_id: str, required_permission: Union[Permission, str]) -> bool:
     """
     Check if a user has a specific permission.
+    Groups take precedence over role permissions.
 
     Args:
         user_id: The user's ID
@@ -215,9 +221,10 @@ async def user_has_permission(user_id: str, required_permission: Union[Permissio
         except ValueError:
             return False
 
-    # Get permissions from groups
+    # Get user's groups
     group_ids = user.get("group_ids", [])
 
+    # If user belongs to groups → ONLY check group permissions (groups override role)
     if group_ids:
         async for group in db.groups.find(
             {"_id": {"$in": [ObjectId(gid) for gid in group_ids]}},
@@ -225,8 +232,9 @@ async def user_has_permission(user_id: str, required_permission: Union[Permissio
         ):
             if required_permission in group.get("permissions", []):
                 return True
+        return False
 
-    # Also check role-based permissions (backwards compatibility)
+    # No groups → check role-based permissions (backwards compatibility)
     role = user.get("role")
     if role in ROLE_PERMISSIONS:
         role_perms = ROLE_PERMISSIONS[role]
