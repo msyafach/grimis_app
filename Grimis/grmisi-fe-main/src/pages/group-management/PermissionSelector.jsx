@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import API_ENDPOINTS from '@/config/apiConfig';
+import { useAuth } from '@/context/AuthContext';
 
 const PERMISSION_CATEGORIES = {
     dashboard: {
@@ -81,6 +82,7 @@ const PERMISSION_CATEGORIES = {
 };
 
 const PermissionSelector = ({ group, onClose }) => {
+    const { user, refreshPermissions } = useAuth();
     const [groupData, setGroupData] = useState(null);
     const [selectedPermissions, setSelectedPermissions] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -163,6 +165,12 @@ const PermissionSelector = ({ group, onClose }) => {
                     Authorization: `Bearer ${token}`
                 }
             });
+
+            // Refresh current user's permissions if they belong to this group
+            if (user?.group_ids?.includes(group.id)) {
+                await refreshPermissions();
+            }
+
             onClose();
         } catch (err) {
             setError('Gagal menyimpan perubahan.');

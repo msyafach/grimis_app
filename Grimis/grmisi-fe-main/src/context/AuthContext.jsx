@@ -88,6 +88,14 @@ export const AuthProvider = ({ children }) => {
         return rolePermissions[role] || [];
     };
 
+    // Refresh user permissions (call this after group permissions change)
+    const refreshPermissions = async () => {
+        const token = localStorage.getItem('access_token');
+        if (token && user?.id) {
+            await fetchUserPermissions(token, user.id, user.role);
+        }
+    };
+
     const login = (userData) => {
         setUser(userData); // Menyimpan data pengguna di state setelah login
         setLoading(false); // Status loading selesai
@@ -101,7 +109,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, permissions, loading, login, logout }}>
+        <AuthContext.Provider value={{ user, permissions, loading, login, logout, refreshPermissions }}>
             {children} {/* Menyediakan konteks untuk komponen lain */}
         </AuthContext.Provider>
     );
