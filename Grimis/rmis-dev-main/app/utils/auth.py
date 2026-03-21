@@ -35,17 +35,17 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     try:
         token = credentials.credentials
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        
+
         exp = payload.get("exp")
         if not exp or datetime.fromtimestamp(exp) < datetime.utcnow():
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token has expired",
             )
-            
+
         username: str = payload.get("sub")
         role: str = payload.get("role")
-        
+
         if username is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -60,7 +60,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
                 status_code=404,
                 detail="User not found"
             )
-        
+
         return {
             "id": str(user["_id"]),
             "username": username,
@@ -68,7 +68,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             "nama_depan": user["nama_depan"],
             "nama_belakang": user["nama_belakang"]
         }
-        
+
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

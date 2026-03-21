@@ -3,6 +3,7 @@ FastAPI middleware for audit logging
 Captures all API requests and logs them
 """
 import json
+import asyncio
 from typing import Optional, Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -176,18 +177,7 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
         except:
             pass  # User not authenticated or invalid token
 
-        # Capture request body for POST/PUT/PATCH
-        request_body = None
-        if method in ["POST", "PUT", "PATCH"]:
-            try:
-                body = await request.body()
-                if body:
-                    request_body = json.loads(body)
-                    request_body = self._redact_sensitive_data(request_body)
-            except:
-                pass  # Body might not be JSON or readable
-
-        # Process the request
+        # Process the request FIRST - let the endpoint handle the body
         response = await call_next(request)
         status_code = response.status_code
 
@@ -196,20 +186,12 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
         resource_type = self._determine_resource_type(path, method)
         resource_id = self._extract_resource_id(path)
 
-        # Extract resource name from request body if available
-        resource_name = None
-        if request_body and isinstance(request_body, dict):
-            resource_name = request_body.get("name") or request_body.get("nama") or request_body.get("username")
-
-        # Build details
+        # Build details from query params only (not body, to avoid consuming stream)
         details = {
             "query_params": str(request.query_params) if request.query_params else None
         }
-        if request_body:
-            details["request_body_keys"] = list(request_body.keys())
 
         # Log the action (fire and forget - don't wait for it)
-        import asyncio
         asyncio.create_task(AuditService.log_action(
             user_id=user_id,
             username=username,
@@ -217,14 +199,13 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
             action=action,
             resource_type=resource_type,
             resource_id=resource_id,
-            resource_name=resource_name,
+            resource_name=None,  # Cannot extract without reading body
             endpoint=path,
             method=method,
             ip_address=client_ip,
             user_agent=user_agent,
             status_code=status_code,
-            details=details,
-            new_values=request_body if action in [AuditAction.CREATE, AuditAction.UPDATE] else None
+            details=details
         ))
 
         return response
