@@ -205,8 +205,8 @@ const GroupMemberList = ({ group, onClose }) => {
                         </thead>
                         <tbody>
                             {(groupData?.members || []).map((member) => (
-                                <tr key={member.id}>
-                                    <td>{member.full_name}</td>
+                                <tr key={member.user_id}>
+                                    <td>{member.full_name || `${member.nama_depan} ${member.nama_belakang}`}</td>
                                     <td>{member.username}</td>
                                     <td>
                                         <span className="badge badge-secondary">{member.role}</span>
@@ -214,7 +214,7 @@ const GroupMemberList = ({ group, onClose }) => {
                                     <td style={{ textAlign: 'right' }}>
                                         <button
                                             className="btn btn-danger btn-sm"
-                                            onClick={() => handleRemoveMember(member.id)}
+                                            onClick={() => handleRemoveMember(member.user_id)}
                                         >
                                             Hapus
                                         </button>
