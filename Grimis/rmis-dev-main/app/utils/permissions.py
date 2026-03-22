@@ -159,12 +159,23 @@ async def get_user_permissions(user_id: str) -> List[Permission]:
     if not user:
         return []
 
-    # Super admin has all permissions
-    if user.get("role") == UserRole.SUPER_ADMIN:
-        return list(Permission)
-
     # Get user's groups
     group_ids = user.get("group_ids", [])
+
+    # If SUPER_ADMIN has groups → use group permissions (groups override role)
+    if user.get("role") == UserRole.SUPER_ADMIN and group_ids:
+        permissions = set()
+        async for group in db.groups.find(
+            {"_id": {"$in": [ObjectId(gid) for gid in group_ids]}},
+            {"permissions": 1}
+        ):
+            for perm in group.get("permissions", []):
+                permissions.add(perm)
+        return list(permissions)
+
+    # Super admin without groups has all permissions
+    if user.get("role") == UserRole.SUPER_ADMIN:
+        return list(Permission)
 
     # If user belongs to groups → ONLY use group permissions (groups override role)
     if group_ids:
@@ -210,10 +221,6 @@ async def user_has_permission(user_id: str, required_permission: Union[Permissio
     if not user:
         return False
 
-    # Super admin has all permissions
-    if user.get("role") == UserRole.SUPER_ADMIN:
-        return True
-
     # Convert string to Permission enum if needed
     if isinstance(required_permission, str):
         try:
@@ -223,6 +230,20 @@ async def user_has_permission(user_id: str, required_permission: Union[Permissio
 
     # Get user's groups
     group_ids = user.get("group_ids", [])
+
+    # If SUPER_ADMIN has groups → use group permissions (groups override role)
+    if user.get("role") == UserRole.SUPER_ADMIN and group_ids:
+        async for group in db.groups.find(
+            {"_id": {"$in": [ObjectId(gid) for gid in group_ids]}},
+            {"permissions": 1}
+        ):
+            if required_permission in group.get("permissions", []):
+                return True
+        return False
+
+    # Super admin without groups has all permissions
+    if user.get("role") == UserRole.SUPER_ADMIN:
+        return True
 
     # If user belongs to groups → ONLY check group permissions (groups override role)
     if group_ids:

@@ -994,5 +994,11 @@ async def get_user_permissions_endpoint(
     # Get permissions using the permission utility
     permissions = await get_user_permissions(user_id)
 
-    # Convert Permission enums to strings
-    return [str(p.value) for p in permissions] 
+    # Convert Permission enums to strings (handle both enum and string cases)
+    result = []
+    for p in permissions:
+        if hasattr(p, 'value'):
+            result.append(str(p.value))
+        else:
+            result.append(str(p))
+    return result 
