@@ -87,13 +87,27 @@ const ROLE_BASED_MENUS = {
  * @returns {boolean} - True if user can access the menu
  */
 export const canAccessMenu = (menuPath, userPermissions, userRole) => {
-    // Super admin has access to everything
+    // Ensure userPermissions is an array
+    const safePermissions = Array.isArray(userPermissions) ? userPermissions : [];
+
+    // If SUPER_ADMIN has permissions (groups assigned), use permission-based check
+    // If SUPER_ADMIN has no permissions (no groups), allow everything (fallback)
+    if (userRole === 'SUPER_ADMIN' && safePermissions.length > 0) {
+        const requiredPermissions = MENU_PERMISSION_MAP[menuPath];
+
+        // If no specific permission required, allow access
+        if (!requiredPermissions || !Array.isArray(requiredPermissions)) {
+            return true;
+        }
+
+        // Check if user has any of the required permissions
+        return requiredPermissions.some(perm => safePermissions.includes(perm));
+    }
+
+    // SUPER_ADMIN without groups has access to everything
     if (userRole === 'SUPER_ADMIN') {
         return true;
     }
-
-    // Ensure userPermissions is an array
-    const safePermissions = Array.isArray(userPermissions) ? userPermissions : [];
 
     // If we have permissions (group-based), use them
     if (safePermissions && safePermissions.length > 0) {
