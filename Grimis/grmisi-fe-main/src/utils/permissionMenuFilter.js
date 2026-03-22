@@ -184,3 +184,52 @@ export const filterMenuByPermissions = (menuList, userPermissions, userRole, isR
         return newMenu;
     }).filter(menu => menu !== null); // Remove null entries
 };
+
+/**
+ * Get human-readable feature name for a menu path
+ * @param {string} menuPath - The menu path
+ * @returns {string} - Human-readable feature name
+ */
+export const getFeatureName = (menuPath) => {
+    const featureNames = {
+        'organisasi': 'Organisasi',
+        'organisasi/instansi': 'Manajemen Instansi',
+        'organisasi/induk-unit-kerja': 'Manajemen Induk Unit Kerja',
+        'pengaturan/kop-surat': 'Pengaturan Kop Surat',
+
+        'parameters': 'Parameter',
+        'parameters/struktur-organisasi': 'Struktur Organisasi',
+        'parameters/kategori-risiko': 'Kategori Risiko',
+        'parameters/jenis-penyebab': 'Jenis Penyebab',
+        'parameters/konteks-sasaran': 'Konteks Sasaran',
+        'parameters/konteks-probis': 'Konteks Probis',
+        'parameters/kamus-risiko': 'Kamus Risiko',
+        'parameters/bagan-risiko': 'Bagan Risiko',
+
+        'kriteria-risiko': 'Kriteria Risiko',
+        'kriteria-risiko/kemungkinan': 'Kriteria Risiko Kemungkinan',
+        'kriteria-risiko/dampak': 'Kriteria Risiko Dampak',
+
+        'pengelolaan-risiko': 'Pengelolaan Risiko',
+        'pengelolaan-risiko/identifikasi-risiko': 'Identifikasi Risiko',
+        'pengelolaan-risiko/monitoring-risiko': 'Monitoring Risiko',
+        'pengelolaan-risiko/pelaporan-risiko': 'Pelaporan Risiko',
+        'pengelolaan-risiko/proses-akhir-tahun': 'Proses Akhir Tahun',
+
+        'settings-unit-kerja': 'Pengaturan Unit Kerja',
+        'settings-unit-kerja/manajemen-pengguna': 'Manajemen Pengguna',
+        'settings-unit-kerja/manajemen-group': 'Manajemen Group',
+
+        'approval': 'Approval',
+        'approval/laporan-kejadian': 'Approval Laporan Kejadian',
+        'approval/kamus-risiko': 'Approval Kamus Risiko',
+
+        'dashboards': 'Dashboard',
+        'peta-risiko': 'Peta Risiko',
+
+        'manajemen-group': 'Manajemen Group',
+        'manajemen-pengguna': 'Manajemen Pengguna',
+    };
+
+    return featureNames[menuPath] || menuPath || 'Fitur ini';
+};

@@ -80,97 +80,14 @@ const Menus = () => {
     // Ensure permissions is always an array
     const safePermissions = Array.isArray(permissions) ? permissions : [];
 
-    let filteredMenuList = menuList.filter(menu => {
-        // Use permission-based filtering if permissions are available
-        if (safePermissions && safePermissions.length > 0) {
-            return canAccessMenu(menu.name, safePermissions, user?.role, user?.is_root);
-        }
-
-        // Fallback to role-based filtering for backwards compatibility
-        if (user?.is_root) {
-            return true; // Root users have access to everything
-        }
-        if (menu.name === "organisasi" && user?.role !== "SUPER_ADMIN") {
-            return false;
-        }
-        if (menu.name === "settings-unit-kerja" && user?.role !== "ADMIN_KLP" && user?.role !== "SUPER_ADMIN") {
-            return false;
-        }
-        // Filter settings-unit-kerja menu items based on role
-        if (menu.name === "settings-unit-kerja") {
-            // Only SUPER_ADMIN and ADMIN_KLP can access Group Management
-            if (user?.role !== "SUPER_ADMIN" && user?.role !== "ADMIN_KLP") {
-                // Check if there are any menu items this user can access
-                const hasAccessibleItems = menu.dropdownMenu.some(item =>
-                    item.name !== "Manajemen Group"
-                );
-                return hasAccessibleItems;
-            }
-            return true;
-        }
-        // Hide kriteria-risiko menu for all roles
-        if (menu.name === "kriteria-risiko") {
-            return false;
-        }
-        if (user?.role === "ADMIN_KLP" && menu.name === "pengelolaan-risiko") {
-            return false;
-        }
-        // PEMILIK_RISIKO and PENGELOLA_RISIKO can access dashboards, pengelolaan-risiko, and parameters
-        if ((user?.role === "PEMILIK_RISIKO" || user?.role === "PENGELOLA_RISIKO")) {
-            return menu.name === "dashboards" || menu.name === "pengelolaan-risiko" || menu.name === "parameters";
-        }
-        if ((user?.role === "PEGAWAI" || user?.role === "PENGAWAS_INTERN") && (menu.name === "organisasi" || menu.name === "settings-unit-kerja" || menu.name === "approval" || menu.name === "proses-akhir-tahun")) {
-            return false;
-        }
-        // Only show approval menu for SUPER_ADMIN, ADMIN_KLP, and PEMILIK_RISIKO
-        if (menu.name === "approval" && user?.role !== "SUPER_ADMIN" && user?.role !== "ADMIN_KLP" && user?.role !== "PEMILIK_RISIKO" && user?.role !== "PENGELOLA_RISIKO") {
-            return false;
-        }
-        return true;
-    });
-
-    filteredMenuList = filteredMenuList.map(menu => {
+    // Show all menus - filtering will happen at the route level
+    // This provides better UX as users can see what features exist
+    let filteredMenuList = menuList.map(menu => {
+        // Just filter dropdown menus that don't exist (like Bagan Risiko)
         if (menu.name === "parameters") {
-            // For PEMILIK_RISIKO and PENGELOLA_RISIKO, only show Kamus Risiko and Konteks (for proposals)
-            if (user?.role === "PEMILIK_RISIKO" || user?.role === "PENGELOLA_RISIKO") {
-                return {
-                    ...menu,
-                    dropdownMenu: menu.dropdownMenu.filter(item =>
-                        item.name === "Kamus Risiko" ||
-                        item.name === "Konteks Sasaran" ||
-                        item.name === "Konteks Probis"
-                    )
-                };
-            }
             return {
                 ...menu,
                 dropdownMenu: menu.dropdownMenu.filter(item => item.name !== "Bagan Risiko")
-            };
-        }
-        // For organisasi menu, filter out Instansi if not SUPER_ADMIN
-        if (menu.name === "organisasi" && user?.role !== "SUPER_ADMIN") {
-            return {
-                ...menu,
-                dropdownMenu: menu.dropdownMenu.filter(item => item.name !== "Instansi")
-            };
-        }
-        // For settings-unit-kerja menu, filter out Manajemen Group if not SUPER_ADMIN or ADMIN_KLP
-        if (menu.name === "settings-unit-kerja" && user?.role !== "SUPER_ADMIN" && user?.role !== "ADMIN_KLP") {
-            return {
-                ...menu,
-                dropdownMenu: menu.dropdownMenu.filter(item => item.name !== "Manajemen Group")
-            };
-        }
-        if (menu.name === "pengelolaan-risiko") {
-            let newDropdownMenu = menu.dropdownMenu;
-
-            if (user?.role === "PEGAWAI" || user?.role === "PENGAWAS_INTERN") {
-                newDropdownMenu = newDropdownMenu.filter(item => item.name !== "Proses Akhir Tahun");
-            }
-
-            return {
-                ...menu,
-                dropdownMenu: newDropdownMenu
             };
         }
         return menu;
