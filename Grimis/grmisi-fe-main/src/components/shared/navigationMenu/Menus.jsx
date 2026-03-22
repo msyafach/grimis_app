@@ -83,10 +83,13 @@ const Menus = () => {
     let filteredMenuList = menuList.filter(menu => {
         // Use permission-based filtering if permissions are available
         if (safePermissions && safePermissions.length > 0) {
-            return canAccessMenu(menu.name, safePermissions, user?.role);
+            return canAccessMenu(menu.name, safePermissions, user?.role, user?.is_root);
         }
 
         // Fallback to role-based filtering for backwards compatibility
+        if (user?.is_root) {
+            return true; // Root users have access to everything
+        }
         if (menu.name === "organisasi" && user?.role !== "SUPER_ADMIN") {
             return false;
         }

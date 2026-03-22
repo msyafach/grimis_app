@@ -315,6 +315,13 @@ async def add_member_to_group(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Prevent root users from being added to groups
+    if user.get("is_root", False):
+        raise HTTPException(
+            status_code=403,
+            detail="Root users cannot be added to groups"
+        )
+
     # Check permission
     if current_user.get("role") != UserRole.SUPER_ADMIN:
         has_perm = await user_has_permission(current_user, Permission.MANAGE_GROUPS)

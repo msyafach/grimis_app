@@ -86,7 +86,12 @@ const ROLE_BASED_MENUS = {
  * @param {string} userRole - User's role (for backwards compatibility)
  * @returns {boolean} - True if user can access the menu
  */
-export const canAccessMenu = (menuPath, userPermissions, userRole) => {
+export const canAccessMenu = (menuPath, userPermissions, userRole, isRoot = false) => {
+    // Root users always have full access (like AWS root account)
+    if (isRoot) {
+        return true;
+    }
+
     // Ensure userPermissions is an array
     const safePermissions = Array.isArray(userPermissions) ? userPermissions : [];
 
@@ -150,15 +155,16 @@ export const canAccessMenu = (menuPath, userPermissions, userRole) => {
  * @param {Array} menuList - The original menu list
  * @param {Array} userPermissions - Array of user permission strings
  * @param {string} userRole - User's role
+ * @param {boolean} isRoot - Whether user is root account
  * @returns {Array} - Filtered menu list
  */
-export const filterMenuByPermissions = (menuList, userPermissions, userRole) => {
+export const filterMenuByPermissions = (menuList, userPermissions, userRole, isRoot = false) => {
     // Ensure userPermissions is an array
     const safePermissions = Array.isArray(userPermissions) ? userPermissions : [];
 
     return menuList.map(menu => {
         // Check main menu access
-        const hasAccess = canAccessMenu(menu.name, safePermissions, userRole);
+        const hasAccess = canAccessMenu(menu.name, safePermissions, userRole, isRoot);
 
         if (!hasAccess) {
             return null; // Will be filtered out
@@ -171,7 +177,7 @@ export const filterMenuByPermissions = (menuList, userPermissions, userRole) => 
         if (menu.dropdownMenu && Array.isArray(menu.dropdownMenu)) {
             newMenu.dropdownMenu = menu.dropdownMenu.filter(subMenu => {
                 const subMenuPath = `${menu.name}/${subMenu.path.split('/').pop()}`.toLowerCase();
-                return canAccessMenu(subMenuPath, safePermissions, userRole);
+                return canAccessMenu(subMenuPath, safePermissions, userRole, isRoot);
             });
         }
 

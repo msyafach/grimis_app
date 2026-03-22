@@ -207,7 +207,11 @@ async def get_all_users(
     
     # Build query filter
     query = {}
-    
+
+    # Hide root users from non-root users
+    if not current_user.get("is_root", False):
+        query["is_root"] = {"$ne": True}
+
     # If instansi_id filter is provided
     if instansi_id:
         query["instansi_id"] = instansi_id
@@ -318,6 +322,13 @@ async def update_user(
             detail="User not found"
         )
 
+    # Prevent editing root users (only root can edit themselves)
+    if existing.get("is_root", False) and current_user["id"] != user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Root users can only be edited by themselves"
+        )
+
     # Get current user's full data
     current_user_data = await db.users.find_one({"_id": ObjectId(current_user["id"])})
 
@@ -405,7 +416,14 @@ async def update_user(
         )
 
     update_data = user.dict(exclude_unset=True)
-    
+
+    # Prevent non-root users from modifying is_root flag
+    if "is_root" in update_data and not current_user.get("is_root", False):
+        raise HTTPException(
+            status_code=403,
+            detail="Only root users can modify the is_root flag"
+        )
+
     # Hash password if provided
     if "password" in update_data:
         update_data["password"] = get_password_hash(update_data["password"])
@@ -458,6 +476,10 @@ async def delete_user(
     user_to_delete = await db.users.find_one({"_id": ObjectId(user_id)})
     if not user_to_delete:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Prevent deleting root users
+    if user_to_delete.get("is_root", False):
+        raise HTTPException(status_code=403, detail="Root users cannot be deleted")
 
     # If deleting self, always allowed
     if current_user["id"] == user_id:

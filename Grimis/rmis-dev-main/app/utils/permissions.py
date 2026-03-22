@@ -159,6 +159,10 @@ async def get_user_permissions(user_id: str) -> List[Permission]:
     if not user:
         return []
 
+    # Root account always has all permissions
+    if user.get("is_root", False):
+        return list(Permission)
+
     # Get user's groups
     group_ids = user.get("group_ids", [])
 
@@ -220,6 +224,10 @@ async def user_has_permission(user_id: str, required_permission: Union[Permissio
 
     if not user:
         return False
+
+    # Root account always has all permissions
+    if user.get("is_root", False):
+        return True
 
     # Convert string to Permission enum if needed
     if isinstance(required_permission, str):
