@@ -71,6 +71,7 @@ import ManajemenPenggunaEdit from "../pages/users/manajemen-pengguna-edit";
 import ManajemenPenggunaDetail from "../pages/users/detail";
 
 import GroupManagement from "../pages/group-management/GroupManagement";
+import RoleManagement from "../pages/role-management/RoleManagement";
 import AuditTrail from "../pages/audit-trail/index";
 
 import IdentifikasiRisikoIndex from "../pages/pengelolaan-risiko";
@@ -957,6 +958,15 @@ export const router = createBrowserRouter([
                 element: (
                     <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
                         <GroupManagement />
+                    </ProtectedRoute>
+                ),
+            },
+            // Role Management
+            {
+                path: "/settings/role-management",
+                element: (
+                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
+                        <RoleManagement />
                     </ProtectedRoute>
                 ),
             },

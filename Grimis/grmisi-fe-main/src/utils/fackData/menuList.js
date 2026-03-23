@@ -158,6 +158,12 @@ export const menuList = [
                 name: "Manajemen Group",
                 path: "/settings/group-management",
                 subdropdownMenu: false
+            },
+            {
+                id: 3,
+                name: "Manajemen Role",
+                path: "/settings/role-management",
+                subdropdownMenu: false
             }
         ],
     },

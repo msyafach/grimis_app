@@ -342,6 +342,18 @@ const API_ENDPOINTS = {
     addMemberToGroup: (groupId, userId) => `${API_BASE_URL}/api/v1/groups/${groupId}/members/${userId}`,
     removeMemberFromGroup: (groupId, userId) => `${API_BASE_URL}/api/v1/groups/${groupId}/members/${userId}`,
 
+    // Roles
+    roles: `${API_BASE_URL}/api/v1/roles`,
+    createRole: `${API_BASE_URL}/api/v1/roles`,
+    getRoles: `${API_BASE_URL}/api/v1/roles`,
+    getRoleById: (roleId) => `${API_BASE_URL}/api/v1/roles/${roleId}`,
+    updateRole: (roleId) => `${API_BASE_URL}/api/v1/roles/${roleId}`,
+    deleteRole: (roleId) => `${API_BASE_URL}/api/v1/roles/${roleId}`,
+    assignRoleToUser: (roleId, userId) => `${API_BASE_URL}/api/v1/roles/${roleId}/users/${userId}`,
+    removeRoleFromUser: (roleId, userId) => `${API_BASE_URL}/api/v1/roles/${roleId}/users/${userId}`,
+    getRolePermissions: (roleId) => `${API_BASE_URL}/api/v1/roles/${roleId}/permissions`,
+    updateRolePermissions: (roleId) => `${API_BASE_URL}/api/v1/roles/${roleId}/permissions`,
+
     // Audit Trail (like AWS CloudTrail)
     getAuditLogs: `${API_BASE_URL}/api/v1/audit-trail/logs`,
     getAuditLogById: (logId) => `${API_BASE_URL}/api/v1/audit-trail/logs/${logId}`,
