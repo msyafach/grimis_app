@@ -26,6 +26,7 @@ class UserCreate(UserBase):
     instansi_id: Optional[str] = Field(None, description="Required for all roles except SUPER_ADMIN")
     induk_unit_kerja_ids: Optional[List[str]] = Field(None, description="List of parent work unit IDs the user has access to")
     group_ids: Optional[List[str]] = Field(None, description="List of group IDs the user belongs to")
+    role_ids: Optional[List[str]] = Field(None, description="List of custom role IDs assigned to the user (in addition to their system role)")
 
 class UserUpdate(BaseModel):
     nama_depan: Optional[str] = None
@@ -38,6 +39,7 @@ class UserUpdate(BaseModel):
     instansi_id: Optional[str] = None
     induk_unit_kerja_ids: Optional[List[str]] = None
     group_ids: Optional[List[str]] = Field(None, description="List of group IDs the user belongs to")
+    role_ids: Optional[List[str]] = Field(None, description="List of custom role IDs assigned to the user")
 
 class UserSelfUpdate(BaseModel):
     nama_depan: Optional[str] = None
@@ -58,6 +60,7 @@ class UserResponse(UserBase):
     instansi_id: Optional[str] = None
     induk_unit_kerja_ids: Optional[List[str]] = None
     group_ids: Optional[List[str]] = Field(default_factory=list, description="List of group IDs the user belongs to")
+    role_ids: Optional[List[str]] = Field(default_factory=list, description="List of custom role IDs assigned to the user")
     is_root: bool = Field(default=False, description="Root account flag - cannot be edited or added to groups")
     nama_instansi: Optional[str] = None
 

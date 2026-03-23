@@ -137,11 +137,11 @@ ROLE_PERMISSIONS = {
 
 async def get_user_permissions(user_id: str) -> List[Permission]:
     """
-    Get all permissions for a user based on their groups.
-    Groups take precedence over role permissions (best practice for group-based access control).
+    Get all permissions for a user based on their roles and groups.
+    Roles and groups take precedence over role permissions (best practice for RBAC).
 
-    If user belongs to groups, only group permissions are returned.
-    If user has no groups, role permissions are used as fallback.
+    If user belongs to roles or groups, those permissions are combined and returned.
+    If user has no roles or groups, role permissions are used as fallback.
 
     Args:
         user_id: The user's ID
@@ -163,36 +163,37 @@ async def get_user_permissions(user_id: str) -> List[Permission]:
     if user.get("is_root", False):
         return list(Permission)
 
-    # Get user's groups
-    group_ids = user.get("group_ids", [])
+    permissions = set()
 
-    # If SUPER_ADMIN has groups → use group permissions (groups override role)
-    if user.get("role") == UserRole.SUPER_ADMIN and group_ids:
-        permissions = set()
+    # Check role permissions first (new role management system)
+    role_ids = user.get("role_ids", [])
+    if role_ids:
+        async for role in db.roles.find(
+            {"_id": {"$in": [ObjectId(rid) for rid in role_ids]}},
+            {"permissions": 1}
+        ):
+            for perm in role.get("permissions", []):
+                permissions.add(perm)
+
+    # Then check group permissions
+    group_ids = user.get("group_ids", [])
+    if group_ids:
         async for group in db.groups.find(
             {"_id": {"$in": [ObjectId(gid) for gid in group_ids]}},
             {"permissions": 1}
         ):
             for perm in group.get("permissions", []):
                 permissions.add(perm)
+
+    # If user has permissions from roles or groups, return those
+    if permissions:
         return list(permissions)
 
-    # Super admin without groups has all permissions
+    # Super admin without roles/groups has all permissions
     if user.get("role") == UserRole.SUPER_ADMIN:
         return list(Permission)
 
-    # If user belongs to groups → ONLY use group permissions (groups override role)
-    if group_ids:
-        permissions = set()
-        async for group in db.groups.find(
-            {"_id": {"$in": [ObjectId(gid) for gid in group_ids]}},
-            {"permissions": 1}
-        ):
-            for perm in group.get("permissions", []):
-                permissions.add(perm)
-        return list(permissions)
-
-    # No groups → fallback to role permissions (backwards compatibility)
+    # No roles or groups → fallback to role permissions (backwards compatibility)
     role = user.get("role")
     if role in ROLE_PERMISSIONS:
         role_perms = ROLE_PERMISSIONS[role]
@@ -206,7 +207,7 @@ async def get_user_permissions(user_id: str) -> List[Permission]:
 async def user_has_permission(user_id: str, required_permission: Union[Permission, str]) -> bool:
     """
     Check if a user has a specific permission.
-    Groups take precedence over role permissions.
+    Roles and groups take precedence over role permissions.
 
     Args:
         user_id: The user's ID
@@ -236,24 +237,18 @@ async def user_has_permission(user_id: str, required_permission: Union[Permissio
         except ValueError:
             return False
 
-    # Get user's groups
-    group_ids = user.get("group_ids", [])
-
-    # If SUPER_ADMIN has groups → use group permissions (groups override role)
-    if user.get("role") == UserRole.SUPER_ADMIN and group_ids:
-        async for group in db.groups.find(
-            {"_id": {"$in": [ObjectId(gid) for gid in group_ids]}},
+    # Check role permissions first (new role management system)
+    role_ids = user.get("role_ids", [])
+    if role_ids:
+        async for role in db.roles.find(
+            {"_id": {"$in": [ObjectId(rid) for rid in role_ids]}},
             {"permissions": 1}
         ):
-            if required_permission in group.get("permissions", []):
+            if required_permission in role.get("permissions", []):
                 return True
-        return False
 
-    # Super admin without groups has all permissions
-    if user.get("role") == UserRole.SUPER_ADMIN:
-        return True
-
-    # If user belongs to groups → ONLY check group permissions (groups override role)
+    # Then check group permissions
+    group_ids = user.get("group_ids", [])
     if group_ids:
         async for group in db.groups.find(
             {"_id": {"$in": [ObjectId(gid) for gid in group_ids]}},
@@ -261,9 +256,16 @@ async def user_has_permission(user_id: str, required_permission: Union[Permissio
         ):
             if required_permission in group.get("permissions", []):
                 return True
+
+    # If user has roles or groups but permission not found, deny access
+    if role_ids or group_ids:
         return False
 
-    # No groups → check role-based permissions (backwards compatibility)
+    # Super admin without roles/groups has all permissions
+    if user.get("role") == UserRole.SUPER_ADMIN:
+        return True
+
+    # No roles or groups → check role-based permissions (backwards compatibility)
     role = user.get("role")
     if role in ROLE_PERMISSIONS:
         role_perms = ROLE_PERMISSIONS[role]
@@ -356,6 +358,8 @@ def get_permission_label(permission: Permission) -> str:
         Permission.DELETE_USERS: "Delete Users",
         Permission.MANAGE_GROUPS: "Manage Groups",
         Permission.VIEW_GROUPS: "View Groups",
+        Permission.MANAGE_ROLES: "Manage Roles",
+        Permission.VIEW_ROLES: "View Roles",
         Permission.APPROVE_PROPOSALS: "Approve Proposals",
         Permission.VIEW_APPROVALS: "View Approvals",
         Permission.MANAGE_SETTINGS: "Manage Settings",
@@ -427,6 +431,10 @@ def get_permissions_by_category() -> dict:
         "Group Management": [
             Permission.MANAGE_GROUPS,
             Permission.VIEW_GROUPS,
+        ],
+        "Role Management": [
+            Permission.MANAGE_ROLES,
+            Permission.VIEW_ROLES,
         ],
         "Approval": [
             Permission.APPROVE_PROPOSALS,

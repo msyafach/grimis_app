@@ -29,6 +29,7 @@ from app.api.v1 import (
     pelaporan_risiko,
     export
 )
+from .roles import router as roles_router
 
 # ... other imports ...
 
@@ -161,6 +162,13 @@ api_router.include_router(
     groups_router,
     prefix="/groups",
     tags=["Groups"]
+)
+
+# Register roles router (Role-based Access Control)
+api_router.include_router(
+    roles_router,
+    prefix="/roles",
+    tags=["Roles"]
 )
 
 # Register audit trail router (Audit logging like AWS CloudTrail)
