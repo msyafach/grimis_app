@@ -114,6 +114,27 @@ async def register_user(user: UserCreate, current_user: dict = Depends(get_curre
     result = await db.users.insert_one(user_dict)
     new_user_id = str(result.inserted_id)
 
+    # Handle role assignments if role_ids are provided
+    if user.role_ids and len(user.role_ids) > 0:
+        for role_id in user.role_ids:
+            try:
+                # Validate role exists
+                role = await db.roles.find_one({"_id": ObjectId(role_id)})
+                if role:
+                    # Add user to role
+                    await db.roles.update_one(
+                        {"_id": ObjectId(role_id)},
+                        {"$addToSet": {"user_ids": new_user_id}}
+                    )
+                    # Add role to user's role_ids
+                    await db.users.update_one(
+                        {"_id": ObjectId(new_user_id)},
+                        {"$addToSet": {"role_ids": role_id}}
+                    )
+            except:
+                # Skip invalid role IDs
+                continue
+
     # Handle group assignments if group_ids are provided
     if user.group_ids and len(user.group_ids) > 0:
         for group_id in user.group_ids:
@@ -439,6 +460,60 @@ async def update_user(
     
     update_data["updated_at"] = datetime.utcnow()
 
+    # Handle role_ids updates if provided
+    if "role_ids" in update_data:
+        new_role_ids = set(update_data["role_ids"] or [])
+        old_role_ids = set(existing.get("role_ids", []))
+
+        # Roles to add
+        for role_id in new_role_ids - old_role_ids:
+            try:
+                role = await db.roles.find_one({"_id": ObjectId(role_id)})
+                if role:
+                    await db.roles.update_one(
+                        {"_id": ObjectId(role_id)},
+                        {"$addToSet": {"user_ids": user_id}}
+                    )
+            except:
+                continue
+
+        # Roles to remove
+        for role_id in old_role_ids - new_role_ids:
+            try:
+                await db.roles.update_one(
+                    {"_id": ObjectId(role_id)},
+                    {"$pull": {"user_ids": user_id}}
+                )
+            except:
+                continue
+
+    # Handle group_ids updates if provided
+    if "group_ids" in update_data:
+        new_group_ids = set(update_data["group_ids"] or [])
+        old_group_ids = set(existing.get("group_ids", []))
+
+        # Groups to add
+        for group_id in new_group_ids - old_group_ids:
+            try:
+                group = await db.groups.find_one({"_id": ObjectId(group_id)})
+                if group:
+                    await db.groups.update_one(
+                        {"_id": ObjectId(group_id)},
+                        {"$addToSet": {"member_ids": user_id}}
+                    )
+            except:
+                continue
+
+        # Groups to remove
+        for group_id in old_group_ids - new_group_ids:
+            try:
+                await db.groups.update_one(
+                    {"_id": ObjectId(group_id)},
+                    {"$pull": {"member_ids": user_id}}
+                )
+            except:
+                continue
+
     await db.users.update_one(
         {"_id": ObjectId(user_id)},
         {"$set": update_data}
@@ -513,6 +588,28 @@ async def delete_user(
     # Other users: not allowed
     else:
         raise HTTPException(status_code=403, detail="You can only delete your own account")
+
+    # Remove user from all roles before deletion
+    role_ids = user_to_delete.get("role_ids", [])
+    for role_id in role_ids:
+        try:
+            await db.roles.update_one(
+                {"_id": ObjectId(role_id)},
+                {"$pull": {"user_ids": user_id}}
+            )
+        except:
+            pass
+
+    # Remove user from all groups before deletion
+    group_ids = user_to_delete.get("group_ids", [])
+    for group_id in group_ids:
+        try:
+            await db.groups.update_one(
+                {"_id": ObjectId(group_id)},
+                {"$pull": {"member_ids": user_id}}
+            )
+        except:
+            pass
 
     # Proceed to delete
     result = await db.users.delete_one({"_id": ObjectId(user_id)})
