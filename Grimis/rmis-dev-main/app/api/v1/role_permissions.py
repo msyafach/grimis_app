@@ -140,8 +140,11 @@ async def get_roles(
             role_data["permissions"] = default_perms
             role_data["is_customized"] = False
 
-        # Count users with this role
-        user_count = await db.users.count_documents({"role": role.value})
+        # Count users with this role (excluding root users)
+        user_count = await db.users.count_documents({
+            "role": role.value,
+            "is_root": {"$ne": True}  # Exclude root users from count
+        })
         role_data["user_count"] = user_count
 
         roles.append(role_data)
