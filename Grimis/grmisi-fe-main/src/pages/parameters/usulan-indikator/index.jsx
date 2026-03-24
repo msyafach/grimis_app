@@ -44,7 +44,7 @@ const UsulanIndikator = () => {
             setLoading(true);
             const token = localStorage.getItem('access_token');
             const response = await axios.get(
-                `${API_BASE_URL}/api/v1/indikator?id_instansi=${instansiId}`,
+                API_ENDPOINTS.getIndikator(instansiId),
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setProposals(response.data);
@@ -65,7 +65,7 @@ const UsulanIndikator = () => {
             const token = localStorage.getItem('access_token');
             // Get struktur organisasi to find SASARAN contexts
             const response = await axios.get(
-                `${API_BASE_URL}/api/v1/struktur-organisasi?id_instansi=${instansiId}`,
+                API_ENDPOINTS.getStrukturOrganisasibyInstansi(instansiId),
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
@@ -79,7 +79,7 @@ const UsulanIndikator = () => {
                     if (jk.jenis === 'SASARAN') {
                         // Fetch actual konteks for this jenis
                         const konteksResponse = await axios.get(
-                            `${API_BASE_URL}/api/v1/konteks?id_jenis_konteks=${jk.id}&id_instansi=${instansiId}`,
+                            API_ENDPOINTS.getKonteksByJenis(instansiId, jk.id),
                             { headers: { Authorization: `Bearer ${token}` } }
                         );
                         sasaranKonteks.push(...(konteksResponse.data || []));

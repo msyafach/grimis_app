@@ -112,6 +112,7 @@ const API_ENDPOINTS = {
 
     // Konteks
     getKonteksAll: (instansiId) => `${API_BASE_URL}/api/v1/konteks?id_instansi=${instansiId}`,
+    getKonteksByJenis: (instansiId, jenisKonteksId) => `${API_BASE_URL}/api/v1/konteks?id_instansi=${instansiId}&id_jenis_konteks=${jenisKonteksId}`,
 
     // Konteks SASARAN
     postKonteksSasaran: `${API_BASE_URL}/api/v1/konteks`,
@@ -131,6 +132,7 @@ const API_ENDPOINTS = {
 
     // Indikator
     postIndikator: `${API_BASE_URL}/api/v1/indikator`,
+    getIndikator: (instansiId) => `${API_BASE_URL}/api/v1/indikator?id_instansi=${instansiId}`,
     getIndikatorAll: (konteksId, instansiId) => `${API_BASE_URL}/api/v1/indikator?id_konteks=${konteksId}&id_instansi=${instansiId}`,
     getIndikatorByIndukUnitKerja: (instansiId, indukUnitKerjaId) => `${API_BASE_URL}/api/v1/indikator?id_instansi=${instansiId}&id_induk_unit_kerja=${indukUnitKerjaId}`,
     getIndikatorById: (indikatorId) => `${API_BASE_URL}/api/v1/indikator/${indikatorId}`,
