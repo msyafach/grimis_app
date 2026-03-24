@@ -441,6 +441,9 @@ const RoleManagement = () => {
                                                             <span className="text-muted fst-italic">Tidak dapat diubah</span>
                                                         )}
                                                     </div>
+                                                </td>
+                                            </tr>
+                                        ))
                                     )}
                                 </tbody>
                             </table>
