@@ -11,11 +11,7 @@ const RoleManagement = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [selectedRole, setSelectedRole] = useState(null);
-    const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit' | 'users' | 'permissions'
-    const [formData, setFormData] = useState({ name: '', description: '', permissions: [] });
-    const [users, setUsers] = useState([]);
-    const [selectedUsers, setSelectedUsers] = useState([]);
-    const [availablePermissions, setAvailablePermissions] = useState([]);
+    const [selectedPermissions, setSelectedPermissions] = useState([]);
 
     const fetchRoles = async () => {
         try {
@@ -27,35 +23,10 @@ const RoleManagement = () => {
             setRoles(response.data);
             setError(null);
         } catch (err) {
-            setError('Gagal memuat data role. Silakan coba lagi.');
+            setError('Gagal memuat data peran. Silakan coba lagi.');
             console.error('Error fetching roles:', err);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const fetchUsers = async () => {
-        try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.get(API_ENDPOINTS.users, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setUsers(response.data);
-        } catch (err) {
-            console.error('Error fetching users:', err);
-        }
-    };
-
-    const fetchPermissions = async () => {
-        try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.get(`${API_BASE_URL}/api/v1/users/me/permissions`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            // This is a placeholder - permissions should come from a dedicated endpoint
-            setAvailablePermissions([]);
-        } catch (err) {
-            console.error('Error fetching permissions:', err);
         }
     };
 
@@ -63,127 +34,84 @@ const RoleManagement = () => {
         fetchRoles();
     }, []);
 
-    const handleCreate = () => {
-        setSelectedRole(null);
-        setFormData({ name: '', description: '', permissions: [] });
-        setModalMode('create');
-        setShowModal(true);
+    const handleManagePermissions = async (role) => {
+        try {
+            setSelectedRole(role);
+            const token = localStorage.getItem('access_token');
+            const response = await axios.get(API_ENDPOINTS.getRolePermissions(role.id), {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setSelectedPermissions(response.data.permissions || []);
+            setShowModal(true);
+        } catch (err) {
+            console.error('Error fetching role permissions:', err);
+        }
     };
 
-    const handleEdit = (role) => {
-        setSelectedRole(role);
-        setFormData({
-            name: role.name || '',
-            description: role.description || '',
-            permissions: role.permissions || []
-        });
-        setModalMode('edit');
-        setShowModal(true);
-    };
-
-    const handleManageUsers = async (role) => {
-        setSelectedRole(role);
-        await fetchUsers();
-        setSelectedUsers(role.users?.map(u => u.user_id) || []);
-        setModalMode('users');
-        setShowModal(true);
-    };
-
-    const handleManagePermissions = (role) => {
-        setSelectedRole(role);
-        setFormData({ ...formData, permissions: role.permissions || [] });
-        setModalMode('permissions');
-        setShowModal(true);
-    };
-
-    const handleDelete = async (roleId, roleName) => {
-        if (!window.confirm(`Apakah Anda yakin ingin menghapus role "${roleName}"?`)) {
+    const handleResetPermissions = async (role) => {
+        if (!window.confirm(`Reset izin ${role.display_name} ke default?`)) {
             return;
         }
 
         try {
             const token = localStorage.getItem('access_token');
-            await axios.delete(API_ENDPOINTS.deleteRole(roleId), {
+            await axios.delete(API_ENDPOINTS.resetRolePermissions(role.id), {
                 headers: { Authorization: `Bearer ${token}` }
             });
             await fetchRoles();
         } catch (err) {
-            alert('Gagal menghapus role. Pastikan role tidak memiliki pengguna.');
-            console.error('Error deleting role:', err);
+            alert('Gagal reset izin.');
+            console.error('Error resetting permissions:', err);
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSavePermissions = async () => {
         try {
             const token = localStorage.getItem('access_token');
-            if (modalMode === 'create') {
-                await axios.post(API_ENDPOINTS.createRole, formData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-            } else if (modalMode === 'edit') {
-                await axios.put(API_ENDPOINTS.updateRole(selectedRole.id), formData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-            } else if (modalMode === 'permissions') {
-                await axios.put(API_ENDPOINTS.updateRolePermissions(selectedRole.id), {
-                    permissions: formData.permissions
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-            }
-            setShowModal(false);
-            fetchRoles();
-        } catch (err) {
-            alert('Gagal menyimpan role. Silakan coba lagi.');
-            console.error('Error saving role:', err);
-        }
-    };
-
-    const handleUserToggle = async (userId, isSelected) => {
-        try {
-            const token = localStorage.getItem('access_token');
-            if (isSelected) {
-                await axios.post(API_ENDPOINTS.assignRoleToUser(selectedRole.id, userId), {}, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-            } else {
-                await axios.delete(API_ENDPOINTS.removeRoleFromUser(selectedRole.id, userId), {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-            }
-            // Refresh role data
-            const response = await axios.get(API_ENDPOINTS.getRoleById(selectedRole.id), {
+            await axios.put(API_ENDPOINTS.updateRolePermissions(selectedRole.id), selectedPermissions, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setSelectedRole(response.data);
+            setShowModal(false);
+            await fetchRoles();
         } catch (err) {
-            console.error('Error updating role users:', err);
+            alert('Gagal menyimpan izin.');
+            console.error('Error saving permissions:', err);
         }
+    };
+
+    const handleTogglePermission = (perm) => {
+        setSelectedPermissions(prev => {
+            if (prev.includes(perm)) {
+                return prev.filter(p => p !== perm);
+            }
+            return [...prev, perm];
+        });
     };
 
     const handleModalClose = () => {
         setShowModal(false);
         setSelectedRole(null);
-        fetchRoles();
+        setSelectedPermissions([]);
     };
 
     const filteredRoles = useMemo(() => {
         return (Array.isArray(roles) ? roles : []).filter((role) =>
-            role.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            role.description?.toLowerCase().includes(searchTerm.toLowerCase())
+            role.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            role.name?.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [roles, searchTerm]);
 
+    // Permission categories
     const permissionCategories = {
         'Dashboard': ['view:dashboard', 'view:risk_map'],
         'Organisasi': ['manage:organization', 'view:organization', 'manage:structural_units', 'view:structural_units'],
-        'Parameter': ['manage:parameters', 'view:parameters', 'propose:parameters'],
+        'Parameter': ['manage:parameters', 'view:parameters', 'propose:parameters', 'manage:context_target', 'view:context_target', 'manage:context_probis', 'view:context_probis', 'manage:risk_dictionary', 'view:risk_dictionary', 'approve:risk_dictionary'],
         'Risiko': ['manage:risk', 'view:risk', 'propose:risk', 'approve:risk'],
-        'Identifikasi': ['manage:identification', 'view:identification', 'create:identification', 'edit:identification', 'delete:identification'],
-        'Analisis': ['manage:analysis', 'view:analysis', 'create:analysis', 'edit:analysis'],
-        'Evaluasi': ['manage:evaluation', 'view:evaluation', 'create:evaluation', 'edit:evaluation', 'verify:evaluation'],
+        'Identifikasi': ['manage:identification', 'view:identification', 'create:identification', 'edit:identification', 'delete:identification', 'manage:risk_identification', 'view:risk_identification'],
+        'Analisis': ['manage:analysis', 'view:analysis', 'create:analysis', 'edit:analysis', 'create:risk_assessment', 'approve:risk_assessment'],
+        'Evaluasi': ['manage:evaluation', 'view:evaluation', 'create:evaluation', 'edit:evaluation', 'verify:evaluation', 'manage:risk_treatment', 'view:risk_treatment'],
         'Monitoring': ['manage:monitoring', 'view:monitoring', 'create:monitoring', 'manage:reporting', 'view:reports', 'export:reports'],
+        'Kejadian': ['manage:event', 'view:event', 'approve:event', 'approve:kejadian'],
         'Pengguna': ['manage:users', 'view:users', 'create:users', 'edit:users', 'delete:users'],
         'Group': ['manage:groups', 'view:groups'],
         'Role': ['manage:roles', 'view:roles'],
@@ -201,6 +129,13 @@ const RoleManagement = () => {
         'manage:parameters': 'Kelola Parameter',
         'view:parameters': 'Lihat Parameter',
         'propose:parameters': 'Ajukan Parameter',
+        'manage:context_target': 'Kelola Konteks Sasaran',
+        'view:context_target': 'Lihat Konteks Sasaran',
+        'manage:context_probis': 'Kelola Konteks Probis',
+        'view:context_probis': 'Lihat Konteks Probis',
+        'manage:risk_dictionary': 'Kelola Kamus Risiko',
+        'view:risk_dictionary': 'Lihat Kamus Risiko',
+        'approve:risk_dictionary': 'Setujui Kamus Risiko',
         'manage:risk': 'Kelola Risiko',
         'view:risk': 'Lihat Risiko',
         'propose:risk': 'Ajukan Risiko',
@@ -210,21 +145,31 @@ const RoleManagement = () => {
         'create:identification': 'Buat Identifikasi',
         'edit:identification': 'Edit Identifikasi',
         'delete:identification': 'Hapus Identifikasi',
+        'manage:risk_identification': 'Kelola Identifikasi Risiko',
+        'view:risk_identification': 'Lihat Identifikasi Risiko',
         'manage:analysis': 'Kelola Analisis',
         'view:analysis': 'Lihat Analisis',
         'create:analysis': 'Buat Analisis',
         'edit:analysis': 'Edit Analisis',
+        'create:risk_assessment': 'Buat Penilaian Risiko',
+        'approve:risk_assessment': 'Setujui Penilaian Risiko',
         'manage:evaluation': 'Kelola Evaluasi',
         'view:evaluation': 'Lihat Evaluasi',
         'create:evaluation': 'Buat Evaluasi',
         'edit:evaluation': 'Edit Evaluasi',
         'verify:evaluation': 'Verifikasi Evaluasi',
+        'manage:risk_treatment': 'Kelola Pengobatan Risiko',
+        'view:risk_treatment': 'Lihat Pengobatan Risiko',
         'manage:monitoring': 'Kelola Monitoring',
         'view:monitoring': 'Lihat Monitoring',
         'create:monitoring': 'Buat Monitoring',
         'manage:reporting': 'Kelola Laporan',
         'view:reports': 'Lihat Laporan',
         'export:reports': 'Export Laporan',
+        'manage:event': 'Kelola Kejadian',
+        'view:event': 'Lihat Kejadian',
+        'approve:event': 'Setujui Kejadian',
+        'approve:kejadian': 'Setujui Kejadian (legacy)',
         'manage:users': 'Kelola Pengguna',
         'view:users': 'Lihat Pengguna',
         'create:users': 'Buat Pengguna',
@@ -232,8 +177,8 @@ const RoleManagement = () => {
         'delete:users': 'Hapus Pengguna',
         'manage:groups': 'Kelola Group',
         'view:groups': 'Lihat Group',
-        'manage:roles': 'Kelola Role',
-        'view:roles': 'Lihat Role',
+        'manage:roles': 'Kelola Peran',
+        'view:roles': 'Lihat Peran',
         'approve:proposals': 'Setujui Pengajuan',
         'view:approvals': 'Lihat Approval',
         'manage:settings': 'Kelola Settings',
@@ -242,132 +187,47 @@ const RoleManagement = () => {
     };
 
     const renderModal = () => {
-        if (!showModal) return null;
-
-        const modalTitle = {
-            'create': 'Tambah Role Baru',
-            'edit': 'Edit Role',
-            'users': `Kelola Pengguna - ${selectedRole?.name}`,
-            'permissions': `Kelola Izin - ${selectedRole?.name}`
-        }[modalMode];
+        if (!showModal || !selectedRole) return null;
 
         return (
             <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
                 <div className="modal-dialog modal-lg">
                     <div className="modal-content">
                         <div className="modal-header">
-                            <h5 className="modal-title">{modalTitle}</h5>
+                            <h5 className="modal-title">Kelola Izin - {selectedRole.display_name}</h5>
                             <button type="button" className="btn-close" onClick={handleModalClose}></button>
                         </div>
                         <div className="modal-body">
-                            {(modalMode === 'create' || modalMode === 'edit') && (
-                                <form onSubmit={handleSubmit}>
-                                    <div className="mb-3">
-                                        <label className="form-label">Nama Role</label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Deskripsi</label>
-                                        <textarea
-                                            className="form-control"
-                                            rows="3"
-                                            value={formData.description}
-                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="modal-footer">
-                                        <button type="button" className="btn btn-secondary" onClick={handleModalClose}>Batal</button>
-                                        <button type="submit" className="btn btn-primary">Simpan</button>
-                                    </div>
-                                </form>
-                            )}
-
-                            {modalMode === 'users' && (
-                                <div>
-                                    <p>Pilih pengguna untuk ditambahkan ke role ini:</p>
-                                    <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                                        <table className="table table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th>Pilih</th>
-                                                    <th>Username</th>
-                                                    <th>Nama</th>
-                                                    <th>Role Sistem</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {users.map((user) => {
-                                                    const isSelected = selectedRole?.users?.some(u => u.user_id === user.id);
-                                                    return (
-                                                        <tr key={user.id}>
-                                                            <td>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    className="form-check-input"
-                                                                    checked={isSelected}
-                                                                    onChange={(e) => handleUserToggle(user.id, e.target.checked)}
-                                                                />
-                                                            </td>
-                                                            <td>{user.username}</td>
-                                                            <td>{user.nama_depan} {user.nama_belakang}</td>
-                                                            <td>{user.role}</td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <div className="modal-footer">
-                                        <button type="button" className="btn btn-secondary" onClick={handleModalClose}>Tutup</button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {modalMode === 'permissions' && (
-                                <form onSubmit={handleSubmit}>
-                                    <p>Pilih izin untuk role ini:</p>
-                                    <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                                        {Object.entries(permissionCategories).map(([category, perms]) => (
-                                            <div key={category} className="mb-3">
-                                                <h6 className="fw-bold">{category}</h6>
-                                                <div className="row">
-                                                    {perms.map((perm) => (
-                                                        <div key={perm} className="col-md-6 mb-2">
-                                                            <div className="form-check">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    className="form-check-input"
-                                                                    id={`perm-${perm}`}
-                                                                    checked={formData.permissions.includes(perm)}
-                                                                    onChange={(e) => {
-                                                                        const newPerms = e.target.checked
-                                                                            ? [...formData.permissions, perm]
-                                                                            : formData.permissions.filter(p => p !== perm);
-                                                                        setFormData({ ...formData, permissions: newPerms });
-                                                                    }}
-                                                                />
-                                                                <label className="form-check-label" htmlFor={`perm-${perm}`}>
-                                                                    {permissionLabels[perm] || perm}
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                            <p>Pilih izin untuk peran ini:</p>
+                            <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                                {Object.entries(permissionCategories).map(([category, perms]) => (
+                                    <div key={category} className="mb-3">
+                                        <h6 className="fw-bold border-bottom pb-1">{category}</h6>
+                                        <div className="row">
+                                            {perms.map((perm) => (
+                                                <div key={perm} className="col-md-6 mb-2">
+                                                    <div className="form-check">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="form-check-input"
+                                                            id={`perm-${perm}`}
+                                                            checked={selectedPermissions.includes(perm)}
+                                                            onChange={() => handleTogglePermission(perm)}
+                                                        />
+                                                        <label className="form-check-label" htmlFor={`perm-${perm}`}>
+                                                            {permissionLabels[perm] || perm}
+                                                        </label>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div className="modal-footer">
-                                        <button type="button" className="btn btn-secondary" onClick={handleModalClose}>Batal</button>
-                                        <button type="submit" className="btn btn-primary">Simpan Izin</button>
-                                    </div>
-                                </form>
-                            )}
+                                ))}
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-secondary" onClick={handleModalClose}>Batal</button>
+                            <button type="button" className="btn btn-primary" onClick={handleSavePermissions}>Simpan Izin</button>
                         </div>
                     </div>
                 </div>
@@ -377,24 +237,21 @@ const RoleManagement = () => {
 
     return (
         <>
-            <PageHeader title="Manajemen Role" />
+            <PageHeader title="Manajemen Peran" />
             <div className="main-content">
                 <div className="card p-4">
                     <div className="d-flex justify-content-between align-items-center mb-4">
                         <div>
-                            <h4 className="mb-1">Daftar Role</h4>
-                            <p className="text-muted mb-0">Kelola role dan izin pengguna</p>
+                            <h4 className="mb-1">Daftar Peran</h4>
+                            <p className="text-muted mb-0">Kelola izin untuk peran pengguna yang ada (Super Admin, Admin KLP, dll)</p>
                         </div>
-                        <button className="btn btn-primary" onClick={handleCreate}>
-                            <i className="fas fa-plus me-2"></i>Tambah Role
-                        </button>
                     </div>
 
                     <div className="mb-4">
                         <input
                             type="text"
                             className="form-control"
-                            placeholder="Cari role..."
+                            placeholder="Cari peran..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -417,10 +274,10 @@ const RoleManagement = () => {
                             <table className="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Nama Role</th>
-                                        <th>Deskripsi</th>
+                                        <th>Nama Peran</th>
                                         <th>Jumlah Pengguna</th>
                                         <th>Jumlah Izin</th>
+                                        <th>Status</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -428,46 +285,54 @@ const RoleManagement = () => {
                                     {filteredRoles.length === 0 ? (
                                         <tr>
                                             <td colSpan="5" className="text-center py-4">
-                                                Tidak ada role yang ditemukan
+                                                Tidak ada peran yang ditemukan
                                             </td>
                                         </tr>
                                     ) : (
                                         filteredRoles.map((role) => (
                                             <tr key={role.id}>
-                                                <td>{role.name}</td>
-                                                <td>{role.description || '-'}</td>
+                                                <td>
+                                                    <strong>{role.display_name}</strong>
+                                                    <br />
+                                                    <small className="text-muted">{role.name}</small>
+                                                    {role.has_all_permissions && (
+                                                        <span className="badge bg-success ms-2">Semua Izin</span>
+                                                    )}
+                                                </td>
                                                 <td>{role.user_count || 0} pengguna</td>
                                                 <td>{role.permissions?.length || 0} izin</td>
                                                 <td>
+                                                    {role.is_customized ? (
+                                                        <span className="badge bg-info">Kustom</span>
+                                                    ) : (
+                                                        <span className="badge bg-secondary">Default</span>
+                                                    )}
+                                                </td>
+                                                <td>
                                                     <div className="d-flex gap-2">
-                                                        <button
-                                                            className="btn btn-sm btn-outline-primary"
-                                                            onClick={() => handleManageUsers(role)}
-                                                            title="Kelola Pengguna"
-                                                        >
-                                                            <i className="fas fa-users"></i>
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-sm btn-outline-info"
-                                                            onClick={() => handleManagePermissions(role)}
-                                                            title="Kelola Izin"
-                                                        >
-                                                            <i className="fas fa-key"></i>
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-sm btn-outline-secondary"
-                                                            onClick={() => handleEdit(role)}
-                                                            title="Edit"
-                                                        >
-                                                            <i className="fas fa-edit"></i>
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-sm btn-outline-danger"
-                                                            onClick={() => handleDelete(role.id, role.name)}
-                                                            title="Hapus"
-                                                        >
-                                                            <i className="fas fa-trash"></i>
-                                                        </button>
+                                                        {!role.has_all_permissions && (
+                                                            <>
+                                                                <button
+                                                                    className="btn btn-sm btn-outline-primary"
+                                                                    onClick={() => handleManagePermissions(role)}
+                                                                    title="Kelola Izin"
+                                                                >
+                                                                    <i className="fas fa-key"></i> Izin
+                                                                </button>
+                                                                {role.is_customized && (
+                                                                    <button
+                                                                        className="btn btn-sm btn-outline-warning"
+                                                                        onClick={() => handleResetPermissions(role)}
+                                                                        title="Reset ke Default"
+                                                                    >
+                                                                        <i className="fas fa-undo"></i> Reset
+                                                                    </button>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                        {role.has_all_permissions && (
+                                                            <span className="text-muted fst-italic">Tidak dapat diubah</span>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>

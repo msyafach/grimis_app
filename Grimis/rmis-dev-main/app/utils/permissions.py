@@ -138,7 +138,7 @@ ROLE_PERMISSIONS = {
 async def get_user_permissions(user_id: str) -> List[Permission]:
     """
     Get all permissions for a user based on their roles and groups.
-    Roles and groups take precedence over role permissions (best practice for RBAC).
+    Groups and custom role permissions take precedence over default role permissions.
 
     If user belongs to roles or groups, those permissions are combined and returned.
     If user has no roles or groups, role permissions are used as fallback.
@@ -165,7 +165,30 @@ async def get_user_permissions(user_id: str) -> List[Permission]:
 
     permissions = set()
 
-    # Check role permissions first (new role management system)
+    # Check custom role permissions first (new role management system)
+    user_role = user.get("role")
+    if user_role:
+        # Check if there are custom permissions for this role
+        custom_role_perms = await db.role_permissions.find_one({"role": user_role})
+        if custom_role_perms:
+            # Use custom permissions from database
+            for perm in custom_role_perms.get("permissions", []):
+                try:
+                    permissions.add(Permission(perm))
+                except ValueError:
+                    continue
+        elif user_role == UserRole.SUPER_ADMIN.value:
+            # SUPER_ADMIN gets all permissions
+            return list(Permission)
+        else:
+            # Use default role permissions
+            role_perms = ROLE_PERMISSIONS.get(UserRole(user_role), {})
+            if role_perms.get("all"):
+                return list(Permission)
+            for perm in role_perms.get("permissions", []):
+                permissions.add(perm)
+
+    # Check custom role IDs (for additional roles assigned to user)
     role_ids = user.get("role_ids", [])
     if role_ids:
         async for role in db.roles.find(
@@ -207,7 +230,7 @@ async def get_user_permissions(user_id: str) -> List[Permission]:
 async def user_has_permission(user_id: str, required_permission: Union[Permission, str]) -> bool:
     """
     Check if a user has a specific permission.
-    Roles and groups take precedence over role permissions.
+    Custom role permissions, group permissions, and custom roles are checked.
 
     Args:
         user_id: The user's ID
@@ -237,7 +260,24 @@ async def user_has_permission(user_id: str, required_permission: Union[Permissio
         except ValueError:
             return False
 
-    # Check role permissions first (new role management system)
+    # Check custom role permissions first
+    user_role = user.get("role")
+    if user_role:
+        custom_role_perms = await db.role_permissions.find_one({"role": user_role})
+        if custom_role_perms:
+            if required_permission.value in custom_role_perms.get("permissions", []):
+                return True
+        elif user_role == UserRole.SUPER_ADMIN.value:
+            return True  # SUPER_ADMIN has all permissions
+        else:
+            # Check default role permissions
+            role_perms = ROLE_PERMISSIONS.get(UserRole(user_role), {})
+            if role_perms.get("all"):
+                return True
+            if required_permission in role_perms.get("permissions", []):
+                return True
+
+    # Check custom role IDs
     role_ids = user.get("role_ids", [])
     if role_ids:
         async for role in db.roles.find(

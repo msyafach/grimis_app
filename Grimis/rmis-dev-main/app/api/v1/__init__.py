@@ -29,7 +29,7 @@ from app.api.v1 import (
     pelaporan_risiko,
     export
 )
-from .roles import router as roles_router
+from .role_permissions import router as role_permissions_router
 
 # ... other imports ...
 
@@ -164,9 +164,9 @@ api_router.include_router(
     tags=["Groups"]
 )
 
-# Register roles router (Role-based Access Control)
+# Register role permissions router (Manage permissions for built-in Peran)
 api_router.include_router(
-    roles_router,
+    role_permissions_router,
     prefix="/roles",
     tags=["Roles"]
 )
