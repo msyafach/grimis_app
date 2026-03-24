@@ -77,6 +77,12 @@ export const menuList = [
             },
             {
                 id: 6,
+                name: "Usulan Indikator",
+                path: "/parameters/usulan-indikator",
+                subdropdownMenu: false
+            },
+            {
+                id: 7,
                 name: "Kamus Risiko",
                 path: "/parameters/kamus-risiko",
                 subdropdownMenu: false

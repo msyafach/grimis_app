@@ -72,6 +72,7 @@ import ManajemenPenggunaDetail from "../pages/users/detail";
 
 import GroupManagement from "../pages/group-management/GroupManagement";
 import RoleManagement from "../pages/role-management/RoleManagement";
+import UsulanIndikator from "../pages/parameters/usulan-indikator";
 import AuditTrail from "../pages/audit-trail/index";
 
 import IdentifikasiRisikoIndex from "../pages/pengelolaan-risiko";
@@ -473,6 +474,15 @@ export const router = createBrowserRouter([
                 element: (
                     <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
                         <BaganRisikoDetail />
+                    </ProtectedRoute>
+                ),
+            },
+
+            {
+                path: "/parameters/usulan-indikator",
+                element: (
+                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'UNIT_MANAJEMEN_RISIKO']}>
+                        <UsulanIndikator />
                     </ProtectedRoute>
                 ),
             },

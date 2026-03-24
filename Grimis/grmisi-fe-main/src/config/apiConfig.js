@@ -136,6 +136,7 @@ const API_ENDPOINTS = {
     getIndikatorById: (indikatorId) => `${API_BASE_URL}/api/v1/indikator/${indikatorId}`,
     putIndikator: (indikatorId) => `${API_BASE_URL}/api/v1/indikator/${indikatorId}`,
     deleteIndikator: (indikatorId) => `${API_BASE_URL}/api/v1/indikator/${indikatorId}`,
+    approveIndikator: (indikatorId) => `${API_BASE_URL}/api/v1/indikator/${indikatorId}/approve`,
 
     // Kamus Risiko
     postKamusRisiko: `${API_BASE_URL}/api/v1/kamus-risiko`,
