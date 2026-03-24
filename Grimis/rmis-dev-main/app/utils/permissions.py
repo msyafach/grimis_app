@@ -171,14 +171,14 @@ async def get_user_permissions(user_id: str) -> List[Permission]:
         # Check if there are custom permissions for this role
         custom_role_perms = await db.role_permissions.find_one({"role": user_role})
         if custom_role_perms:
-            # Use custom permissions from database
+            # Use custom permissions from database (even for SUPER_ADMIN)
             for perm in custom_role_perms.get("permissions", []):
                 try:
                     permissions.add(Permission(perm))
                 except ValueError:
                     continue
         elif user_role == UserRole.SUPER_ADMIN.value:
-            # SUPER_ADMIN gets all permissions
+            # SUPER_ADMIN gets all permissions by default (only if no custom permissions)
             return list(Permission)
         else:
             # Use default role permissions

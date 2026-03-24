@@ -183,13 +183,14 @@ async def get_role_permissions(
             "is_customized": True
         }
 
-    # Return default permissions
+    # Return default permissions - SUPER_ADMIN gets all by default
     if role == UserRole.SUPER_ADMIN:
         return {
             "role": role.value,
             "display_name": ROLE_DISPLAY_NAMES.get(role, role.value),
             "permissions": [p.value for p in Permission],
-            "is_customized": False
+            "is_customized": False,
+            "note": "SUPER_ADMIN has all permissions by default, but can be customized"
         }
 
     default_perms = DEFAULT_ROLE_PERMISSIONS.get(role, {}).get("permissions", [])
@@ -225,13 +226,6 @@ async def update_role_permissions(
         role = UserRole(role_name)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid role name")
-
-    # Don't allow modifying SUPER_ADMIN permissions
-    if role == UserRole.SUPER_ADMIN:
-        raise HTTPException(
-            status_code=403,
-            detail="Cannot modify SUPER_ADMIN permissions - they always have all permissions"
-        )
 
     # Validate permissions
     valid_permissions = {p.value for p in Permission}

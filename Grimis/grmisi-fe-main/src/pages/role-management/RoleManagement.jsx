@@ -310,28 +310,21 @@ const RoleManagement = () => {
                                                 </td>
                                                 <td>
                                                     <div className="d-flex gap-2">
-                                                        {!role.has_all_permissions && (
-                                                            <>
-                                                                <button
-                                                                    className="btn btn-sm btn-outline-primary"
-                                                                    onClick={() => handleManagePermissions(role)}
-                                                                    title="Kelola Izin"
-                                                                >
-                                                                    <i className="fas fa-key"></i> Izin
-                                                                </button>
-                                                                {role.is_customized && (
-                                                                    <button
-                                                                        className="btn btn-sm btn-outline-warning"
-                                                                        onClick={() => handleResetPermissions(role)}
-                                                                        title="Reset ke Default"
-                                                                    >
-                                                                        <i className="fas fa-undo"></i> Reset
-                                                                    </button>
-                                                                )}
-                                                            </>
-                                                        )}
-                                                        {role.has_all_permissions && (
-                                                            <span className="text-muted fst-italic">Tidak dapat diubah</span>
+                                                        <button
+                                                            className="btn btn-sm btn-outline-primary"
+                                                            onClick={() => handleManagePermissions(role)}
+                                                            title="Kelola Izin"
+                                                        >
+                                                            <i className="fas fa-key"></i> Izin
+                                                        </button>
+                                                        {role.is_customized && (
+                                                            <button
+                                                                className="btn btn-sm btn-outline-warning"
+                                                                onClick={() => handleResetPermissions(role)}
+                                                                title="Reset ke Default"
+                                                            >
+                                                                <i className="fas fa-undo"></i> Reset
+                                                            </button>
                                                         )}
                                                     </div>
                                                 </td>
