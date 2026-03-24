@@ -105,6 +105,7 @@ async def get_roles(
     Get list of all built-in roles (Peran) with their permissions.
 
     Returns the existing UserRole values with their configurable permissions.
+    Includes a special "root" role for root accounts.
     """
     # Check permission
     if current_user.get("role") != UserRole.SUPER_ADMIN:
@@ -116,6 +117,22 @@ async def get_roles(
     db = await Database.get_db()
 
     roles = []
+
+    # Add special root role first
+    root_count = await db.users.count_documents({"is_root": True})
+    roles.append({
+        "id": "root",
+        "name": "ROOT",
+        "display_name": "Root Account",
+        "is_system_role": True,
+        "has_all_permissions": True,
+        "user_count": root_count,
+        "permissions": [p.value for p in Permission],
+        "is_customized": False,
+        "is_root": True,
+        "note": "Root accounts always have all permissions and cannot be modified"
+    })
+
     for role in UserRole:
         # Get custom permissions from database if exists
         custom_perms = await db.role_permissions.find_one({"role": role.value})
@@ -143,7 +160,7 @@ async def get_roles(
         # Count users with this role (excluding root users)
         user_count = await db.users.count_documents({
             "role": role.value,
-            "is_root": {"$ne": True}  # Exclude root users from count
+            "is_root": {"$ne": True}
         })
         role_data["user_count"] = user_count
 
@@ -167,13 +184,24 @@ async def get_role_permissions(
             detail="Only SUPER_ADMIN can view role permissions"
         )
 
+    db = await Database.get_db()
+
+    # Handle special root role
+    if role_name == "root":
+        return {
+            "role": "root",
+            "display_name": "Root Account",
+            "permissions": [p.value for p in Permission],
+            "is_customized": False,
+            "is_root": True,
+            "note": "Root accounts always have all permissions and cannot be modified"
+        }
+
     # Validate role name
     try:
         role = UserRole(role_name)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid role name")
-
-    db = await Database.get_db()
 
     # Get custom permissions from database
     custom_perms = await db.role_permissions.find_one({"role": role.value})

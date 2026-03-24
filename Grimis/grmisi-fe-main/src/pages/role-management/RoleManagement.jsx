@@ -63,7 +63,14 @@ const RoleManagement = () => {
             });
             // Filter users by role
             const users = response.data || [];
-            const filteredUsers = users.filter(user => user.role === role.id);
+            let filteredUsers;
+            if (role.id === 'root') {
+                // For root role, filter by is_root flag
+                filteredUsers = users.filter(user => user.is_root === true);
+            } else {
+                // For regular roles, filter by role
+                filteredUsers = users.filter(user => user.role === role.id && !user.is_root);
+            }
             setRoleUsers(filteredUsers);
         } catch (err) {
             console.error('Error fetching users:', err);
@@ -377,12 +384,16 @@ const RoleManagement = () => {
                                         </tr>
                                     ) : (
                                         filteredRoles.map((role) => (
-                                            <tr key={role.id}>
+                                            <tr key={role.id} className={role.is_root ? 'table-dark' : ''}>
                                                 <td>
                                                     <strong>{role.display_name}</strong>
                                                     <br />
-                                                    <small className="text-muted">{role.name}</small>
-                                                    {role.has_all_permissions && (
+                                                    <small className={role.is_root ? 'text-white-50' : 'text-muted'}>
+                                                        {role.name}
+                                                    </small>
+                                                    {role.is_root ? (
+                                                        <span className="badge bg-warning text-dark ms-2">ROOT</span>
+                                                    ) : role.has_all_permissions && (
                                                         <span className="badge bg-success ms-2">Semua Izin</span>
                                                     )}
                                                 </td>
@@ -397,7 +408,9 @@ const RoleManagement = () => {
                                                 </td>
                                                 <td>{role.permissions?.length || 0} izin</td>
                                                 <td>
-                                                    {role.is_customized ? (
+                                                    {role.is_root ? (
+                                                        <span className="badge bg-warning text-dark">ROOT</span>
+                                                    ) : role.is_customized ? (
                                                         <span className="badge bg-info">Kustom</span>
                                                     ) : (
                                                         <span className="badge bg-secondary">Default</span>
@@ -405,26 +418,29 @@ const RoleManagement = () => {
                                                 </td>
                                                 <td>
                                                     <div className="d-flex gap-2">
-                                                        <button
-                                                            className="btn btn-sm btn-outline-primary"
-                                                            onClick={() => handleManagePermissions(role)}
-                                                            title="Kelola Izin"
-                                                        >
-                                                            <i className="fas fa-key"></i> Izin
-                                                        </button>
-                                                        {role.is_customized && (
-                                                            <button
-                                                                className="btn btn-sm btn-outline-warning"
-                                                                onClick={() => handleResetPermissions(role)}
-                                                                title="Reset ke Default"
-                                                            >
-                                                                <i className="fas fa-undo"></i> Reset
-                                                            </button>
+                                                        {!role.is_root ? (
+                                                            <>
+                                                                <button
+                                                                    className="btn btn-sm btn-outline-primary"
+                                                                    onClick={() => handleManagePermissions(role)}
+                                                                    title="Kelola Izin"
+                                                                >
+                                                                    <i className="fas fa-key"></i> Izin
+                                                                </button>
+                                                                {role.is_customized && (
+                                                                    <button
+                                                                        className="btn btn-sm btn-outline-warning"
+                                                                        onClick={() => handleResetPermissions(role)}
+                                                                        title="Reset ke Default"
+                                                                    >
+                                                                        <i className="fas fa-undo"></i> Reset
+                                                                    </button>
+                                                                )}
+                                                            </>
+                                                        ) : (
+                                                            <span className="text-muted fst-italic">Tidak dapat diubah</span>
                                                         )}
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        ))
                                     )}
                                 </tbody>
                             </table>

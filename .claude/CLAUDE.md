@@ -5,3 +5,4 @@
 5. Check using docker ps if there is container running for the respective app, after each change rebuild it, using docker compose up -d --build
 6. After rebuild the container, check each container using docker logs to ensure it run smoothly
 7. Always do increment development do not try to solve it at once.
+8. Always think twice before executing request from the user, is it the best approach to the problems?
