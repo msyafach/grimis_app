@@ -10,8 +10,11 @@ const RoleManagement = () => {
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [showUsersModal, setShowUsersModal] = useState(false);
     const [selectedRole, setSelectedRole] = useState(null);
     const [selectedPermissions, setSelectedPermissions] = useState([]);
+    const [roleUsers, setRoleUsers] = useState([]);
+    const [loadingUsers, setLoadingUsers] = useState(false);
 
     const fetchRoles = async () => {
         try {
@@ -46,6 +49,34 @@ const RoleManagement = () => {
         } catch (err) {
             console.error('Error fetching role permissions:', err);
         }
+    };
+
+    const handleViewUsers = async (role) => {
+        try {
+            setSelectedRole(role);
+            setLoadingUsers(true);
+            setShowUsersModal(true);
+            const token = localStorage.getItem('access_token');
+            // Fetch all users and filter by role
+            const response = await axios.get(API_ENDPOINTS.users, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            // Filter users by role
+            const users = response.data || [];
+            const filteredUsers = users.filter(user => user.role === role.id);
+            setRoleUsers(filteredUsers);
+        } catch (err) {
+            console.error('Error fetching users:', err);
+            setRoleUsers([]);
+        } finally {
+            setLoadingUsers(false);
+        }
+    };
+
+    const handleCloseUsersModal = () => {
+        setShowUsersModal(false);
+        setRoleUsers([]);
+        setSelectedRole(null);
     };
 
     const handleResetPermissions = async (role) => {
@@ -235,6 +266,62 @@ const RoleManagement = () => {
         );
     };
 
+    const renderUsersModal = () => {
+        if (!showUsersModal || !selectedRole) return null;
+
+        return (
+            <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                <div className="modal-dialog modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Daftar Pengguna - {selectedRole.display_name}</h5>
+                            <button type="button" className="btn-close" onClick={handleCloseUsersModal}></button>
+                        </div>
+                        <div className="modal-body">
+                            {loadingUsers ? (
+                                <div className="text-center py-4">
+                                    <div className="spinner-border" role="status">
+                                        <span className="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            ) : roleUsers.length === 0 ? (
+                                <div className="text-center py-4">
+                                    <p className="text-muted">Tidak ada pengguna dengan peran ini</p>
+                                </div>
+                            ) : (
+                                <div className="table-responsive">
+                                    <table className="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Username</th>
+                                                <th>Nama</th>
+                                                <th>Email</th>
+                                                <th>Instansi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {roleUsers.map((user) => (
+                                                <tr key={user.id}>
+                                                    <td>{user.username}</td>
+                                                    <td>{user.nama_depan} {user.nama_belakang}</td>
+                                                    <td>{user.email}</td>
+                                                    <td>{user.nama_instansi || '-'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-secondary" onClick={handleCloseUsersModal}>Tutup</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <>
             <PageHeader title="Manajemen Peran" />
@@ -299,7 +386,15 @@ const RoleManagement = () => {
                                                         <span className="badge bg-success ms-2">Semua Izin</span>
                                                     )}
                                                 </td>
-                                                <td>{role.user_count || 0} pengguna</td>
+                                                <td>
+                                                    <button
+                                                        className="btn btn-link text-decoration-none p-0"
+                                                        onClick={() => handleViewUsers(role)}
+                                                        title="Lihat daftar pengguna"
+                                                    >
+                                                        {role.user_count || 0} pengguna
+                                                    </button>
+                                                </td>
                                                 <td>{role.permissions?.length || 0} izin</td>
                                                 <td>
                                                     {role.is_customized ? (
@@ -339,6 +434,7 @@ const RoleManagement = () => {
             </div>
             <Footer />
             {renderModal()}
+            {renderUsersModal()}
         </>
     );
 };

@@ -7,3 +7,4 @@ description: Write documentation for the project on the specified file by the us
 2. Generate the table of content to navigate the document easier.
 3. If the document is exist, append the new content to the document.
 4. Always update the table of content after adding new content.
+5. If you want to include a diagram in the documentation, please use plantUML or mermaid.
