@@ -76,6 +76,7 @@ import UsulanIndikator from "../pages/parameters/usulan-indikator";
 import UsulanKamusRisiko from "../pages/parameters/usulan-kamus-risiko";
 import PemilihanWarnaMatriks from "../pages/parameters/pemilihan-warna-matriks";
 import SettingMatriksRisiko from "../pages/parameters/setting-matriks-risiko";
+import PengisianKategoriKriteriaDampak from "../pages/parameters/pengisian-kategori-kriteria-dampak";
 import AuditTrail from "../pages/audit-trail/index";
 
 import IdentifikasiRisikoIndex from "../pages/pengelolaan-risiko";
@@ -200,6 +201,14 @@ export const router = createBrowserRouter([
                 element: (
                     <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
                         <SettingMatriksRisiko />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "/parameters/pengisian-kategori-kriteria-dampak",
+                element: (
+                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
+                        <PengisianKategoriKriteriaDampak />
                     </ProtectedRoute>
                 ),
             },

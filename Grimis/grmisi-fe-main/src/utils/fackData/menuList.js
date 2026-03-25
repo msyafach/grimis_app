@@ -59,54 +59,60 @@ export const menuList = [
             },
             {
                 id: 3,
+                name: "Pengisian Kategori dan Kriteria Dampak Risiko",
+                path: "/parameters/pengisian-kategori-kriteria-dampak",
+                subdropdownMenu: false
+            },
+            {
+                id: 4,
                 name: "Struktur Organisasi",
                 path: "/parameters/struktur-organisasi",
                 subdropdownMenu: false
             },
             {
-                id: 4,
+                id: 5,
                 name: "Kategori Risiko",
                 path: "/parameters/kategori-risiko",
                 subdropdownMenu: false
             },
             {
-                id: 5,
+                id: 6,
                 name: "Jenis Penyebab",
                 path: "/parameters/jenis-penyebab",
                 subdropdownMenu: false
             },
             {
-                id: 6,
+                id: 7,
                 name: "Konteks Sasaran",
                 path: "/parameters/konteks-sasaran",
                 subdropdownMenu: false
             },
             {
-                id: 7,
+                id: 8,
                 name: "Konteks Probis",
                 path: "/parameters/konteks-probis",
                 subdropdownMenu: false
             },
             {
-                id: 8,
+                id: 9,
                 name: "Usulan Indikator",
                 path: "/parameters/usulan-indikator",
                 subdropdownMenu: false
             },
             {
-                id: 9,
+                id: 10,
                 name: "Usulan Kamus Risiko",
                 path: "/parameters/usulan-kamus-risiko",
                 subdropdownMenu: false
             },
             {
-                id: 10,
+                id: 11,
                 name: "Kamus Risiko",
                 path: "/parameters/kamus-risiko",
                 subdropdownMenu: false
             },
             {
-                id: 11,
+                id: 12,
                 name: "Bagan Risiko",
                 path: "/parameters/bagan-risiko",
                 subdropdownMenu: false
@@ -128,7 +134,7 @@ export const menuList = [
             {
                 id: 2,
                 name: "Dampak",
-                path: "/kriteria-risiko/dampak/matrix",
+                path: "/kriteria-risiko/dampak",
                 subdropdownMenu: false
             },
         ]
