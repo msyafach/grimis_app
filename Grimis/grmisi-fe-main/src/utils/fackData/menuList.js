@@ -47,48 +47,60 @@ export const menuList = [
         dropdownMenu: [
             {
                 id: 1,
+                name: "Pemilihan Warna Matriks Risiko",
+                path: "/parameters/pemilihan-warna-matriks",
+                subdropdownMenu: false
+            },
+            {
+                id: 2,
                 name: "Struktur Organisasi",
                 path: "/parameters/struktur-organisasi",
                 subdropdownMenu: false
             },
             {
-                id: 2,
+                id: 3,
                 name: "Kategori Risiko",
                 path: "/parameters/kategori-risiko",
                 subdropdownMenu: false
             },
             {
-                id: 3,
+                id: 4,
                 name: "Jenis Penyebab",
                 path: "/parameters/jenis-penyebab",
                 subdropdownMenu: false
             },
             {
-                id: 4,
+                id: 5,
                 name: "Konteks Sasaran",
                 path: "/parameters/konteks-sasaran",
                 subdropdownMenu: false
             },
             {
-                id: 5,
+                id: 6,
                 name: "Konteks Probis",
                 path: "/parameters/konteks-probis",
                 subdropdownMenu: false
             },
             {
-                id: 6,
+                id: 7,
                 name: "Usulan Indikator",
                 path: "/parameters/usulan-indikator",
                 subdropdownMenu: false
             },
             {
-                id: 7,
+                id: 8,
+                name: "Usulan Kamus Risiko",
+                path: "/parameters/usulan-kamus-risiko",
+                subdropdownMenu: false
+            },
+            {
+                id: 9,
                 name: "Kamus Risiko",
                 path: "/parameters/kamus-risiko",
                 subdropdownMenu: false
             },
             {
-                id: 7,
+                id: 10,
                 name: "Bagan Risiko",
                 path: "/parameters/bagan-risiko",
                 subdropdownMenu: false

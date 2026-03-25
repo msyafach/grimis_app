@@ -15,11 +15,14 @@ const MENU_PERMISSION_MAP = {
 
     // Parameters menu
     'parameters': ['view:parameters'],
+    'parameters/pemilihan-warna-matriks': ['manage:parameters'],
     'parameters/struktur-organisasi': ['view:organization'],
     'parameters/kategori-risiko': ['view:parameters'],
     'parameters/jenis-penyebab': ['view:parameters'],
     'parameters/konteks-sasaran': ['view:parameters'],
     'parameters/konteks-probis': ['view:parameters'],
+    'parameters/usulan-indikator': ['view:parameters'],
+    'parameters/usulan-kamus-risiko': ['view:parameters'],
     'parameters/kamus-risiko': ['view:risk'],
     'parameters/bagan-risiko': ['view:risk_map'],
 
@@ -198,6 +201,7 @@ export const getFeatureName = (menuPath) => {
         'pengaturan/kop-surat': 'Pengaturan Kop Surat',
 
         'parameters': 'Parameter',
+        'parameters/pemilihan-warna-matriks': 'Pemilihan Warna Matriks Risiko',
         'parameters/struktur-organisasi': 'Struktur Organisasi',
         'parameters/kategori-risiko': 'Kategori Risiko',
         'parameters/jenis-penyebab': 'Jenis Penyebab',
