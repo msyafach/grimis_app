@@ -48,48 +48,97 @@ const KriteriaRisikoDampakMatrix = () => {
         setLoading(true);
         try {
             // Get template
-            const templateRes = await axios.get(
-                API_ENDPOINTS.getPetaTemplateByIndukUnitKerjaId(tahunId, idIndukUnitKerja),
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            let templateRes;
+            try {
+                templateRes = await axios.get(
+                    API_ENDPOINTS.getPetaTemplateByIndukUnitKerjaId(tahunId, idIndukUnitKerja),
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+            } catch (templateErr) {
+                // Template might not exist, we'll generate one
+                console.log('Template not found, will generate one');
+                templateRes = { data: [] };
+            }
 
+            let tmpl;
             if (templateRes.data && templateRes.data.length > 0) {
-                const tmpl = templateRes.data[0];
+                tmpl = templateRes.data[0];
                 setTemplate(tmpl);
+            } else {
+                // Generate template automatically
+                try {
+                    const generateRes = await axios.post(
+                        API_ENDPOINTS.postPetaTemplate(tahunId, idInstansi, idIndukUnitKerja),
+                        {},
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    tmpl = generateRes.data;
+                    setTemplate(tmpl);
+                    showToast('success', 'Template baru berhasil dibuat');
+                } catch (genErr) {
+                    console.error('Failed to generate template:', genErr);
+                    showToast('error', 'Gagal membuat template. Silakan buat template di menu Setting Matriks Risiko terlebih dahulu.');
+                    setLoading(false);
+                    return;
+                }
+            }
 
-                // Get kategori dampak
-                const kategoriRes = await axios.get(
+            // Get kategori dampak - use sync if needed
+            let kategoriRes;
+            try {
+                kategoriRes = await axios.get(
                     API_ENDPOINTS.getPetaKategoriDampak(tmpl.id),
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
-                setKategoriDampak(kategoriRes.data || []);
+            } catch (kategoriErr) {
+                console.log('No kategori found, using defaults');
+                kategoriRes = { data: [] };
+            }
 
-                // Get klasifikasi dampak for matrix structure
-                const klasifikasiRes = await axios.get(
+            if (kategoriRes.data && kategoriRes.data.length > 0) {
+                setKategoriDampak(kategoriRes.data);
+            } else {
+                // Use default kategori
+                setKategoriDampak([
+                    { key: 1, nama: 'Tidak Signifikan' },
+                    { key: 2, nama: 'Minor' },
+                    { key: 3, nama: 'Moderat' },
+                    { key: 4, nama: 'Signifikan' },
+                    { key: 5, nama: 'Sangat Signifikan' }
+                ]);
+            }
+
+            // Get klasifikasi dampak for matrix structure
+            let klasifikasiRes;
+            try {
+                klasifikasiRes = await axios.get(
                     API_ENDPOINTS.getPetaKlasifikasiDampak(tmpl.id),
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
-
-                // Build jenis kriteria list from existing data
-                const existingJenis = new Set();
-                const matrix = {};
-
-                (klasifikasiRes.data || []).forEach(item => {
-                    if (item.jenis_kriteria) {
-                        existingJenis.add(item.jenis_kriteria);
-                    }
-                    const key = `${item.key}_${item.jenis_kriteria || 'default'}`;
-                    matrix[key] = item;
-                });
-
-                setJenisKriteriaList(Array.from(existingJenis).length > 0
-                    ? Array.from(existingJenis)
-                    : ['Beban Keuangan Negara']);
-                setMatrixData(matrix);
+            } catch (klasifikasiErr) {
+                console.log('No klasifikasi found');
+                klasifikasiRes = { data: [] };
             }
+
+            // Build jenis kriteria list from existing data
+            const existingJenis = new Set();
+            const matrix = {};
+
+            (klasifikasiRes.data || []).forEach(item => {
+                if (item.jenis_kriteria) {
+                    existingJenis.add(item.jenis_kriteria);
+                }
+                const key = `${item.key}_${item.jenis_kriteria || 'default'}`;
+                matrix[key] = item;
+            });
+
+            setJenisKriteriaList(Array.from(existingJenis).length > 0
+                ? Array.from(existingJenis)
+                : ['Beban Keuangan Negara']);
+            setMatrixData(matrix);
         } catch (err) {
             console.error('Error fetching data:', err);
-            showToast('error', 'Gagal memuat data');
+            showToast('error', 'Gagal memuat data. Pastikan Setting Matriks Risiko sudah dikonfigurasi.');
         } finally {
             setLoading(false);
         }
@@ -98,20 +147,6 @@ const KriteriaRisikoDampakMatrix = () => {
     useEffect(() => {
         fetchData();
     }, [fetchData]);
-
-    // Initialize default kategori if empty
-    useEffect(() => {
-        if (kategoriDampak.length === 0 && template) {
-            const defaultKategori = [
-                { key: 1, nama: 'Tidak Signifikan' },
-                { key: 2, nama: 'Minor' },
-                { key: 3, nama: 'Moderat' },
-                { key: 4, nama: 'Signifikan' },
-                { key: 5, nama: 'Sangat Signifikan' }
-            ];
-            setKategoriDampak(defaultKategori);
-        }
-    }, [kategoriDampak, template]);
 
     // Handle add jenis kriteria (new row)
     const handleAddJenisKriteria = () => {
