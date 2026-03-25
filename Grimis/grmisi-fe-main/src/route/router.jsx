@@ -189,7 +189,7 @@ export const router = createBrowserRouter([
             {
                 path: "/parameters/pemilihan-warna-matriks",
                 element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
+                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
                         <PemilihanWarnaMatriks />
                     </ProtectedRoute>
                 ),
@@ -197,7 +197,7 @@ export const router = createBrowserRouter([
             {
                 path: "/parameters/setting-matriks-risiko",
                 element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
+                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
                         <SettingMatriksRisiko />
                     </ProtectedRoute>
                 ),
