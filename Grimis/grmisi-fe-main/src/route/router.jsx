@@ -102,6 +102,7 @@ import KriteriaRisikoKemungkinanEdit from "../pages/kriteria-risiko/kemungkinan/
 import KriteriaRisikoKemungkinanDetail from "../pages/kriteria-risiko/kemungkinan/detail";
 
 import KriteriaRisikoDampakIndex from "../pages/kriteria-risiko/dampak";
+import KriteriaRisikoDampakMatrix from "../pages/kriteria-risiko/dampak/matrix";
 import KriteriaRisikoDampakTambah from "../pages/kriteria-risiko/dampak/tambah";
 import KriteriaRisikoDampakEdit from "../pages/kriteria-risiko/dampak/edit";
 import KriteriaRisikoDampakDetail from "../pages/kriteria-risiko/dampak/detail";
@@ -953,6 +954,14 @@ export const router = createBrowserRouter([
                 element: (
                     <ProtectedRoute requiredRole={['SUPER_ADMIN']}>
                         <KriteriaRisikoDampakDetail />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "/kriteria-risiko/dampak/matrix",
+                element: (
+                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
+                        <KriteriaRisikoDampakMatrix />
                     </ProtectedRoute>
                 ),
             },

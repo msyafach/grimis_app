@@ -128,7 +128,7 @@ export const menuList = [
             {
                 id: 2,
                 name: "Dampak",
-                path: "/kriteria-risiko/dampak",
+                path: "/kriteria-risiko/dampak/matrix",
                 subdropdownMenu: false
             },
         ]
