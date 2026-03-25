@@ -25,6 +25,7 @@ const KriteriaRisikoDampakMatrix = () => {
     const [showKategoriModal, setShowKategoriModal] = useState(false);
     const [showPenjelasanModal, setShowPenjelasanModal] = useState(false);
     const [showKriteriaModal, setShowKriteriaModal] = useState(false);
+    const [showAddJenisModal, setShowAddJenisModal] = useState(false);
     const [selectedCell, setSelectedCell] = useState(null);
     const [selectedRow, setSelectedRow] = useState(null);
 
@@ -327,32 +328,36 @@ const KriteriaRisikoDampakMatrix = () => {
                         </div>
                     ) : (
                         <>
-                            {/* Matrix Table */}
+                            {/* Matrix Table - Fixed Layout */}
                             <div className="table-responsive">
-                                <Table bordered className="text-center align-middle">
+                                <table className="table table-bordered" style={{ tableLayout: 'fixed', minWidth: '900px' }}>
                                     <thead>
-                                        <tr>
-                                            <th rowSpan="2" className="bg-light" style={{ width: '200px' }}>
+                                        {/* Row 1: Main headers */}
+                                        <tr style={{ height: '60px' }}>
+                                            <th rowSpan="2" className="text-center align-middle bg-light" style={{ width: '100px', verticalAlign: 'middle' }}>
                                                 Peta Dampak
                                             </th>
-                                            <th colSpan={kategoriDampak.length} className="bg-light">
+                                            <th colSpan={5} className="text-center align-middle bg-light">
                                                 Kategori Dampak
                                             </th>
                                         </tr>
-                                        <tr>
+                                        {/* Row 2: Level numbers and category names */}
+                                        <tr style={{ height: '80px' }}>
                                             {kategoriDampak.map((k) => (
-                                                <th key={k.key} className="bg-light">
-                                                    <div className="d-flex flex-column align-items-center">
-                                                        <span>{k.nama || `Level ${k.key}`}</span>
-                                                        <small className="text-muted">({k.key})</small>
-                                                        <Button
-                                                            variant="link"
-                                                            size="sm"
+                                                <th key={k.key} className="text-center align-middle bg-light" style={{ width: '180px', verticalAlign: 'middle' }}>
+                                                    <div>
+                                                        <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{k.key}</div>
+                                                        <div style={{ fontSize: '0.85rem', marginTop: '5px' }}>
+                                                            {k.nama || `Level ${k.key}`}
+                                                            <span className="text-muted"> ({k.key})</span>
+                                                        </div>
+                                                        <button
+                                                            className="btn btn-link btn-sm p-0 mt-1"
                                                             onClick={() => openKategoriModal(k)}
-                                                            className="mt-1"
+                                                            style={{ color: '#0d6efd', fontSize: '0.75rem' }}
                                                         >
-                                                            <FiEdit2 size={14} />
-                                                        </Button>
+                                                            <FiEdit2 size={12} /> Edit
+                                                        </button>
                                                     </div>
                                                 </th>
                                             ))}
@@ -360,37 +365,52 @@ const KriteriaRisikoDampakMatrix = () => {
                                     </thead>
                                     <tbody>
                                         {jenisKriteriaList.map((jenis, rowIndex) => (
-                                            <tr key={jenis}>
-                                                <td className="bg-light text-start">
+                                            <tr key={jenis} style={{ minHeight: '100px' }}>
+                                                {/* First cell: Penjelasan (only on first row) */}
+                                                {rowIndex === 0 && (
+                                                    <td rowSpan={jenisKriteriaList.length} className="text-center align-middle bg-light" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', width: '30px', fontSize: '0.85rem' }}>
+                                                        Penjelasan
+                                                    </td>
+                                                )}
+                                                {/* Second cell: Row number */}
+                                                <td className="text-center align-middle bg-light" style={{ width: '40px', fontWeight: 'bold' }}>
+                                                    {rowIndex + 1}
+                                                </td>
+                                                {/* Third cell: Jenis Kriteria name with delete button */}
+                                                <td className="align-middle bg-light" style={{ width: '160px' }}>
                                                     <div className="d-flex justify-content-between align-items-center">
-                                                        <span>{jenis}</span>
-                                                        <Button
-                                                            variant="outline-danger"
-                                                            size="sm"
+                                                        <span style={{ fontWeight: '500' }}>{jenis}</span>
+                                                        <button
+                                                            className="btn btn-outline-danger btn-sm"
                                                             onClick={() => handleRemoveJenisKriteria(jenis)}
+                                                            style={{ padding: '2px 6px', fontSize: '0.7rem' }}
                                                         >
-                                                            <FiMinus />
-                                                        </Button>
+                                                            <FiMinus size={12} />
+                                                        </button>
                                                     </div>
                                                 </td>
+                                                {/* Data cells: 5 columns with green background */}
                                                 {kategoriDampak.map((kategori) => {
                                                     const cellData = getCellData(kategori.key, jenis);
                                                     return (
                                                         <td
                                                             key={`${kategori.key}_${jenis}`}
+                                                            className="align-middle text-white"
                                                             style={{
                                                                 backgroundColor: '#33cc00',
-                                                                color: 'white',
-                                                                minWidth: '150px',
+                                                                minHeight: '100px',
                                                                 cursor: 'pointer',
-                                                                fontSize: '0.85rem'
+                                                                fontSize: '0.8rem',
+                                                                padding: '10px'
                                                             }}
                                                             onClick={() => openKriteriaModal(kategori, jenis)}
                                                         >
-                                                            <div className="p-2">
-                                                                <strong>{kategori.nama}</strong>
+                                                            <div>
+                                                                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                                                                    {kategori.nama || `Level ${kategori.key}`}
+                                                                </div>
                                                                 {cellData.value && (
-                                                                    <div className="mt-1 small">
+                                                                    <div style={{ fontSize: '0.75rem', lineHeight: '1.3' }}>
                                                                         {cellData.value}
                                                                     </div>
                                                                 )}
@@ -401,22 +421,27 @@ const KriteriaRisikoDampakMatrix = () => {
                                             </tr>
                                         ))}
                                     </tbody>
-                                </Table>
+                                </table>
                             </div>
 
-                            {/* Add Jenis Kriteria */}
-                            <div className="mt-4 p-3 border rounded">
-                                <h6>Tambah Jenis Kriteria Baru</h6>
+                            {/* Plus/Minus buttons at bottom */}
+                            <div className="d-flex justify-content-center mt-3">
                                 <div className="d-flex gap-2">
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Nama jenis kriteria..."
-                                        value={newJenisKriteria}
-                                        onChange={(e) => setNewJenisKriteria(e.target.value)}
-                                    />
-                                    <Button variant="success" onClick={handleAddJenisKriteria}>
-                                        <FiPlus className="me-1" /> Tambah
-                                    </Button>
+                                    <button
+                                        className="btn btn-outline-secondary"
+                                        onClick={() => setShowAddJenisModal(true)}
+                                        style={{ padding: '5px 15px' }}
+                                    >
+                                        <FiPlus size={18} />
+                                    </button>
+                                    <button
+                                        className="btn btn-outline-secondary"
+                                        onClick={() => jenisKriteriaList.length > 1 && handleRemoveJenisKriteria(jenisKriteriaList[jenisKriteriaList.length - 1])}
+                                        style={{ padding: '5px 15px' }}
+                                        disabled={jenisKriteriaList.length <= 1}
+                                    >
+                                        <FiMinus size={18} />
+                                    </button>
                                 </div>
                             </div>
 
@@ -424,11 +449,11 @@ const KriteriaRisikoDampakMatrix = () => {
                             <div className="mt-4">
                                 <h6>Cara Pengisian:</h6>
                                 <ol className="small">
-                                    <li><strong>A. Mengisi Level/Kategori:</strong> Klik ikon edit pada header kolom untuk mengisi nama kategori</li>
-                                    <li><strong>B. Mengisi Penjelasan:</strong> Klik pada sel untuk mengisi penjelasan kategori</li>
-                                    <li><strong>C. Mengisi Kriteria:</strong> Klik pada sel hijau untuk mengisi detail kriteria</li>
+                                    <li><strong>A. Mengisi Level/Kategori:</strong> Klik "Edit" pada header kolom untuk mengisi nama kategori</li>
+                                    <li><strong>B. Mengisi Penjelasan:</strong> Klik pada sel kiri (jenis kriteria) untuk mengisi penjelasan</li>
+                                    <li><strong>C. Mengisi Kriteria:</strong> Klik pada sel hijau untuk mengisi detail kriteria/formula</li>
                                     <li>Gunakan tombol <FiPlus /> untuk menambah jenis kriteria baru</li>
-                                    <li>Gunakan tombol <FiMinus /> untuk menghapus jenis kriteria</li>
+                                    <li>Gunakan tombol <FiMinus /> atau ikon minus di setiap baris untuk menghapus jenis kriteria</li>
                                 </ol>
                             </div>
                         </>
@@ -502,45 +527,37 @@ const KriteriaRisikoDampakMatrix = () => {
                 </Modal.Footer>
             </Modal>
 
-            {/* Modal C: Edit Kriteria */}
-            <Modal show={showKriteriaModal} onHide={() => setShowKriteriaModal(false)} size="lg">
+            {/* Modal D: Add Jenis Kriteria */}
+            <Modal show={showAddJenisModal} onHide={() => setShowAddJenisModal(false)}>
                 <Modal.Header closeButton>
-                    <Modal.Title>C. Mengisi Kriteria</Modal.Title>
+                    <Modal.Title>Tambah Jenis Kriteria Baru</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
                         <Form.Group className="mb-3">
-                            <Form.Label>Kategori</Form.Label>
-                            <Form.Control type="text" value={kriteriaForm.kategori_nama} disabled />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Jenis Kriteria</Form.Label>
-                            <Form.Control type="text" value={kriteriaForm.jenis_kriteria} disabled />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Kriteria / Formula</Form.Label>
+                            <Form.Label>Nama Jenis Kriteria *</Form.Label>
                             <Form.Control
-                                as="textarea"
-                                rows={4}
-                                value={kriteriaForm.kriteria}
-                                onChange={(e) => setKriteriaForm({...kriteriaForm, kriteria: e.target.value})}
-                                placeholder="Contoh: ≤0,01% dari total anggaran..."
+                                type="text"
+                                value={newJenisKriteria}
+                                onChange={(e) => setNewJenisKriteria(e.target.value)}
+                                placeholder="Contoh: Beban Keuangan Negara"
                             />
                         </Form.Group>
                     </Form>
-                    <div className="alert alert-info">
-                        <small>
-                            <strong>Contoh:</strong> Kategori x Penjelasan = Kriteria<br/>
-                            Misal: Signifikan (4) x Beban Keuangan Negara = ≤1% dari total anggaran
-                        </small>
-                    </div>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="outline-danger" onClick={() => setShowKriteriaModal(false)}>
+                    <Button variant="outline-danger" onClick={() => setShowAddJenisModal(false)}>
                         Batal
                     </Button>
-                    <Button variant="primary" onClick={saveKriteria}>
-                        <FiSave className="me-1" /> Simpan
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            handleAddJenisKriteria();
+                            setShowAddJenisModal(false);
+                        }}
+                        disabled={!newJenisKriteria.trim()}
+                    >
+                        <FiPlus className="me-1" /> Tambah
                     </Button>
                 </Modal.Footer>
             </Modal>
