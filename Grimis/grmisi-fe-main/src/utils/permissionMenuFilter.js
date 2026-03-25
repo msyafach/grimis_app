@@ -16,6 +16,7 @@ const MENU_PERMISSION_MAP = {
     // Parameters menu
     'parameters': ['view:parameters'],
     'parameters/pemilihan-warna-matriks': ['manage:parameters'],
+    'parameters/setting-matriks-risiko': ['manage:parameters'],
     'parameters/struktur-organisasi': ['view:organization'],
     'parameters/kategori-risiko': ['view:parameters'],
     'parameters/jenis-penyebab': ['view:parameters'],
@@ -202,6 +203,7 @@ export const getFeatureName = (menuPath) => {
 
         'parameters': 'Parameter',
         'parameters/pemilihan-warna-matriks': 'Pemilihan Warna Matriks Risiko',
+        'parameters/setting-matriks-risiko': 'Setting Matriks Risiko',
         'parameters/struktur-organisasi': 'Struktur Organisasi',
         'parameters/kategori-risiko': 'Kategori Risiko',
         'parameters/jenis-penyebab': 'Jenis Penyebab',
