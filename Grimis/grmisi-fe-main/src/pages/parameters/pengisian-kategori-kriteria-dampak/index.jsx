@@ -333,37 +333,48 @@ const KriteriaRisikoDampakMatrix = () => {
                                 <table className="table table-bordered" style={{ tableLayout: 'fixed', minWidth: '1000px' }}>
                                     <thead>
                                         {/* Row 1: Main headers */}
-                                        <tr style={{ height: '50px' }}>
-                                            <th colSpan="2" rowSpan="2" className="text-center align-middle bg-light" style={{ width: '80px', verticalAlign: 'middle' }}>
-                                                Peta Dampak
+                                        <tr style={{ height: '40px' }}>
+                                            <th rowSpan="3" className="text-center align-middle bg-light" style={{ width: '60px', verticalAlign: 'middle' }}>
+                                                <div style={{ fontSize: '0.9rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                                                    Peta Dampak
+                                                </div>
                                             </th>
-                                            <th colSpan="6" className="text-center align-middle bg-light">
-                                                Kategori Dampak
+                                            <th colSpan="3" className="bg-light" style={{ width: '250px' }}></th>
+                                            <th colSpan="5" className="text-center align-middle bg-light" style={{ verticalAlign: 'middle' }}>
+                                                <div style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>
+                                                    Kategori Dampak
+                                                </div>
                                             </th>
                                         </tr>
                                         {/* Row 2: Level numbers */}
-                                        <tr style={{ height: '40px' }}>
+                                        <tr style={{ height: '35px' }}>
+                                            <th colSpan="3" className="bg-light"></th>
                                             {kategoriDampak.map((k) => (
                                                 <th key={k.key} className="text-center align-middle bg-light" style={{ width: '150px' }}>
-                                                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{k.key}</div>
+                                                    <div style={{ fontSize: '1rem', fontWeight: 'bold' }}>{k.key}</div>
                                                 </th>
                                             ))}
                                         </tr>
-                                        {/* Row 3: Category names with edit */}
-                                        <tr style={{ height: '60px' }}>
-                                            <th colSpan="2" className="bg-light"></th>
+                                        {/* Row 3: Category names with level */}
+                                        <tr style={{ height: '40px' }}>
+                                            <th className="bg-light" style={{ width: '30px' }}></th>
+                                            <th className="text-center align-middle bg-light" style={{ width: '50px' }}>
+                                                <div style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>No</div>
+                                            </th>
+                                            <th className="text-center align-middle bg-light" style={{ width: '170px' }}>
+                                                <div style={{ fontSize: '0.75rem', fontWeight: 'bold' }}></div>
+                                            </th>
                                             {kategoriDampak.map((k) => (
-                                                <th key={`name-${k.key}`} className="text-center align-middle bg-light" style={{ width: '150px' }}>
-                                                    <div style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>
-                                                        {k.nama || `Level ${k.key}`}
-                                                        <span className="text-muted"> ({k.key})</span>
+                                                <th key={`name-${k.key}`} className="text-center align-middle bg-light" style={{ width: '150px', padding: '4px' }}>
+                                                    <div style={{ fontSize: '0.8rem', fontWeight: 'bold', wordWrap: 'break-word', lineHeight: '1.2' }}>
+                                                        {k.nama || `Level ${k.key}`} ({k.key})
                                                     </div>
                                                     <button
                                                         className="btn btn-link btn-sm p-0 mt-1"
                                                         onClick={() => openKategoriModal(k)}
-                                                        style={{ color: '#0d6efd', fontSize: '0.75rem' }}
+                                                        style={{ color: '#0d6efd', fontSize: '0.7rem' }}
                                                     >
-                                                        <FiEdit2 size={12} /> EDIT
+                                                        <FiEdit2 size={10} /> EDIT
                                                     </button>
                                                 </th>
                                             ))}
@@ -371,27 +382,29 @@ const KriteriaRisikoDampakMatrix = () => {
                                     </thead>
                                     <tbody>
                                         {jenisKriteriaList.map((jenis, rowIndex) => (
-                                            <tr key={jenis} style={{ height: '100px' }}>
-                                                {/* First cell: Penjelasan (only on first row) */}
+                                            <tr key={jenis} style={{ height: '80px' }}>
+                                                {/* Column 1: Penjelasan vertical text (only on first row) */}
                                                 {rowIndex === 0 && (
-                                                    <td rowSpan={jenisKriteriaList.length} className="text-center align-middle bg-light" style={{ width: '30px' }}>
-                                                        <div style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)', fontSize: '0.85rem', fontWeight: '500' }}>
+                                                    <td rowSpan={jenisKriteriaList.length} className="text-center align-middle bg-light" style={{ width: '60px' }}>
+                                                        <div style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)', fontSize: '0.8rem', fontWeight: '500' }}>
                                                             Penjelasan
                                                         </div>
                                                     </td>
                                                 )}
-                                                {/* Second cell: Row number */}
-                                                <td className="text-center align-middle bg-light" style={{ width: '50px', fontWeight: 'bold' }}>
+                                                {/* Column 2: Empty - merged cell */}
+                                                <td className="bg-light" style={{ width: '30px' }}></td>
+                                                {/* Column 3: Row number */}
+                                                <td className="text-center align-middle bg-light" style={{ width: '50px', fontWeight: 'bold', fontSize: '0.85rem' }}>
                                                     {rowIndex + 1}
                                                 </td>
-                                                {/* Third cell: Jenis Kriteria name with delete button */}
-                                                <td className="align-middle bg-light" style={{ width: '170px' }}>
+                                                {/* Column 4: Jenis Kriteria name with delete button */}
+                                                <td className="align-middle bg-light" style={{ width: '170px', backgroundColor: '#00cc00 !important' }}>
                                                     <div className="d-flex justify-content-between align-items-center px-2">
-                                                        <span style={{ fontWeight: '500', fontSize: '0.9rem' }}>{jenis}</span>
+                                                        <span style={{ fontWeight: '600', fontSize: '0.8rem', wordWrap: 'break-word', lineHeight: '1.2', overflowWrap: 'break-word', maxWidth: '130px' }}>{jenis}</span>
                                                         <button
-                                                            className="btn btn-outline-danger btn-sm"
+                                                            className="btn btn-outline-danger btn-sm ms-1"
                                                             onClick={() => handleRemoveJenisKriteria(jenis)}
-                                                            style={{ padding: '2px 6px', fontSize: '0.7rem' }}
+                                                            style={{ padding: '2px 6px', fontSize: '0.7rem', flexShrink: 0 }}
                                                         >
                                                             <FiMinus size={12} />
                                                         </button>
@@ -405,19 +418,19 @@ const KriteriaRisikoDampakMatrix = () => {
                                                             key={`${kategori.key}_${jenis}`}
                                                             className="align-middle text-white"
                                                             style={{
-                                                                backgroundColor: '#33cc00',
+                                                                backgroundColor: '#00cc00',
                                                                 cursor: 'pointer',
-                                                                fontSize: '0.8rem',
-                                                                padding: '10px'
+                                                                fontSize: '0.75rem',
+                                                                padding: '8px',
+                                                                wordWrap: 'break-word',
+                                                                lineHeight: '1.3',
+                                                                verticalAlign: 'top'
                                                             }}
                                                             onClick={() => openKriteriaModal(kategori, jenis)}
                                                         >
                                                             <div>
-                                                                <div style={{ fontWeight: 'bold', marginBottom: '5px', fontSize: '0.85rem' }}>
-                                                                    {kategori.nama || `Level ${kategori.key}`}
-                                                                </div>
                                                                 {cellData.value && (
-                                                                    <div style={{ fontSize: '0.75rem', lineHeight: '1.3' }}>
+                                                                    <div style={{ fontSize: '0.75rem', lineHeight: '1.3', wordWrap: 'break-word' }}>
                                                                         {cellData.value}
                                                                     </div>
                                                                 )}
