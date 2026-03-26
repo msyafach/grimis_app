@@ -649,6 +649,7 @@ class PetaRisikoKlasifikasiBase(BaseModel):
     key: int = Field(..., description="Key for the classification")
     value: str = Field(..., description="Value/name of the classification")
     jenis: str = Field(..., description="Type (FREKUENSI/DAMPAK)")
+    jenis_kriteria: Optional[str] = Field(None, description="Jenis kriteria for matrix row identification")
 
 class PetaRisikoKlasifikasiCreate(PetaRisikoKlasifikasiBase):
     pass
@@ -656,6 +657,7 @@ class PetaRisikoKlasifikasiCreate(PetaRisikoKlasifikasiBase):
 class PetaRisikoKlasifikasiUpdate(BaseModel):
     key: Optional[int] = None
     value: Optional[str] = None
+    jenis_kriteria: Optional[str] = None
 
 class PetaRisikoKlasifikasiResponse(PetaRisikoKlasifikasiBase):
     id: str
