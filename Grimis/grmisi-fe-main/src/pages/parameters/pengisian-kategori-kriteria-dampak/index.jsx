@@ -8,7 +8,7 @@ import { useIndukUnitKerja } from '@/context/IndukUnitKerjaContext';
 import { useTahun } from '@/context/TahunContext';
 import { showToast } from '@/utils/toast';
 import { Modal, Button, Form, Table } from 'react-bootstrap';
-import { FiPlus, FiMinus, FiEdit2, FiSave } from 'react-icons/fi';
+import { FiPlus, FiMinus } from 'react-icons/fi';
 
 const KriteriaRisikoDampakMatrix = () => {
     const { idInstansi } = useInstansi();
@@ -159,7 +159,23 @@ const KriteriaRisikoDampakMatrix = () => {
             showToast('warning', 'Jenis kriteria sudah ada');
             return;
         }
+
+        // Add to jenis kriteria list
         setJenisKriteriaList([...jenisKriteriaList, newJenisKriteria]);
+
+        // Create empty matrix entries for each kategori to persist the row
+        const newMatrixEntries = {};
+        kategoriDampak.forEach(kategori => {
+            const key = `${kategori.key}_${newJenisKriteria}`;
+            newMatrixEntries[key] = {
+                key: kategori.key,
+                jenis_kriteria: newJenisKriteria,
+                value: '',
+                formula: ''
+            };
+        });
+        setMatrixData({ ...matrixData, ...newMatrixEntries });
+
         setNewJenisKriteria('');
         showToast('success', 'Jenis kriteria ditambahkan');
     };
@@ -193,21 +209,41 @@ const KriteriaRisikoDampakMatrix = () => {
         }
     };
 
-    // Modal B: Edit Penjelasan
-    const openPenjelasanModal = (kategori) => {
+    // Modal B: Edit Penjelasan (row label / jenis kriteria name)
+    const openPenjelasanModal = (jenis, rowIndex) => {
         setPenjelasanForm({
-            id: kategori.key,
-            nama: kategori.nama,
-            penjelasan: kategori.penjelasan || ''
+            id: rowIndex,
+            nama: jenis,
+            penjelasan: jenis
         });
         setShowPenjelasanModal(true);
     };
 
     const savePenjelasan = async () => {
         try {
-            setKategoriDampak(kategoriDampak.map(k =>
-                k.key === penjelasanForm.id ? { ...k, penjelasan: penjelasanForm.penjelasan } : k
+            const oldName = jenisKriteriaList[penjelasanForm.id];
+            const newName = penjelasanForm.penjelasan.trim();
+            if (!newName) {
+                showToast('warning', 'Nama penjelasan tidak boleh kosong');
+                return;
+            }
+            // Update jenis kriteria list
+            setJenisKriteriaList(jenisKriteriaList.map((j, i) =>
+                i === penjelasanForm.id ? newName : j
             ));
+            // Update matrixData keys that reference the old jenis name
+            if (oldName !== newName) {
+                const updatedMatrix = {};
+                for (const [key, data] of Object.entries(matrixData)) {
+                    if (data.jenis_kriteria === oldName) {
+                        const newKey = `${data.key}_${newName}`;
+                        updatedMatrix[newKey] = { ...data, jenis_kriteria: newName };
+                    } else {
+                        updatedMatrix[key] = data;
+                    }
+                }
+                setMatrixData(updatedMatrix);
+            }
             setShowPenjelasanModal(false);
             showToast('success', 'Penjelasan berhasil disimpan');
         } catch (err) {
@@ -251,42 +287,76 @@ const KriteriaRisikoDampakMatrix = () => {
 
     // Save all data to backend
     const handleSaveAll = async () => {
+        if (!template?.id) {
+            showToast('error', 'Template belum tersedia. Silakan muat ulang halaman.');
+            return;
+        }
         try {
             setLoading(true);
 
-            // Save kategori dampak
+            // Save kategori dampak: PUT if has id, POST if new
             for (const kategori of kategoriDampak) {
-                await axios.post(
-                    API_ENDPOINTS.postPetaKategori(template?.id),
-                    {
-                        key: kategori.key,
-                        nama: kategori.nama,
-                        jenis: 'DAMPAK',
-                        penjelasan: kategori.penjelasan
-                    },
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
+                if (kategori.id) {
+                    await axios.put(
+                        API_ENDPOINTS.putPetaKategori(kategori.id),
+                        {
+                            key: kategori.key,
+                            nama: kategori.nama,
+                            jenis: 'DAMPAK',
+                            penjelasan: kategori.penjelasan
+                        },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                } else {
+                    await axios.post(
+                        API_ENDPOINTS.postPetaKategori(template.id),
+                        {
+                            key: kategori.key,
+                            nama: kategori.nama,
+                            jenis: 'DAMPAK',
+                            penjelasan: kategori.penjelasan
+                        },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                }
             }
 
-            // Save klasifikasi/kriteria
-            for (const [key, data] of Object.entries(matrixData)) {
-                await axios.post(
-                    API_ENDPOINTS.postPetaKlasifikasi(template?.id),
-                    {
-                        key: data.key,
-                        value: data.value,
-                        jenis: 'DAMPAK',
-                        jenis_kriteria: data.jenis_kriteria,
-                        formula: data.formula
-                    },
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
+            // Save klasifikasi/kriteria: PUT if has id, POST if new
+            // Save all entries that have jenis_kriteria to persist row structure
+            for (const [, data] of Object.entries(matrixData)) {
+                // Skip entries without jenis_kriteria (incomplete data)
+                if (!data.jenis_kriteria) continue;
+
+                const payload = {
+                    key: data.key,
+                    value: data.value || '',  // Allow empty value
+                    jenis: 'DAMPAK',
+                    jenis_kriteria: data.jenis_kriteria,
+                    formula: data.formula || ''
+                };
+
+                if (data.id) {
+                    await axios.put(
+                        API_ENDPOINTS.putPetaKlasifikasi(data.id),
+                        payload,
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                } else {
+                    const response = await axios.post(
+                        API_ENDPOINTS.postPetaKlasifikasi(template.id),
+                        payload,
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    // Update matrixData with the created id
+                    data.id = response.data.id;
+                }
             }
 
             showToast('success', 'Semua data berhasil disimpan');
         } catch (err) {
             console.error('Error saving:', err);
-            showToast('error', 'Gagal menyimpan data');
+            const msg = err?.response?.data?.detail || 'Gagal menyimpan data';
+            showToast('error', msg);
         } finally {
             setLoading(false);
         }
@@ -311,7 +381,6 @@ const KriteriaRisikoDampakMatrix = () => {
                             </p>
                         </div>
                         <Button variant="primary" onClick={handleSaveAll} disabled={loading}>
-                            <FiSave className="me-2" />
                             {loading ? 'Menyimpan...' : 'Simpan Semua'}
                         </Button>
                     </div>
@@ -328,113 +397,197 @@ const KriteriaRisikoDampakMatrix = () => {
                         </div>
                     ) : (
                         <>
-                            {/* Matrix Table - Fixed Layout */}
+                            {/* Matrix Table */}
                             <div className="table-responsive">
-                                <table className="table table-bordered" style={{ tableLayout: 'fixed', minWidth: '1000px' }}>
+                                <table className="table table-bordered mb-0" style={{ tableLayout: 'fixed', minWidth: '900px', borderColor: '#000' }}>
+                                    <colgroup>
+                                        <col style={{ width: '40px' }} />
+                                        <col style={{ width: '35px' }} />
+                                        <col style={{ width: '155px' }} />
+                                        {kategoriDampak.map((k) => (
+                                            <col key={`col-${k.key}`} />
+                                        ))}
+                                    </colgroup>
                                     <thead>
-                                        {/* Row 1: Main headers */}
-                                        <tr style={{ height: '40px' }}>
-                                            <th rowSpan="3" className="text-center align-middle bg-light" style={{ width: '60px', verticalAlign: 'middle' }}>
-                                                <div style={{ fontSize: '0.9rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
-                                                    Peta Dampak
-                                                </div>
+                                        {/* Row 1: Top header row */}
+                                        <tr>
+                                            <th
+                                                colSpan="3"
+                                                rowSpan="3"
+                                                className="text-center align-middle"
+                                                style={{
+                                                    backgroundColor: '#f8f9fa',
+                                                    borderColor: '#000',
+                                                    padding: '8px',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: 'bold'
+                                                }}
+                                            >
+                                                Peta Dampak
                                             </th>
-                                            <th colSpan="3" className="bg-light" style={{ width: '250px' }}></th>
-                                            <th colSpan="5" className="text-center align-middle bg-light" style={{ verticalAlign: 'middle' }}>
-                                                <div style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>
-                                                    Kategori Dampak
-                                                </div>
+                                            <th
+                                                colSpan={kategoriDampak.length}
+                                                className="text-center align-middle"
+                                                style={{
+                                                    backgroundColor: '#f8f9fa',
+                                                    borderColor: '#000',
+                                                    fontSize: '0.9rem',
+                                                    fontWeight: 'bold',
+                                                    padding: '8px'
+                                                }}
+                                            >
+                                                Kategori Dampak
                                             </th>
                                         </tr>
                                         {/* Row 2: Level numbers */}
-                                        <tr style={{ height: '35px' }}>
-                                            <th colSpan="3" className="bg-light"></th>
+                                        <tr>
                                             {kategoriDampak.map((k) => (
-                                                <th key={k.key} className="text-center align-middle bg-light" style={{ width: '150px' }}>
-                                                    <div style={{ fontSize: '1rem', fontWeight: 'bold' }}>{k.key}</div>
+                                                <th
+                                                    key={k.key}
+                                                    className="text-center align-middle"
+                                                    style={{
+                                                        backgroundColor: '#00cc00',
+                                                        borderColor: '#000',
+                                                        color: '#000',
+                                                        fontSize: '1.1rem',
+                                                        fontWeight: 'bold',
+                                                        padding: '6px'
+                                                    }}
+                                                >
+                                                    {k.key}
                                                 </th>
                                             ))}
                                         </tr>
-                                        {/* Row 3: Category names with level */}
-                                        <tr style={{ height: '40px' }}>
-                                            <th className="bg-light" style={{ width: '30px' }}></th>
-                                            <th className="text-center align-middle bg-light" style={{ width: '50px' }}>
-                                                <div style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>No</div>
-                                            </th>
-                                            <th className="text-center align-middle bg-light" style={{ width: '170px' }}>
-                                                <div style={{ fontSize: '0.75rem', fontWeight: 'bold' }}></div>
-                                            </th>
+                                        {/* Row 3: Category names */}
+                                        <tr>
                                             {kategoriDampak.map((k) => (
-                                                <th key={`name-${k.key}`} className="text-center align-middle bg-light" style={{ width: '150px', padding: '4px' }}>
-                                                    <div style={{ fontSize: '0.8rem', fontWeight: 'bold', wordWrap: 'break-word', lineHeight: '1.2' }}>
-                                                        {k.nama || `Level ${k.key}`} ({k.key})
-                                                    </div>
-                                                    <button
-                                                        className="btn btn-link btn-sm p-0 mt-1"
-                                                        onClick={() => openKategoriModal(k)}
-                                                        style={{ color: '#0d6efd', fontSize: '0.7rem' }}
-                                                    >
-                                                        <FiEdit2 size={10} /> EDIT
-                                                    </button>
+                                                <th
+                                                    key={`name-${k.key}`}
+                                                    className="text-center align-middle"
+                                                    style={{
+                                                        backgroundColor: '#00cc00',
+                                                        borderColor: '#000',
+                                                        color: '#000',
+                                                        fontSize: 'clamp(0.65rem, 1.2vw, 0.85rem)',
+                                                        fontWeight: 'bold',
+                                                        padding: '6px 4px',
+                                                        wordWrap: 'break-word',
+                                                        overflowWrap: 'break-word',
+                                                        lineHeight: '1.3',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    onClick={() => openKategoriModal(k)}
+                                                    title="Klik untuk edit kategori"
+                                                >
+                                                    {k.nama || `Level ${k.key}`} ({k.key})
                                                 </th>
                                             ))}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {jenisKriteriaList.map((jenis, rowIndex) => (
-                                            <tr key={jenis} style={{ height: '80px' }}>
+                                            <tr key={jenis}>
                                                 {/* Column 1: Penjelasan vertical text (only on first row) */}
                                                 {rowIndex === 0 && (
-                                                    <td rowSpan={jenisKriteriaList.length} className="text-center align-middle bg-light" style={{ width: '60px' }}>
-                                                        <div style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)', fontSize: '0.8rem', fontWeight: '500' }}>
+                                                    <td
+                                                        rowSpan={jenisKriteriaList.length}
+                                                        className="text-center align-middle"
+                                                        style={{
+                                                            backgroundColor: '#f8f9fa',
+                                                            borderColor: '#000',
+                                                            width: '50px',
+                                                            padding: '4px'
+                                                        }}
+                                                    >
+                                                        <div style={{
+                                                            writingMode: 'vertical-rl',
+                                                            textOrientation: 'mixed',
+                                                            transform: 'rotate(180deg)',
+                                                            fontSize: '0.85rem',
+                                                            fontWeight: '600',
+                                                            letterSpacing: '1px'
+                                                        }}>
                                                             Penjelasan
                                                         </div>
                                                     </td>
                                                 )}
-                                                {/* Column 2: Empty - merged cell */}
-                                                <td className="bg-light" style={{ width: '30px' }}></td>
-                                                {/* Column 3: Row number */}
-                                                <td className="text-center align-middle bg-light" style={{ width: '50px', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                                                {/* Column 2: Row number */}
+                                                <td
+                                                    className="text-center align-middle"
+                                                    style={{
+                                                        backgroundColor: '#f8f9fa',
+                                                        borderColor: '#000',
+                                                        width: '35px',
+                                                        minWidth: '35px',
+                                                        maxWidth: '35px',
+                                                        fontWeight: 'bold',
+                                                        fontSize: '0.9rem',
+                                                        whiteSpace: 'nowrap',
+                                                        overflow: 'hidden',
+                                                        padding: '4px'
+                                                    }}
+                                                >
                                                     {rowIndex + 1}
                                                 </td>
-                                                {/* Column 4: Jenis Kriteria name with delete button */}
-                                                <td className="align-middle bg-light" style={{ width: '170px', backgroundColor: '#00cc00 !important' }}>
-                                                    <div className="d-flex justify-content-between align-items-center px-2">
-                                                        <span style={{ fontWeight: '600', fontSize: '0.8rem', wordWrap: 'break-word', lineHeight: '1.2', overflowWrap: 'break-word', maxWidth: '130px' }}>{jenis}</span>
-                                                        <button
-                                                            className="btn btn-outline-danger btn-sm ms-1"
-                                                            onClick={() => handleRemoveJenisKriteria(jenis)}
-                                                            style={{ padding: '2px 6px', fontSize: '0.7rem', flexShrink: 0 }}
-                                                        >
-                                                            <FiMinus size={12} />
-                                                        </button>
-                                                    </div>
+                                                {/* Column 3: Jenis Kriteria name (Step B: clickable) */}
+                                                <td
+                                                    className="text-center align-middle"
+                                                    style={{
+                                                        backgroundColor: '#f8f9fa',
+                                                        borderColor: '#000',
+                                                        width: '155px',
+                                                        minWidth: '155px',
+                                                        maxWidth: '155px',
+                                                        padding: '8px 6px',
+                                                        fontWeight: '700',
+                                                        fontSize: 'clamp(0.6rem, 1vw, 0.82rem)',
+                                                        lineHeight: '1.35',
+                                                        cursor: 'pointer',
+                                                        whiteSpace: 'normal',
+                                                        wordBreak: 'break-word',
+                                                        overflowWrap: 'break-word',
+                                                        overflow: 'hidden'
+                                                    }}
+                                                    onClick={() => openPenjelasanModal(jenis, rowIndex)}
+                                                    title="Klik untuk edit penjelasan"
+                                                >
+                                                    {jenis}
                                                 </td>
-                                                {/* Data cells: 5 columns with green background */}
+                                                {/* Data cells: columns with green background */}
                                                 {kategoriDampak.map((kategori) => {
                                                     const cellData = getCellData(kategori.key, jenis);
                                                     return (
                                                         <td
                                                             key={`${kategori.key}_${jenis}`}
-                                                            className="align-middle text-white"
+                                                            className="align-middle"
                                                             style={{
                                                                 backgroundColor: '#00cc00',
+                                                                borderColor: '#000',
                                                                 cursor: 'pointer',
-                                                                fontSize: '0.75rem',
-                                                                padding: '8px',
-                                                                wordWrap: 'break-word',
-                                                                lineHeight: '1.3',
-                                                                verticalAlign: 'top'
+                                                                fontSize: 'clamp(0.6rem, 1vw, 0.8rem)',
+                                                                padding: '6px 4px',
+                                                                lineHeight: '1.35',
+                                                                verticalAlign: 'middle',
+                                                                color: '#000',
+                                                                whiteSpace: 'normal',
+                                                                wordBreak: 'break-word',
+                                                                overflowWrap: 'break-word',
+                                                                overflow: 'hidden',
+                                                                width: '0',
+                                                                minWidth: '0'
                                                             }}
                                                             onClick={() => openKriteriaModal(kategori, jenis)}
+                                                            title="Klik untuk edit kriteria"
                                                         >
-                                                            <div>
-                                                                {cellData.value && (
-                                                                    <div style={{ fontSize: '0.75rem', lineHeight: '1.3', wordWrap: 'break-word' }}>
-                                                                        {cellData.value}
-                                                                    </div>
-                                                                )}
-                                                            </div>
+                                                            {cellData.value ? (
+                                                                <div style={{ fontSize: 'clamp(0.6rem, 1vw, 0.75rem)', lineHeight: '1.35' }}>
+                                                                    {cellData.value}
+                                                                </div>
+                                                            ) : (
+                                                                <div style={{ fontSize: '0.7rem', color: 'rgba(0,0,0,0.4)', fontStyle: 'italic', textAlign: 'center' }}>
+                                                                    Klik untuk isi
+                                                                </div>
+                                                            )}
                                                         </td>
                                                     );
                                                 })}
@@ -446,35 +599,23 @@ const KriteriaRisikoDampakMatrix = () => {
 
                             {/* Plus/Minus buttons at bottom */}
                             <div className="d-flex justify-content-center mt-3">
-                                <div className="d-flex gap-2">
+                                <div className="d-flex gap-1" style={{ border: '1px solid #dee2e6', borderRadius: '4px', overflow: 'hidden' }}>
                                     <button
-                                        className="btn btn-outline-secondary"
+                                        className="btn btn-outline-secondary border-0"
                                         onClick={() => setShowAddJenisModal(true)}
-                                        style={{ padding: '5px 15px' }}
+                                        style={{ padding: '4px 14px', borderRadius: 0 }}
                                     >
-                                        <FiPlus size={18} />
+                                        <FiPlus size={16} />
                                     </button>
                                     <button
-                                        className="btn btn-outline-secondary"
+                                        className="btn btn-outline-secondary border-0"
                                         onClick={() => jenisKriteriaList.length > 1 && handleRemoveJenisKriteria(jenisKriteriaList[jenisKriteriaList.length - 1])}
-                                        style={{ padding: '5px 15px' }}
+                                        style={{ padding: '4px 14px', borderRadius: 0, borderLeft: '1px solid #dee2e6' }}
                                         disabled={jenisKriteriaList.length <= 1}
                                     >
-                                        <FiMinus size={18} />
+                                        <FiMinus size={16} />
                                     </button>
                                 </div>
-                            </div>
-
-                            {/* Legend */}
-                            <div className="mt-4">
-                                <h6>Cara Pengisian:</h6>
-                                <ol className="small">
-                                    <li><strong>A. Mengisi Level/Kategori:</strong> Klik "Edit" pada header kolom untuk mengisi nama kategori</li>
-                                    <li><strong>B. Mengisi Penjelasan:</strong> Klik pada sel kiri (jenis kriteria) untuk mengisi penjelasan</li>
-                                    <li><strong>C. Mengisi Kriteria:</strong> Klik pada sel hijau untuk mengisi detail kriteria/formula</li>
-                                    <li>Gunakan tombol <FiPlus /> untuk menambah jenis kriteria baru</li>
-                                    <li>Gunakan tombol <FiMinus /> atau ikon minus di setiap baris untuk menghapus jenis kriteria</li>
-                                </ol>
                             </div>
                         </>
                     )}
@@ -485,16 +626,14 @@ const KriteriaRisikoDampakMatrix = () => {
             {/* Modal A: Edit Kategori */}
             <Modal show={showKategoriModal} onHide={() => setShowKategoriModal(false)}>
                 <Modal.Header closeButton>
-                    <Modal.Title>A. Mengisi Level/Kategori</Modal.Title>
+                    <Modal.Title>Nilai Matriks DAMPAK</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
                         <Form.Group className="mb-3">
-                            <Form.Label>Level</Form.Label>
-                            <Form.Control type="text" value={kategoriForm.key} disabled />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Nama Kategori *</Form.Label>
+                            <Form.Label style={{ fontWeight: '600', textTransform: 'uppercase', fontSize: '0.85rem' }}>
+                                KATEGORI {kategoriForm.key}
+                            </Form.Label>
                             <Form.Control
                                 type="text"
                                 value={kategoriForm.nama}
@@ -509,30 +648,27 @@ const KriteriaRisikoDampakMatrix = () => {
                         Batal
                     </Button>
                     <Button variant="primary" onClick={saveKategori}>
-                        <FiSave className="me-1" /> Simpan
+                        Simpan
                     </Button>
                 </Modal.Footer>
             </Modal>
 
-            {/* Modal B: Edit Penjelasan */}
+            {/* Modal B: Edit Penjelasan (row label) */}
             <Modal show={showPenjelasanModal} onHide={() => setShowPenjelasanModal(false)}>
                 <Modal.Header closeButton>
-                    <Modal.Title>B. Mengisi Penjelasan</Modal.Title>
+                    <Modal.Title>Nilai Matriks DAMPAK</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
                         <Form.Group className="mb-3">
-                            <Form.Label>Kategori</Form.Label>
-                            <Form.Control type="text" value={penjelasanForm.nama} disabled />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Penjelasan</Form.Label>
+                            <Form.Label style={{ fontWeight: '600', textTransform: 'uppercase', fontSize: '0.85rem' }}>
+                                PENJELASAN {penjelasanForm.id + 1}
+                            </Form.Label>
                             <Form.Control
-                                as="textarea"
-                                rows={4}
+                                type="text"
                                 value={penjelasanForm.penjelasan}
                                 onChange={(e) => setPenjelasanForm({...penjelasanForm, penjelasan: e.target.value})}
-                                placeholder="Masukkan penjelasan..."
+                                placeholder="Contoh: Beban Keuangan Negara"
                             />
                         </Form.Group>
                     </Form>
@@ -542,7 +678,38 @@ const KriteriaRisikoDampakMatrix = () => {
                         Batal
                     </Button>
                     <Button variant="primary" onClick={savePenjelasan}>
-                        <FiSave className="me-1" /> Simpan
+                        Simpan
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Modal C: Edit Kriteria */}
+            <Modal show={showKriteriaModal} onHide={() => setShowKriteriaModal(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Nilai Matriks DAMPAK</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-3">
+                            <Form.Label style={{ fontWeight: '600', textTransform: 'uppercase', fontSize: '0.85rem' }}>
+                                KATEGORI x PENJELASAN ({kriteriaForm.kategori_key} x {jenisKriteriaList.indexOf(kriteriaForm.jenis_kriteria) + 1})
+                            </Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={3}
+                                value={kriteriaForm.kriteria}
+                                onChange={(e) => setKriteriaForm({...kriteriaForm, kriteria: e.target.value})}
+                                placeholder="Contoh: ≤0,01% dari total anggaran non belanja pegawai pada unit pemilik risiko"
+                            />
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="outline-danger" onClick={() => setShowKriteriaModal(false)}>
+                        Batal
+                    </Button>
+                    <Button variant="primary" onClick={saveKriteria}>
+                        Simpan
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -550,12 +717,14 @@ const KriteriaRisikoDampakMatrix = () => {
             {/* Modal D: Add Jenis Kriteria */}
             <Modal show={showAddJenisModal} onHide={() => setShowAddJenisModal(false)}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Tambah Jenis Kriteria Baru</Modal.Title>
+                    <Modal.Title>Nilai Matriks DAMPAK</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
                         <Form.Group className="mb-3">
-                            <Form.Label>Nama Jenis Kriteria *</Form.Label>
+                            <Form.Label style={{ fontWeight: '600', textTransform: 'uppercase', fontSize: '0.85rem' }}>
+                                PENJELASAN {jenisKriteriaList.length + 1} (BARU)
+                            </Form.Label>
                             <Form.Control
                                 type="text"
                                 value={newJenisKriteria}
@@ -577,7 +746,7 @@ const KriteriaRisikoDampakMatrix = () => {
                         }}
                         disabled={!newJenisKriteria.trim()}
                     >
-                        <FiPlus className="me-1" /> Tambah
+                        Simpan
                     </Button>
                 </Modal.Footer>
             </Modal>
