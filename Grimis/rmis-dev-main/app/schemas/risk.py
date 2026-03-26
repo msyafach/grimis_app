@@ -48,10 +48,28 @@ class JenisPetaRisiko(str, Enum):
     FREKUENSI = "FREKUENSI"
     DAMPAK = "DAMPAK"
 
-# JenisKonteksBase
-# JenisKonteksCreate
-# JenisKonteksUpdate
-# JenisKonteksResponse
+# Jenis Konteks schemas
+class JenisKonteksBase(BaseModel):
+    kode: str
+    nama: str
+    jenis: JenisKonteks
+
+class JenisKonteksCreate(JenisKonteksBase):
+    id_instansi: str
+    id_induk_unit_kerja: str
+
+class JenisKonteksUpdate(BaseModel):
+    kode: Optional[str] = None
+    nama: Optional[str] = None
+    jenis: Optional[JenisKonteks] = None
+
+class JenisKonteksResponse(JenisKonteksBase):
+    id: str
+    id_instansi: str
+    id_induk_unit_kerja: str
+    nama_klp: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
 
 # Kategori Risiko schemas
 class KategoriRisikoBase(BaseModel):

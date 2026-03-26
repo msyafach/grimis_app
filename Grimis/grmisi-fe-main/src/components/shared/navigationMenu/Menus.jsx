@@ -4,7 +4,6 @@ import { Link, useLocation } from "react-router-dom";
 import { menuList } from "@/utils/fackData/menuList";
 import getIcon from "@/utils/getIcon";
 import { useAuth } from "../../../context/AuthContext";
-import { canAccessMenu } from "@/utils/permissionMenuFilter";
 
 const Menus = () => {
     const [openDropdown, setOpenDropdown] = useState(null);
@@ -74,20 +73,26 @@ const Menus = () => {
         }
     }, [pathName]);
 
-    // Filter menu based on user permissions (with role-based fallback)
-    const { permissions } = useAuth();
+    // Filter menu based on user role
+    const userRole = user?.role || '';
+    const isAdmin = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN_KLP';
 
-    // Ensure permissions is always an array
-    const safePermissions = Array.isArray(permissions) ? permissions : [];
-
-    // Show all menus - filtering will happen at the route level
-    // This provides better UX as users can see what features exist
+    // Filter menu items based on role
     let filteredMenuList = menuList.map(menu => {
-        // Just filter dropdown menus that don't exist (like Bagan Risiko)
-        if (menu.name === "parameters") {
+        if (menu.name === "parameters" && menu.dropdownMenu) {
             return {
                 ...menu,
-                dropdownMenu: menu.dropdownMenu.filter(item => item.name !== "Bagan Risiko")
+                dropdownMenu: menu.dropdownMenu.filter(item => {
+                    // Bagan Risiko is always hidden
+                    if (item.name === "Bagan Risiko") return false;
+
+                    // Usulan Kamus Risiko - only for Pemilik/Pengelola (not Admin)
+                    if (item.name === "Usulan Kamus Risiko") {
+                        return !isAdmin;
+                    }
+
+                    return true;
+                })
             };
         }
         return menu;

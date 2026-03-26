@@ -96,6 +96,24 @@ async def create_kamus_risiko(
     created = await db.kamus_risiko.find_one({"_id": result.inserted_id})
     created["id"] = str(created["_id"])
 
+    # Create notification for admins if submitted by non-admin
+    if current_user["role"] in [UserRole.PEMILIK_RISIKO, UserRole.PENGELOLA_RISIKO]:
+        notification = {
+            "title_first": "Usulan Kamus Risiko Baru",
+            "title_second": f"{current_user.get('full_name', 'User')} mengajukan kamus risiko '{risiko.nama}' dengan kode '{risiko.kode}'",
+            "user_id": None,  # Will be set per admin user
+            "is_read": False,
+            "target_url": "/approval/kamus-risiko",
+            "created_at": datetime.utcnow()
+        }
+
+        # Find all SUPER_ADMIN and ADMIN_KLP users
+        admin_roles = [UserRole.SUPER_ADMIN, UserRole.ADMIN_KLP]
+        async for admin in db.users.find({"role": {"$in": admin_roles}}):
+            notif_copy = notification.copy()
+            notif_copy["user_id"] = str(admin["_id"])
+            await db.notifications.insert_one(notif_copy)
+
     return KamusRisikoResponse(**created)
 
 @router.get("", response_model=List[KamusRisikoResponse])

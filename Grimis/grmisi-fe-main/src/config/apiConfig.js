@@ -303,6 +303,9 @@ const API_ENDPOINTS = {
     getPetaTemplateById: (templateId) => `${API_BASE_URL}/api/v1/peta-risiko/template/${templateId}`,
     putPetaTemplateById: (templateId) => `${API_BASE_URL}/api/v1/peta-risiko/template/${templateId}`,
     putPetaTemplateSelera: (templateId, inputSelera) => `${API_BASE_URL}/api/v1/peta-risiko/template/${templateId}/selera-risiko?selera_risiko=${inputSelera}`,
+    // Template Examples - Salin Template
+    getPetaTemplateExamples: () => `${API_BASE_URL}/api/v1/peta-risiko/template/examples`,
+    postPetaTemplateCopy: (templateId, indukUnitKerjaId, tahun) => `${API_BASE_URL}/api/v1/peta-risiko/template/${templateId}/copy?id_induk_unit_kerja=${indukUnitKerjaId}&tahun=${tahun}`,
     postPetaKategori: (templateId) => `${API_BASE_URL}/api/v1/peta-risiko/kategori?template_id=${templateId}`,
     getPetaKategoriFrekuensi: (templateId) => `${API_BASE_URL}/api/v1/peta-risiko/kategori?template_id=${templateId}&jenis=FREKUENSI`,
     getPetaKategoriDampak: (templateId) => `${API_BASE_URL}/api/v1/peta-risiko/kategori?template_id=${templateId}&jenis=DAMPAK`,

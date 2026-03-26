@@ -5,6 +5,7 @@ from .induk_unit_kerja import router as induk_unit_kerja_router
 from .struktur_organisasi import router as struktur_organisasi_router
 from .kategori_risiko import router as kategori_risiko_router
 from .jenis_penyebab import router as jenis_penyebab_router
+from .jenis_konteks import router as jenis_konteks_router
 from .konteks import router as konteks_router
 from .indikator import router as indikator_router
 from .kamus_risiko import router as kamus_risiko_router
@@ -63,6 +64,11 @@ api_router.include_router(
     jenis_penyebab_router,
     prefix="/jenis-penyebab",
     tags=["Jenis Penyebab"]
+)
+api_router.include_router(
+    jenis_konteks_router,
+    prefix="/jenis-konteks",
+    tags=["Jenis Konteks"]
 )
 api_router.include_router(
     konteks_router,

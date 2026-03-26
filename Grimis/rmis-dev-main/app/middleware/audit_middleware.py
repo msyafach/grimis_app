@@ -94,6 +94,8 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
             return ResourceType.KRITERIA_RISIKO
         elif "/bagan-risiko" in path_lower:
             return ResourceType.BAGAN_RISIKO
+        elif "/jenis-konteks" in path_lower:
+            return ResourceType.JENIS_KONTEKS
         elif "/konteks" in path_lower:
             return ResourceType.KONTEKS
         elif "/indikator" in path_lower:

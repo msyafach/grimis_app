@@ -733,6 +733,195 @@ async def update_template_selera_risiko(
     
     return PetaRisikoTemplateResponse(**updated)
 
+
+# Template Examples - Available for copying
+@router.get("/template/examples", response_model=List[PetaRisikoTemplateResponse])
+async def get_template_examples(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get all example templates available for copying.
+
+    These are pre-configured templates with various sizes (3x3, 4x4, 5x5)
+    that users can copy and apply to their own KLP.
+
+    Returns:
+    - List of example templates with their configurations
+    """
+    db = await Database.get_db()
+
+    templates = []
+    async for template in db.peta_risiko_template.find({"is_example": True}).sort("nama", 1):
+        template["id"] = str(template.pop("_id"))
+        template["klp_id"] = template.get("id_induk_unit_kerja", "")
+
+        # Add risk appetite info
+        frekuensi = template.get("frekuensi", 5)
+        dampak = template.get("dampak", 5)
+        max_selera = frekuensi * dampak
+        selera_current = template.get("selera_risiko", {}).get("current", 12) if isinstance(template.get("selera_risiko"), dict) else 12
+
+        template["selera_risiko"] = {
+            "max": max_selera,
+            "current": selera_current
+        }
+
+        templates.append(PetaRisikoTemplateResponse(**template))
+
+    return templates
+
+
+@router.post("/template/{template_id}/copy", response_model=PetaRisikoTemplateResponse)
+async def copy_template(
+    template_id: str,
+    id_induk_unit_kerja: str = Query(..., description="Target KLP ID to copy template to"),
+    tahun: int = Query(..., description="Year for the copied template"),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Copy an example template to a specific KLP.
+
+    This endpoint allows users to copy a pre-configured example template
+    (like 3x3, 4x4, or 5x5) to their own KLP.
+
+    Parameters:
+    - template_id: ID of the example template to copy
+    - id_induk_unit_kerja: Target KLP ID where template will be copied
+    - tahun: Year for the new template
+
+    Returns:
+    - The newly created template with all its data copied
+    """
+    if current_user["role"] not in [UserRole.SUPER_ADMIN, UserRole.ADMIN_KLP, UserRole.PENGELOLA_RISIKO, UserRole.PEMILIK_RISIKO, UserRole.UNIT_MANAJEMEN_RISIKO]:
+        raise HTTPException(
+            status_code=403,
+            detail="Only SUPER_ADMIN or ADMIN_KLP can copy templates"
+        )
+
+    db = await Database.get_db()
+
+    # Get example template
+    source = await db.peta_risiko_template.find_one({
+        "_id": ObjectId(template_id),
+        "is_example": True
+    })
+
+    if not source:
+        raise HTTPException(
+            status_code=404,
+            detail="Example template not found"
+        )
+
+    # Get KLP info
+    klp = await db.induk_unit_kerja.find_one({"_id": ObjectId(id_induk_unit_kerja)})
+    if not klp:
+        raise HTTPException(
+            status_code=404,
+            detail="KLP not found"
+        )
+
+    # Check if user has access to this KLP
+    if current_user["role"] != UserRole.SUPER_ADMIN:
+        user_klp_id = current_user.get("id_induk_unit_kerja")
+        if user_klp_id and user_klp_id != id_induk_unit_kerja:
+            raise HTTPException(
+                status_code=403,
+                detail="You can only copy templates to your assigned KLP"
+            )
+
+    id_instansi = klp.get("id_instansi") or current_user.get("id_instansi")
+    if not id_instansi:
+        raise HTTPException(
+            status_code=400,
+            detail="Could not determine institution for the KLP"
+        )
+
+    # Check if template already exists for this KLP and year
+    existing = await db.peta_risiko_template.find_one({
+        "id_induk_unit_kerja": id_induk_unit_kerja,
+        "tahun": tahun
+    })
+
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Template already exists for this KLP in year {tahun}. Please delete it first or choose a different year."
+        )
+
+    # Create new template
+    new_template_data = {
+        "kode": f"{source['kode']}-{id_induk_unit_kerja[:8]}",
+        "nama": f"{source['nama']} (Salin)",
+        "frekuensi": source["frekuensi"],
+        "dampak": source["dampak"],
+        "tahun": tahun,
+        "id_instansi": id_instansi,
+        "id_induk_unit_kerja": id_induk_unit_kerja,
+        "klp_id": id_induk_unit_kerja,
+        "deskripsi": source.get("deskripsi", ""),
+        "is_example": False,
+        "copied_from": template_id,
+        "selera_risiko": source.get("selera_risiko", {"max": 25, "current": 12}),
+        "created_at": datetime.utcnow()
+    }
+
+    result = await db.peta_risiko_template.insert_one(new_template_data)
+    new_template_id = str(result.inserted_id)
+
+    # Copy categories
+    async for cat in db.peta_risiko_kategori.find({"template_id": template_id}):
+        await db.peta_risiko_kategori.insert_one({
+            "template_id": new_template_id,
+            "key": cat["key"],
+            "value": cat["value"],
+            "jenis": cat["jenis"],
+            "created_at": datetime.utcnow()
+        })
+
+    # Copy klasifikasi
+    async for kla in db.peta_risiko_klasifikasi.find({"template_id": template_id}):
+        await db.peta_risiko_klasifikasi.insert_one({
+            "template_id": new_template_id,
+            "key": kla["key"],
+            "value": kla["value"],
+            "jenis": kla["jenis"],
+            "created_at": datetime.utcnow()
+        })
+
+    # Copy heatmap
+    async for heat in db.peta_risiko_matriks_heatmap.find({"template_id": template_id}):
+        await db.peta_risiko_matriks_heatmap.insert_one({
+            "template_id": new_template_id,
+            "frekuensi": heat["frekuensi"],
+            "dampak": heat["dampak"],
+            "value": heat["value"],
+            "kode_warna": heat["kode_warna"],
+            "value_skor": heat.get("value_skor"),
+            "memenuhi": heat.get("memenuhi", False),
+            "atas": heat.get("atas", False),
+            "bawah": heat.get("bawah", False),
+            "kiri": heat.get("kiri", False),
+            "kanan": heat.get("kanan", False),
+            "risks": [],
+            "created_at": datetime.utcnow()
+        })
+
+    # Return the new template
+    new_template = await db.peta_risiko_template.find_one({"_id": ObjectId(new_template_id)})
+    new_template["id"] = new_template_id
+    new_template["klp_id"] = id_induk_unit_kerja
+
+    # Calculate selera_risiko
+    max_selera = new_template["frekuensi"] * new_template["dampak"]
+    selera_current = new_template.get("selera_risiko", {}).get("current", 12) if isinstance(new_template.get("selera_risiko"), dict) else 12
+    new_template["selera_risiko"] = {
+        "max": max_selera,
+        "current": selera_current
+    }
+
+    return PetaRisikoTemplateResponse(**new_template)
+
+
 # 2. Category Management
 @router.post("/kategori", response_model=PetaRisikoKategoriResponse)
 async def create_kategori(
@@ -1509,16 +1698,20 @@ async def get_heatmap(
     if not template:
         raise HTTPException(status_code=404, detail="Template not found")
     
-    # Get selera_risiko from struktur_organisasi
-    struktur = await db.struktur_organisasi.find_one({
-        "id_instansi": current_user["id_instansi"]
-    })
-    if not struktur or "selera_risiko" not in struktur:
-        raise HTTPException(
-            status_code=400,
-            detail="Risk appetite not set in organization structure"
-        )
-    selera_risiko = struktur["selera_risiko"]
+    # Get selera_risiko from template or struktur_organisasi
+    selera_risiko = None
+    if template.get("selera_risiko") and template["selera_risiko"].get("current"):
+        selera_risiko = template["selera_risiko"]["current"]
+    else:
+        # Fallback: look up from struktur_organisasi via template's klp_id
+        struktur = await db.struktur_organisasi.find_one({
+            "id_induk_unit_kerja": template.get("klp_id", "")
+        })
+        if struktur and "selera_risiko" in struktur:
+            selera_risiko = struktur["selera_risiko"]
+
+    if selera_risiko is None:
+        selera_risiko = template.get("frekuensi", 5) * template.get("dampak", 5)  # Default to max
     
     # Arrays untuk melacak garis yang sudah ditandai (seperti di PHP)
     garis_atas = []
@@ -1686,7 +1879,7 @@ async def get_heatmap_with_analisis(
     
     # Get selera_risiko
     struktur = await db.struktur_organisasi.find_one({
-        "id_instansi": id_instansi or current_user["id_instansi"]
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", "")
     })
     if not struktur or "selera_risiko" not in struktur:
         raise HTTPException(
@@ -1698,7 +1891,7 @@ async def get_heatmap_with_analisis(
     # Get kriteria values
     kriteria_kemungkinan = {}
     async for k in db.kriteria_kemungkinan.find({
-        "id_instansi": id_instansi or current_user["id_instansi"],
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", ""),
         "$or": [
             {"id_induk_unit_kerja": template["id_induk_unit_kerja"]},
             {"id_induk_unit_kerja": induk_unit.get("parent_id")}
@@ -1708,7 +1901,7 @@ async def get_heatmap_with_analisis(
     
     kriteria_dampak = {}
     async for k in db.kriteria_dampak.find({
-        "id_instansi": id_instansi or current_user["id_instansi"],
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", ""),
         "$or": [
             {"id_induk_unit_kerja": template["id_induk_unit_kerja"]},
             {"id_induk_unit_kerja": induk_unit.get("parent_id")}
@@ -3201,7 +3394,7 @@ async def get_meta_inherit(
     
     # Get selera_risiko
     struktur = await db.struktur_organisasi.find_one({
-        "id_instansi": id_instansi or current_user["id_instansi"]
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", "")
     })
     if not struktur or "selera_risiko" not in struktur:
         raise HTTPException(
@@ -3213,7 +3406,7 @@ async def get_meta_inherit(
     # Get kriteria values
     kriteria_kemungkinan = {}
     async for k in db.kriteria_kemungkinan.find({
-        "id_instansi": id_instansi or current_user["id_instansi"],
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", ""),
         "$or": [
             {"id_induk_unit_kerja": template["id_induk_unit_kerja"]},
             {"id_induk_unit_kerja": induk_unit.get("parent_id")}
@@ -3223,7 +3416,7 @@ async def get_meta_inherit(
     
     kriteria_dampak = {}
     async for k in db.kriteria_dampak.find({
-        "id_instansi": id_instansi or current_user["id_instansi"],
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", ""),
         "$or": [
             {"id_induk_unit_kerja": template["id_induk_unit_kerja"]},
             {"id_induk_unit_kerja": induk_unit.get("parent_id")}
@@ -3347,7 +3540,7 @@ async def get_meta_residual(
     
     # Get selera_risiko
     struktur = await db.struktur_organisasi.find_one({
-        "id_instansi": id_instansi or current_user["id_instansi"]
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", "")
     })
     if not struktur or "selera_risiko" not in struktur:
         raise HTTPException(
@@ -3359,7 +3552,7 @@ async def get_meta_residual(
     # Get kriteria values
     kriteria_kemungkinan = {}
     async for k in db.kriteria_kemungkinan.find({
-        "id_instansi": id_instansi or current_user["id_instansi"],
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", ""),
         "$or": [
             {"id_induk_unit_kerja": template["id_induk_unit_kerja"]},
             {"id_induk_unit_kerja": induk_unit.get("parent_id")}
@@ -3369,7 +3562,7 @@ async def get_meta_residual(
     
     kriteria_dampak = {}
     async for k in db.kriteria_dampak.find({
-        "id_instansi": id_instansi or current_user["id_instansi"],
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", ""),
         "$or": [
             {"id_induk_unit_kerja": template["id_induk_unit_kerja"]},
             {"id_induk_unit_kerja": induk_unit.get("parent_id")}
@@ -3485,7 +3678,7 @@ async def get_meta_treated(
     
     # Get selera_risiko
     struktur = await db.struktur_organisasi.find_one({
-        "id_instansi": id_instansi or current_user["id_instansi"]
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", "")
     })
     if not struktur or "selera_risiko" not in struktur:
         raise HTTPException(
@@ -3497,7 +3690,7 @@ async def get_meta_treated(
     # Get kriteria values
     kriteria_kemungkinan = {}
     async for k in db.kriteria_kemungkinan.find({
-        "id_instansi": id_instansi or current_user["id_instansi"],
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", ""),
         "$or": [
             {"id_induk_unit_kerja": template["id_induk_unit_kerja"]},
             {"id_induk_unit_kerja": induk_unit.get("parent_id")}
@@ -3507,7 +3700,7 @@ async def get_meta_treated(
     
     kriteria_dampak = {}
     async for k in db.kriteria_dampak.find({
-        "id_instansi": id_instansi or current_user["id_instansi"],
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", ""),
         "$or": [
             {"id_induk_unit_kerja": template["id_induk_unit_kerja"]},
             {"id_induk_unit_kerja": induk_unit.get("parent_id")}
@@ -3623,7 +3816,7 @@ async def get_meta_actual(
     
     # Get selera_risiko
     struktur = await db.struktur_organisasi.find_one({
-        "id_instansi": id_instansi or current_user["id_instansi"]
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", "")
     })
     if not struktur or "selera_risiko" not in struktur:
         raise HTTPException(
@@ -3635,7 +3828,7 @@ async def get_meta_actual(
     # Get kriteria values
     kriteria_kemungkinan = {}
     async for k in db.kriteria_kemungkinan.find({
-        "id_instansi": id_instansi or current_user["id_instansi"],
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", ""),
         "$or": [
             {"id_induk_unit_kerja": template["id_induk_unit_kerja"]},
             {"id_induk_unit_kerja": induk_unit.get("parent_id")}
@@ -3645,7 +3838,7 @@ async def get_meta_actual(
     
     kriteria_dampak = {}
     async for k in db.kriteria_dampak.find({
-        "id_instansi": id_instansi or current_user["id_instansi"],
+        "id_instansi": id_instansi or induk_unit.get("id_instansi", ""),
         "$or": [
             {"id_induk_unit_kerja": template["id_induk_unit_kerja"]},
             {"id_induk_unit_kerja": induk_unit.get("parent_id")}
