@@ -330,56 +330,64 @@ const KriteriaRisikoDampakMatrix = () => {
                         <>
                             {/* Matrix Table - Fixed Layout */}
                             <div className="table-responsive">
-                                <table className="table table-bordered" style={{ tableLayout: 'fixed', minWidth: '900px' }}>
+                                <table className="table table-bordered" style={{ tableLayout: 'fixed', minWidth: '1000px' }}>
                                     <thead>
                                         {/* Row 1: Main headers */}
-                                        <tr style={{ height: '60px' }}>
-                                            <th rowSpan="2" className="text-center align-middle bg-light" style={{ width: '100px', verticalAlign: 'middle' }}>
+                                        <tr style={{ height: '50px' }}>
+                                            <th colSpan="2" rowSpan="2" className="text-center align-middle bg-light" style={{ width: '80px', verticalAlign: 'middle' }}>
                                                 Peta Dampak
                                             </th>
-                                            <th colSpan={5} className="text-center align-middle bg-light">
+                                            <th colSpan="6" className="text-center align-middle bg-light">
                                                 Kategori Dampak
                                             </th>
                                         </tr>
-                                        {/* Row 2: Level numbers and category names */}
-                                        <tr style={{ height: '80px' }}>
+                                        {/* Row 2: Level numbers */}
+                                        <tr style={{ height: '40px' }}>
                                             {kategoriDampak.map((k) => (
-                                                <th key={k.key} className="text-center align-middle bg-light" style={{ width: '180px', verticalAlign: 'middle' }}>
-                                                    <div>
-                                                        <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{k.key}</div>
-                                                        <div style={{ fontSize: '0.85rem', marginTop: '5px' }}>
-                                                            {k.nama || `Level ${k.key}`}
-                                                            <span className="text-muted"> ({k.key})</span>
-                                                        </div>
-                                                        <button
-                                                            className="btn btn-link btn-sm p-0 mt-1"
-                                                            onClick={() => openKategoriModal(k)}
-                                                            style={{ color: '#0d6efd', fontSize: '0.75rem' }}
-                                                        >
-                                                            <FiEdit2 size={12} /> Edit
-                                                        </button>
+                                                <th key={k.key} className="text-center align-middle bg-light" style={{ width: '150px' }}>
+                                                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{k.key}</div>
+                                                </th>
+                                            ))}
+                                        </tr>
+                                        {/* Row 3: Category names with edit */}
+                                        <tr style={{ height: '60px' }}>
+                                            <th colSpan="2" className="bg-light"></th>
+                                            {kategoriDampak.map((k) => (
+                                                <th key={`name-${k.key}`} className="text-center align-middle bg-light" style={{ width: '150px' }}>
+                                                    <div style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>
+                                                        {k.nama || `Level ${k.key}`}
+                                                        <span className="text-muted"> ({k.key})</span>
                                                     </div>
+                                                    <button
+                                                        className="btn btn-link btn-sm p-0 mt-1"
+                                                        onClick={() => openKategoriModal(k)}
+                                                        style={{ color: '#0d6efd', fontSize: '0.75rem' }}
+                                                    >
+                                                        <FiEdit2 size={12} /> EDIT
+                                                    </button>
                                                 </th>
                                             ))}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {jenisKriteriaList.map((jenis, rowIndex) => (
-                                            <tr key={jenis} style={{ minHeight: '100px' }}>
+                                            <tr key={jenis} style={{ height: '100px' }}>
                                                 {/* First cell: Penjelasan (only on first row) */}
                                                 {rowIndex === 0 && (
-                                                    <td rowSpan={jenisKriteriaList.length} className="text-center align-middle bg-light" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', width: '30px', fontSize: '0.85rem' }}>
-                                                        Penjelasan
+                                                    <td rowSpan={jenisKriteriaList.length} className="text-center align-middle bg-light" style={{ width: '30px' }}>
+                                                        <div style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)', fontSize: '0.85rem', fontWeight: '500' }}>
+                                                            Penjelasan
+                                                        </div>
                                                     </td>
                                                 )}
                                                 {/* Second cell: Row number */}
-                                                <td className="text-center align-middle bg-light" style={{ width: '40px', fontWeight: 'bold' }}>
+                                                <td className="text-center align-middle bg-light" style={{ width: '50px', fontWeight: 'bold' }}>
                                                     {rowIndex + 1}
                                                 </td>
                                                 {/* Third cell: Jenis Kriteria name with delete button */}
-                                                <td className="align-middle bg-light" style={{ width: '160px' }}>
-                                                    <div className="d-flex justify-content-between align-items-center">
-                                                        <span style={{ fontWeight: '500' }}>{jenis}</span>
+                                                <td className="align-middle bg-light" style={{ width: '170px' }}>
+                                                    <div className="d-flex justify-content-between align-items-center px-2">
+                                                        <span style={{ fontWeight: '500', fontSize: '0.9rem' }}>{jenis}</span>
                                                         <button
                                                             className="btn btn-outline-danger btn-sm"
                                                             onClick={() => handleRemoveJenisKriteria(jenis)}
@@ -398,7 +406,6 @@ const KriteriaRisikoDampakMatrix = () => {
                                                             className="align-middle text-white"
                                                             style={{
                                                                 backgroundColor: '#33cc00',
-                                                                minHeight: '100px',
                                                                 cursor: 'pointer',
                                                                 fontSize: '0.8rem',
                                                                 padding: '10px'
@@ -406,7 +413,7 @@ const KriteriaRisikoDampakMatrix = () => {
                                                             onClick={() => openKriteriaModal(kategori, jenis)}
                                                         >
                                                             <div>
-                                                                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                                                                <div style={{ fontWeight: 'bold', marginBottom: '5px', fontSize: '0.85rem' }}>
                                                                     {kategori.nama || `Level ${kategori.key}`}
                                                                 </div>
                                                                 {cellData.value && (
