@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PageHeader from "@/components/shared/pageHeader/PageHeader";
 import Footer from "@/components/shared/Footer";
 import axios from "axios";
@@ -20,7 +20,8 @@ const PemilihanWarnaMatriks = () => {
   // Modal State
   const [selectedCell, setSelectedCell] = useState(null);
   const [modalValue, setModalValue] = useState("");
-  const [hsl, setHsl] = useState({ h: 120, s: 100, l: 40 }); // Default green-ish
+  const [hsl, setHsl] = useState({ h: 120, s: 100, l: 40 });
+  const paletteRef = useRef(null);
 
   const { user } = useAuth();
   const { idInstansi } = useInstansi();
@@ -181,6 +182,29 @@ const PemilihanWarnaMatriks = () => {
     }
   };
 
+  const updateSL = (e) => {
+    if (!paletteRef.current) return;
+    const rect = paletteRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+
+    const s = Math.round((x / rect.width) * 100);
+    const l = Math.round(100 - (y / rect.height) * 100);
+
+    setHsl((prev) => ({ ...prev, s, l }));
+  };
+
+  const onPaletteMouseDown = (e) => {
+    updateSL(e);
+    const onMouseMove = (moveEvent) => updateSL(moveEvent);
+    const onMouseUp = () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  };
+
   const renderColorModal = () => {
     if (!showColorModal || !selectedCell) return null;
 
@@ -197,7 +221,7 @@ const PemilihanWarnaMatriks = () => {
             <div className="modal-body p-4 bg-white">
               <h5 className="fw-bold mb-4 text-dark">Nilai Matriks HEATMAP</h5>
 
-              {/* Input Nilai (Dampak x Frekuensi) */}
+              {/* Input Nilai */}
               <div className="mb-4 position-relative">
                 <label
                   className="position-absolute px-2 bg-white"
@@ -227,14 +251,17 @@ const PemilihanWarnaMatriks = () => {
                 className="color-picker-container p-3 border rounded-3 mb-4 shadow-sm"
                 style={{ backgroundColor: "#fcfcfc" }}
               >
-                {/* Main Visual Area: Saturation/Brightness using HSL */}
+                {/* Interactive Palette */}
                 <div
-                  className="mb-3 rounded-2 position-relative overflow-hidden"
+                  ref={paletteRef}
+                  className="mb-3 rounded-2 position-relative overflow-hidden cursor-crosshair"
                   style={{
                     height: "180px",
                     backgroundColor: `hsl(${hsl.h}, 100%, 50%)`,
                     border: "1px solid #ddd",
+                    cursor: "crosshair",
                   }}
+                  onMouseDown={onPaletteMouseDown}
                 >
                   <div
                     style={{
@@ -262,12 +289,13 @@ const PemilihanWarnaMatriks = () => {
                       position: "absolute",
                       left: `${hsl.s}%`,
                       top: `${100 - hsl.l}%`,
-                      width: "12px",
-                      height: "12px",
+                      width: "14px",
+                      height: "14px",
                       border: "2px solid white",
                       borderRadius: "50%",
                       transform: "translate(-50%, -50%)",
-                      boxShadow: "0 0 2px rgba(0,0,0,0.5)",
+                      boxShadow: "0 0 4px rgba(0,0,0,0.5)",
+                      pointerEvents: "none",
                     }}
                   ></div>
                 </div>
@@ -286,7 +314,7 @@ const PemilihanWarnaMatriks = () => {
                   />
                 </div>
 
-                {/* Lightness Slider */}
+                {/* Lightness/Opacity Controls */}
                 <div className="d-flex align-items-center gap-2 mb-3">
                   <div className="flex-grow-1">
                     <input
@@ -315,9 +343,9 @@ const PemilihanWarnaMatriks = () => {
                   ></div>
                 </div>
 
-                {/* Hex/RGB Inputs */}
-                <div className="d-flex gap-2 mb-3">
-                  <div className="flex-grow-1 text-center">
+                {/* Hex/HSL Inputs */}
+                <div className="d-flex gap-2 mb-3 text-center">
+                  <div className="flex-grow-1">
                     <input
                       type="text"
                       className="form-control form-control-sm text-center fw-bold"
@@ -333,10 +361,10 @@ const PemilihanWarnaMatriks = () => {
                       Hex
                     </small>
                   </div>
-                  <div style={{ width: "50px" }} className="text-center">
+                  <div style={{ width: "45px" }}>
                     <input
                       type="text"
-                      className="form-control form-control-sm text-center"
+                      className="form-control form-control-sm text-center px-0"
                       value={hsl.h}
                       readOnly
                     />
@@ -344,10 +372,10 @@ const PemilihanWarnaMatriks = () => {
                       H
                     </small>
                   </div>
-                  <div style={{ width: "50px" }} className="text-center">
+                  <div style={{ width: "45px" }}>
                     <input
                       type="text"
-                      className="form-control form-control-sm text-center"
+                      className="form-control form-control-sm text-center px-0"
                       value={hsl.s}
                       readOnly
                     />
@@ -355,10 +383,10 @@ const PemilihanWarnaMatriks = () => {
                       S
                     </small>
                   </div>
-                  <div style={{ width: "50px" }} className="text-center">
+                  <div style={{ width: "45px" }}>
                     <input
                       type="text"
-                      className="form-control form-control-sm text-center"
+                      className="form-control form-control-sm text-center px-0"
                       value={hsl.l}
                       readOnly
                     />
@@ -368,7 +396,7 @@ const PemilihanWarnaMatriks = () => {
                   </div>
                 </div>
 
-                {/* Predefined Swatches */}
+                {/* Predefined Colors */}
                 <div className="d-flex flex-wrap gap-2 justify-content-between">
                   {predefinedColors.map((color) => (
                     <div
@@ -393,7 +421,7 @@ const PemilihanWarnaMatriks = () => {
               {/* Buttons */}
               <div className="d-flex gap-2 justify-content-end">
                 <button
-                  className="btn btn-lg px-4 rounded-3 text-white"
+                  className="btn btn-lg px-4 rounded-3 text-white shadow-sm"
                   style={{
                     backgroundColor: "#FF4500",
                     fontSize: "14px",
@@ -404,7 +432,7 @@ const PemilihanWarnaMatriks = () => {
                   Batal
                 </button>
                 <button
-                  className="btn btn-lg px-4 rounded-3 text-white"
+                  className="btn btn-lg px-4 rounded-3 text-white shadow-sm"
                   style={{
                     backgroundColor: "#0A0A32",
                     fontSize: "14px",
@@ -432,8 +460,8 @@ const PemilihanWarnaMatriks = () => {
             <div>
               <h4 className="mb-1 fw-bold">Pemilihan Warna Matriks Risiko</h4>
               <p className="text-muted">
-                Sesuaikan nilai dan warna visual heatmap berdasarkan kebijakan
-                manajemen risiko entitas.
+                Atur nilai dan warna visual heatmap berdasarkan kebijakan
+                manajemen risiko.
               </p>
             </div>
             <div className="alert alert-soft-primary d-flex align-items-center gap-2 mb-0 py-2 rounded-3 border-0">
@@ -485,7 +513,9 @@ const PemilihanWarnaMatriks = () => {
                         className="small text-wrap fw-semibold text-dark"
                         style={{ minWidth: "100px" }}
                       >
-                        {d.value || `Dampak ${d.key}`}
+                        {d.value
+                          ? `${d.value} (${d.key})`
+                          : `Level ${d.key} (${d.key})`}
                       </th>
                     ))}
                   </tr>
@@ -513,7 +543,9 @@ const PemilihanWarnaMatriks = () => {
                           className="fw-bold bg-light small text-wrap text-dark fw-semibold"
                           style={{ minWidth: "120px" }}
                         >
-                          {f.value || `Frekuensi ${f.key}`}
+                          {f.value
+                            ? `${f.value} (${f.key})`
+                            : `Level ${f.key} (${f.key})`}
                         </td>
                         {kategoriDampak.map((d) => {
                           const cell = heatmapData.find(
@@ -580,6 +612,7 @@ const PemilihanWarnaMatriks = () => {
                     cursor: pointer;
                     box-shadow: 0 0 3px rgba(0,0,0,0.3);
                 }
+                .cursor-crosshair { cursor: crosshair; }
                 .custom-heatmap-table th, .custom-heatmap-table td { border-color: #dee2e6 !important; }
             `}</style>
       {renderColorModal()}
