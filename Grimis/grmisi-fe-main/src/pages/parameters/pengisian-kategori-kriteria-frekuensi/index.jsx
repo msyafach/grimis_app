@@ -363,6 +363,7 @@ const KriteriaRisikoFrekuensiMatrix = () => {
       }
 
       showToast("success", "Semua data berhasil disimpan");
+      fetchData(); // Refresh data to get newly created IDs
     } catch (err) {
       console.error("Error saving:", err);
       const msg = err?.response?.data?.detail || "Gagal menyimpan data";
