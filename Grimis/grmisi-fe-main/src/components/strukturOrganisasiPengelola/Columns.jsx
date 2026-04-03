@@ -42,7 +42,7 @@ export const getColumns = (handleActionClick, user) => {
         const row = info.row.original;
 
         return (
-          <div className="d-flex justify-content-center gap-1">
+          <div className="d-flex justify-content-center gap-1 py-1">
             <Button
               variant="outline-info"
               size="sm"
@@ -65,7 +65,7 @@ export const getColumns = (handleActionClick, user) => {
         );
       },
       meta: {
-        className: "text-center",
+        className: "text-center align-middle",
       },
     },
   ];

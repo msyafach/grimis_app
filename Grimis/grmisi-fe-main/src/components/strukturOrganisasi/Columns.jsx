@@ -59,7 +59,7 @@ export const getColumns = (handleActionClick, user) => [
       ].includes(user?.role);
 
       return (
-        <div className="d-flex gap-1 justify-content-center">
+        <div className="d-flex gap-1 justify-content-center py-1">
           <Button
             variant="outline-primary"
             size="sm"
@@ -100,7 +100,7 @@ export const getColumns = (handleActionClick, user) => [
       );
     },
     meta: {
-      className: "text-center",
+      className: "text-center align-middle",
     },
   },
 ];
