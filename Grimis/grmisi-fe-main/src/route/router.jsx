@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import RootLayout from "../layout/root";
 import PageNotFound from "../pages/error/page-not-found";
-import ProtectedRoute from '../components/ProtectedRoute';
+import ProtectedRoute from "../components/ProtectedRoute";
 
 import LayoutAuth from "../layout/layoutAuth";
 
@@ -77,6 +77,9 @@ import UsulanKamusRisiko from "../pages/parameters/usulan-kamus-risiko";
 import PemilihanWarnaMatriks from "../pages/parameters/pemilihan-warna-matriks";
 import SettingMatriksRisiko from "../pages/parameters/setting-matriks-risiko";
 import PengisianKategoriKriteriaDampak from "../pages/parameters/pengisian-kategori-kriteria-dampak";
+import KriteriaRisikoFrekuensiMatrix from "../pages/parameters/pengisian-kategori-kriteria-frekuensi";
+import JenisKonteks from "../pages/parameters/jenis-konteks";
+import Konteks from "../pages/parameters-konteks";
 import AuditTrail from "../pages/audit-trail/index";
 
 import IdentifikasiRisikoIndex from "../pages/pengelolaan-risiko";
@@ -103,10 +106,10 @@ import KriteriaRisikoKemungkinanEdit from "../pages/kriteria-risiko/kemungkinan/
 import KriteriaRisikoKemungkinanDetail from "../pages/kriteria-risiko/kemungkinan/detail";
 
 import KriteriaRisikoDampakIndex from "../pages/kriteria-risiko/dampak";
-import KriteriaRisikoDampakMatrix from "../pages/kriteria-risiko/dampak/matrix";
 import KriteriaRisikoDampakTambah from "../pages/kriteria-risiko/dampak/tambah";
 import KriteriaRisikoDampakEdit from "../pages/kriteria-risiko/dampak/edit";
 import KriteriaRisikoDampakDetail from "../pages/kriteria-risiko/dampak/detail";
+import KriteriaRisikoDampakMatrix from "../pages/kriteria-risiko/dampak/matrix";
 
 import RegisterRisiko from "../pages/pengelolaan-register-risiko";
 import RegisterRisikoDetail from "../pages/pengelolaan-register-risiko-detail";
@@ -159,1014 +162,1558 @@ import PengaturanKopSuratForm from "../pages/pengaturan/kop-surat/PengaturanKopS
 import NotificationsIndex from "../pages/notifications/index";
 
 export const router = createBrowserRouter([
-    {
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      {
         path: "/",
-        element: <RootLayout />,
-        children: [
-            {
-                path: "/",
-                element: (
-                    <ProtectedRoute>
-                        <PetaRisikoIndex />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/peta-risiko/setting",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEMILIK_RISIKO']}>
-                        <PetaRisikoSettingIndex />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengaturan/kop-surat",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <PengaturanKopSuratForm />
-                    </ProtectedRoute>
-                ),
-            },
+        element: (
+          <ProtectedRoute>
+            <PetaRisikoIndex />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/peta-risiko/setting",
+        element: (
+          <ProtectedRoute
+            requiredRole={["SUPER_ADMIN", "ADMIN_KLP", "PEMILIK_RISIKO"]}
+          >
+            <PetaRisikoSettingIndex />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengaturan/kop-surat",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <PengaturanKopSuratForm />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/parameters/pemilihan-warna-matriks",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <PemilihanWarnaMatriks />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/setting-matriks-risiko",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <SettingMatriksRisiko />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/pengisian-kategori-kriteria-dampak",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <PengisianKategoriKriteriaDampak />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/struktur-organisasi",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <StrukturOrganisasi />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/struktur-organisasi/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <StrukturOrganisasiTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/struktur-organisasi/detail/:strukturOrganisasiId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <StrukturOrganisasiDetail />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/struktur-organisasi/edit/:strukturOrganisasiId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <StrukturOrganisasiEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/struktur-organisasi/users/:strukturOrganisasiId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <StrukturOrganisasiPengguna />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/struktur-organisasi/users/:strukturOrganisasiId/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <StrukturOrganisasiPenggunaTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/struktur-organisasi/users/:strukturOrganisasiId/detail/:userId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <StrukturOrganisasiPenggunaDetail />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/parameters/pemilihan-warna-matriks",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <PemilihanWarnaMatriks />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/setting-matriks-risiko",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <SettingMatriksRisiko />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/pengisian-kategori-kriteria-dampak",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <PengisianKategoriKriteriaDampak />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/pengisian-kategori-kriteria-frekuensi",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KriteriaRisikoFrekuensiMatrix />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/jenis-konteks",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <JenisKonteks />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/konteks",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <Konteks />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/struktur-organisasi",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <StrukturOrganisasi />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/struktur-organisasi/tambah",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <StrukturOrganisasiTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/struktur-organisasi/detail/:strukturOrganisasiId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <StrukturOrganisasiDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/struktur-organisasi/edit/:strukturOrganisasiId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <StrukturOrganisasiEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/struktur-organisasi/users/:strukturOrganisasiId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <StrukturOrganisasiPengguna />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/struktur-organisasi/users/:strukturOrganisasiId/tambah",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <StrukturOrganisasiPenggunaTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/struktur-organisasi/users/:strukturOrganisasiId/detail/:userId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <StrukturOrganisasiPenggunaDetail />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/parameters/kategori-risiko",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <KategoriRisiko />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/kategori-risiko/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KategoriRisikoTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/kategori-risiko/edit/:kategoriRisikoId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KategoriRisikoEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/kategori-risiko/detail/:kategoriRisikoId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <KategoriRisikoDetail />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/parameters/kategori-risiko",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <KategoriRisiko />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/kategori-risiko/tambah",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KategoriRisikoTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/kategori-risiko/edit/:kategoriRisikoId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KategoriRisikoEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/kategori-risiko/detail/:kategoriRisikoId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <KategoriRisikoDetail />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/parameters/jenis-penyebab",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <JenisPenyebab />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/jenis-penyebab/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <JenisPenyebabTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/jenis-penyebab/detail/:jenisPenyebabId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <JenisPenyebabDetail />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/jenis-penyebab/edit/:jenisPenyebabId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <JenisPenyebabEdit />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/parameters/jenis-penyebab",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <JenisPenyebab />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/jenis-penyebab/tambah",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <JenisPenyebabTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/jenis-penyebab/detail/:jenisPenyebabId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <JenisPenyebabDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/jenis-penyebab/edit/:jenisPenyebabId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <JenisPenyebabEdit />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/parameters/konteks-sasaran",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <KonteksSasaran />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/konteks-sasaran/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KonteksSasaranTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/konteks-sasaran/edit/:konteksSasaranId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KonteksSasaranEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/konteks-sasaran/detail/:konteksSasaranId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <KonteksSasaranDetail />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/konteks-sasaran/indikator/:konteksSasaranId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <KonteksSasaranIndikatorIndex />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/konteks-sasaran/indikator/:konteksSasaranId/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO']}>
-                        <KonteksSasaranIndikatorTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/konteks-sasaran/indikator/:konteksSasaranId/edit/:indikatorId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KonteksSasaranIndikatorEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/konteks-sasaran/indikator/:konteksSasaranId/detail/:indikatorId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <KonteksSasaranIndikatorDetail />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/parameters/konteks-sasaran",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <KonteksSasaran />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/konteks-sasaran/tambah",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KonteksSasaranTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/konteks-sasaran/edit/:konteksSasaranId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KonteksSasaranEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/konteks-sasaran/detail/:konteksSasaranId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <KonteksSasaranDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/konteks-sasaran/indikator/:konteksSasaranId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <KonteksSasaranIndikatorIndex />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/konteks-sasaran/indikator/:konteksSasaranId/tambah",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+            ]}
+          >
+            <KonteksSasaranIndikatorTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/konteks-sasaran/indikator/:konteksSasaranId/edit/:indikatorId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KonteksSasaranIndikatorEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/konteks-sasaran/indikator/:konteksSasaranId/detail/:indikatorId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <KonteksSasaranIndikatorDetail />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/parameters/konteks-probis",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <KonteksProbisIndex />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/konteks-probis/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KonteksProbisTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/konteks-probis/edit/:konteksProbisId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KonteksProbisEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/konteks-probis/detail/:konteksProbisId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <KonteksProbisDetail />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/parameters/konteks-probis",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <KonteksProbisIndex />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/konteks-probis/tambah",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KonteksProbisTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/konteks-probis/edit/:konteksProbisId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KonteksProbisEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/konteks-probis/detail/:konteksProbisId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <KonteksProbisDetail />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/parameters/kamus-risiko",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <KamusRisiko />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/kamus-risiko/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO']}>
-                        <KamusRisikoTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/kamus-risiko/edit/:kamusRisikoId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KamusRisikoEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/kamus-risiko/detail/:kamusRisikoId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEGAWAI', 'PENGAWAS_INTERN', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <KamusRisikoDetail />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/approval/kamus-risiko",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KamusRisikoApprovalIndex />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/parameters/kamus-risiko",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <KamusRisiko />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/kamus-risiko/tambah",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+            ]}
+          >
+            <KamusRisikoTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/kamus-risiko/edit/:kamusRisikoId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KamusRisikoEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/kamus-risiko/detail/:kamusRisikoId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEGAWAI",
+              "PENGAWAS_INTERN",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <KamusRisikoDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/approval/kamus-risiko",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KamusRisikoApprovalIndex />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/parameters/bagan-risiko",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <BaganRisikoIndex />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/bagan-risiko/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <BaganRisikoTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/bagan-risiko/edit/:baganRisikoId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <BaganRisikoEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/parameters/bagan-risiko/detail/:baganRisikoId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <BaganRisikoDetail />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/parameters/bagan-risiko",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <BaganRisikoIndex />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/bagan-risiko/tambah",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <BaganRisikoTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/bagan-risiko/edit/:baganRisikoId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <BaganRisikoEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/parameters/bagan-risiko/detail/:baganRisikoId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <BaganRisikoDetail />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/parameters/usulan-indikator",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <UsulanIndikator />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/parameters/usulan-indikator",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <UsulanIndikator />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/parameters/usulan-kamus-risiko",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'UNIT_MANAJEMEN_RISIKO']}>
-                        <UsulanKamusRisiko />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/parameters/usulan-kamus-risiko",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "UNIT_MANAJEMEN_RISIKO",
+            ]}
+          >
+            <UsulanKamusRisiko />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/parameters/metode-spip",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <MetodeSpipIndex />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/parameters/metode-spip",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <MetodeSpipIndex />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <IdentifikasiRisikoIndex />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <IdentifikasiRisikoTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/edit",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <IdentifikasiRisikoEditIden />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <IdentifikasiRisikoEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <IdentifikasiRisikoDetail />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/detail",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <IdentifikasiRisikoDetailIden />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/inherent",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <AnalisisInherent />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/inherent",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <AnalisisInherentEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/residual",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <AnalisisResidual />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/residual",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <AnalisisResidualEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/treated",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <AnalisisTreated />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/treated",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <AnalisisTreatedEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/actual",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <AnalisisActual />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/actual",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <AnalisisActualEdit />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <IdentifikasiRisikoIndex />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/tambah",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <IdentifikasiRisikoTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/edit",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <IdentifikasiRisikoEditIden />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <IdentifikasiRisikoEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <IdentifikasiRisikoDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/detail",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <IdentifikasiRisikoDetailIden />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/inherent",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <AnalisisInherent />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/inherent",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <AnalisisInherentEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/residual",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <AnalisisResidual />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/residual",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <AnalisisResidualEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/treated",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <AnalisisTreated />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/treated",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <AnalisisTreatedEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/actual",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <AnalisisActual />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/actual",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <AnalisisActualEdit />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/existing-control",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <AnalisisExistingControl />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/existing-control",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <AnalisisExistingControlEdit />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/existing-control",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <AnalisisExistingControl />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/existing-control",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <AnalisisExistingControlEdit />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/rtp",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <EvaluasiRisikoRtpIndex />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/rtp/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <EvaluasiRisikoRtpTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/rtp/edit/:rtpId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <EvaluasiRisikoRtpEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/rtp/realisasi/:rtpId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <EvaluasiRisikoRtpRealisasi />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/rtp/detail/:rtpId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <EvaluasiRisikoRtpDetail />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/rtp",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <EvaluasiRisikoRtpDetailIndex />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/rtp/edit/:rtpId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <EvaluasiRisikoRtpEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/rtp/detail/:rtpId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <EvaluasiRisikoRtpDetail />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/rtp",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <EvaluasiRisikoRtpIndex />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/rtp/tambah",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <EvaluasiRisikoRtpTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/rtp/edit/:rtpId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <EvaluasiRisikoRtpEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/rtp/realisasi/:rtpId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <EvaluasiRisikoRtpRealisasi />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/rtp/detail/:rtpId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <EvaluasiRisikoRtpDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/rtp",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <EvaluasiRisikoRtpDetailIndex />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/rtp/edit/:rtpId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <EvaluasiRisikoRtpEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/rtp/detail/:rtpId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <EvaluasiRisikoRtpDetail />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/pengelolaan-risiko/registrasi-risiko",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <RegisterRisiko />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: "/pengelolaan-risiko/registrasi-risiko/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <RegisterRisikoTambah />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: "/pengelolaan-risiko/registrasi-risiko/:identifikasiId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <RegisterRisikoDetail />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: "/pengelolaan-risiko/registrasi-risiko/:identifikasiId/edit",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <RegisterRisikoEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/registrasi-risiko/:idIdentifikasiRisiko/inherent",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <InherentRisk />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: "/pengelolaan-risiko/registrasi-risiko/:idIdentifikasiRisiko/residual",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <ResidualRisk />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: "/pengelolaan-risiko/registrasi-risiko/:idIdentifikasiRisiko/treated",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <TreatedlRisk />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: "/pengelolaan-risiko/registrasi-risiko/:idIdentifikasiRisiko/actual",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <ActualRisk />
-                    </ProtectedRoute>
-                )
-            },
+      {
+        path: "/pengelolaan-risiko/registrasi-risiko",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <RegisterRisiko />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/registrasi-risiko/tambah",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <RegisterRisikoTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/registrasi-risiko/:identifikasiId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <RegisterRisikoDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/registrasi-risiko/:identifikasiId/edit",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <RegisterRisikoEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/registrasi-risiko/:idIdentifikasiRisiko/inherent",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <InherentRisk />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/registrasi-risiko/:idIdentifikasiRisiko/residual",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <ResidualRisk />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/registrasi-risiko/:idIdentifikasiRisiko/treated",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <TreatedlRisk />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/registrasi-risiko/:idIdentifikasiRisiko/actual",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <ActualRisk />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/pengendalian-risiko/evaluasi-risiko",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <EvaluasiRisiko />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/evaluasi-risiko",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN']}>
-                        <EvaluasiRisikoTambah />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/evaluasi-risiko",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <EvaluasiRisikoDetail />
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: "/pengelolaan-risiko/proses-akhir-tahun",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <ProsesAkhirTahun />
-                    </ProtectedRoute>
-                )
-            },
+      {
+        path: "/pengendalian-risiko/evaluasi-risiko",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <EvaluasiRisiko />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/edit/:identifikasiId/evaluasi-risiko",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+            ]}
+          >
+            <EvaluasiRisikoTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/identifikasi-risiko/detail/:identifikasiId/evaluasi-risiko",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <EvaluasiRisikoDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/proses-akhir-tahun",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <ProsesAkhirTahun />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/pengendalian-risiko/evaluasi-risiko/:idIdentifikasiRisiko/edit",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <EvaluasiRisikoEdit />
-                    </ProtectedRoute>
-                )
-            },
+      {
+        path: "/pengendalian-risiko/evaluasi-risiko/:idIdentifikasiRisiko/edit",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <EvaluasiRisikoEdit />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/organisasi/instansi",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN']}>
-                        <Instansi />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/organisasi/instansi/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN']}>
-                        <InstansiTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/organisasi/instansi/detail/:instansiId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN']}>
-                        <InstansiDetail />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/organisasi/instansi/edit/:instansiId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN']}>
-                        <InstansiEdit />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/organisasi/instansi",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN"]}>
+            <Instansi />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/organisasi/instansi/tambah",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN"]}>
+            <InstansiTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/organisasi/instansi/detail/:instansiId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN"]}>
+            <InstansiDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/organisasi/instansi/edit/:instansiId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN"]}>
+            <InstansiEdit />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/organisasi/induk-unit-kerja",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <IndukUnitKerja />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/organisasi/induk-unit-kerja/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <IndukUnitKerjaTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/organisasi/induk-unit-kerja/edit/:indukUnitKerjaId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <IndukUnitKerjaEditContent />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/organisasi/induk-unit-kerja/detail/:indukUnitKerjaId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <IndukUnitKerjaDetail />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/organisasi/induk-unit-kerja",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <IndukUnitKerja />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/organisasi/induk-unit-kerja/tambah",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <IndukUnitKerjaTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/organisasi/induk-unit-kerja/edit/:indukUnitKerjaId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <IndukUnitKerjaEditContent />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/organisasi/induk-unit-kerja/detail/:indukUnitKerjaId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <IndukUnitKerjaDetail />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/kriteria-risiko/kemungkinan",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KriteriaRisikoKemungkinanIndex />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/kriteria-risiko/kemungkinan/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KriteriaRisikoKemungkinanTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/kriteria-risiko/kemungkinan/edit/:kriteriaKemungkinanId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KriteriaRisikoKemungkinanEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/kriteria-risiko/kemungkinan/detail/:kriteriaKemungkinanId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KriteriaRisikoKemungkinanDetail />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/kriteria-risiko/dampak",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KriteriaRisikoDampakIndex />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/kriteria-risiko/dampak/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KriteriaRisikoDampakTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/kriteria-risiko/dampak/edit/:kriteriaDampakId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KriteriaRisikoDampakEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/kriteria-risiko/dampak/detail/:kriteriaDampakId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN']}>
-                        <KriteriaRisikoDampakDetail />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/kriteria-risiko/dampak/matrix",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <KriteriaRisikoDampakMatrix />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/kriteria-risiko/kemungkinan",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KriteriaRisikoKemungkinanIndex />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/kriteria-risiko/kemungkinan/tambah",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KriteriaRisikoKemungkinanTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/kriteria-risiko/kemungkinan/edit/:kriteriaKemungkinanId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KriteriaRisikoKemungkinanEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/kriteria-risiko/kemungkinan/detail/:kriteriaKemungkinanId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KriteriaRisikoKemungkinanDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/kriteria-risiko/dampak",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KriteriaRisikoDampakIndex />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/kriteria-risiko/dampak/tambah",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KriteriaRisikoDampakTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/kriteria-risiko/dampak/edit/:kriteriaDampakId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KriteriaRisikoDampakEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/kriteria-risiko/dampak/detail/:kriteriaDampakId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN"]}>
+            <KriteriaRisikoDampakDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/kriteria-risiko/dampak/matrix",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <KriteriaRisikoDampakMatrix />
+          </ProtectedRoute>
+        ),
+      },
 
-            {
-                path: "/settings-unit-kerja/manajemen-pengguna",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <ManajemenPengguna />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/settings-unit-kerja/manajemen-pengguna/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <ManajemenPenggunaTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/settings-unit-kerja/manajemen-pengguna/edit/:userId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <ManajemenPenggunaEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/settings-unit-kerja/manajemen-pengguna/detail/:userId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <ManajemenPenggunaDetail />
-                    </ProtectedRoute>
-                ),
-            },
+      {
+        path: "/settings-unit-kerja/manajemen-pengguna",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <ManajemenPengguna />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/settings-unit-kerja/manajemen-pengguna/tambah",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <ManajemenPenggunaTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/settings-unit-kerja/manajemen-pengguna/edit/:userId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <ManajemenPenggunaEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/settings-unit-kerja/manajemen-pengguna/detail/:userId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <ManajemenPenggunaDetail />
+          </ProtectedRoute>
+        ),
+      },
 
-            // Group Management
-            {
-                path: "/settings/group-management",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <GroupManagement />
-                    </ProtectedRoute>
-                ),
-            },
-            // Role Management
-            {
-                path: "/settings/role-management",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <RoleManagement />
-                    </ProtectedRoute>
-                ),
-            },
+      // Group Management
+      {
+        path: "/settings/group-management",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <GroupManagement />
+          </ProtectedRoute>
+        ),
+      },
+      // Role Management
+      {
+        path: "/settings/role-management",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <RoleManagement />
+          </ProtectedRoute>
+        ),
+      },
 
-            // Audit Trail (like AWS CloudTrail)
-            {
-                path: "/settings/audit-trail",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <AuditTrail />
-                    </ProtectedRoute>
-                ),
-            },
+      // Audit Trail (like AWS CloudTrail)
+      {
+        path: "/settings/audit-trail",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <AuditTrail />
+          </ProtectedRoute>
+        ),
+      },
 
-            // Add Laporan Kejadian admin routes under approval menu
-            {
-                path: "/approval/laporan-kejadian",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PENGELOLA_RISIKO', 'PEMILIK_RISIKO']}>
-                        <LaporanKejadianIndex />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/approval/laporan-kejadian/:laporanId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP', 'PENGELOLA_RISIKO', 'PEMILIK_RISIKO']}>
-                        <LaporanKejadianDetail />
-                    </ProtectedRoute>
-                ),
-            },
+      // Add Laporan Kejadian admin routes under approval menu
+      {
+        path: "/approval/laporan-kejadian",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PENGELOLA_RISIKO",
+              "PEMILIK_RISIKO",
+            ]}
+          >
+            <LaporanKejadianIndex />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/approval/laporan-kejadian/:laporanId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "ADMIN_KLP",
+              "PENGELOLA_RISIKO",
+              "PEMILIK_RISIKO",
+            ]}
+          >
+            <LaporanKejadianDetail />
+          </ProtectedRoute>
+        ),
+      },
 
-            // Add Monitoring Risiko routes
-            {
-                path: "/pengelolaan-risiko/monitoring-risiko",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <MonitoringRisiko />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/monitoring-risiko/tambah",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'PENGELOLA_RISIKO']}>
-                        <MonitoringRisikoTambah />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/monitoring-risiko/edit/:monitoringId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'PENGELOLA_RISIKO']}>
-                        <MonitoringRisikoEdit />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/pengelolaan-risiko/monitoring-risiko/:monitoringId",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <MonitoringRisikoDetail />
-                    </ProtectedRoute>
-                ),
-            },
+      // Add Monitoring Risiko routes
+      {
+        path: "/pengelolaan-risiko/monitoring-risiko",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <MonitoringRisiko />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/monitoring-risiko/tambah",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "PENGELOLA_RISIKO"]}>
+            <MonitoringRisikoTambah />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/monitoring-risiko/edit/:monitoringId",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "PENGELOLA_RISIKO"]}>
+            <MonitoringRisikoEdit />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/pengelolaan-risiko/monitoring-risiko/:monitoringId",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <MonitoringRisikoDetail />
+          </ProtectedRoute>
+        ),
+      },
 
-            // Add Pelaporan Risiko route
-            {
-                path: "/pengelolaan-risiko/pelaporan-risiko",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'UNIT_MANAJEMEN_RISIKO', 'PEMILIK_RISIKO', 'PENGELOLA_RISIKO', 'PENGAWAS_INTERN', 'PEGAWAI']}>
-                        <PelaporanRisiko />
-                    </ProtectedRoute>
-                ),
-            },
+      // Add Pelaporan Risiko route
+      {
+        path: "/pengelolaan-risiko/pelaporan-risiko",
+        element: (
+          <ProtectedRoute
+            requiredRole={[
+              "SUPER_ADMIN",
+              "UNIT_MANAJEMEN_RISIKO",
+              "PEMILIK_RISIKO",
+              "PENGELOLA_RISIKO",
+              "PENGAWAS_INTERN",
+              "PEGAWAI",
+            ]}
+          >
+            <PelaporanRisiko />
+          </ProtectedRoute>
+        ),
+      },
 
-            // Notification History Router
-            {
-                path: "/notifications",
-                element: (
-                    <ProtectedRoute>
-                        <NotificationsIndex />
-                    </ProtectedRoute>
-                ),
-            },
+      // Notification History Router
+      {
+        path: "/notifications",
+        element: (
+          <ProtectedRoute>
+            <NotificationsIndex />
+          </ProtectedRoute>
+        ),
+      },
 
-            // Profile routes
-            {
-                path: "/profile/details",
-                element: (
-                    <ProtectedRoute>
-                        <ProfileDetails />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/profile/edit",
-                element: (
-                    <ProtectedRoute>
-                        <EditProfile />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: "/profile/change-password",
-                element: (
-                    <ProtectedRoute>
-                        <ChangePassword />
-                    </ProtectedRoute>
-                ),
-            },
+      // Profile routes
+      {
+        path: "/profile/details",
+        element: (
+          <ProtectedRoute>
+            <ProfileDetails />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/profile/edit",
+        element: (
+          <ProtectedRoute>
+            <EditProfile />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/profile/change-password",
+        element: (
+          <ProtectedRoute>
+            <ChangePassword />
+          </ProtectedRoute>
+        ),
+      },
 
-            // Group Management routes (handled by modal-based component)
-            {
-                path: "/settings/group-management",
-                element: (
-                    <ProtectedRoute requiredRole={['SUPER_ADMIN', 'ADMIN_KLP']}>
-                        <GroupManagement />
-                    </ProtectedRoute>
-                ),
-            },
-        ]
-    },
-    {
-        path: "/",
-        element: <LayoutAuth />,
-        children: [
-            {
-                path: "/authentication/login",
-                element: <Login />
-            },
-            // Add public route for anonymous incident reporting
-            {
-                path: "/laporan-kejadian/:referenceId",
-                element: <LaporanKejadianForm />,
-            },
-            {
-                path: '/error/404',
-                element: <PageNotFound />,
-            },
-            {
-                path: '*',
-                element: <Navigate to="/error/404" />,
-            },
-        ]
-    }
-])
+      // Group Management routes (handled by modal-based component)
+      {
+        path: "/settings/group-management",
+        element: (
+          <ProtectedRoute requiredRole={["SUPER_ADMIN", "ADMIN_KLP"]}>
+            <GroupManagement />
+          </ProtectedRoute>
+        ),
+      },
+    ],
+  },
+  {
+    path: "/",
+    element: <LayoutAuth />,
+    children: [
+      {
+        path: "/authentication/login",
+        element: <Login />,
+      },
+      // Add public route for anonymous incident reporting
+      {
+        path: "/laporan-kejadian/:referenceId",
+        element: <LaporanKejadianForm />,
+      },
+      {
+        path: "/error/404",
+        element: <PageNotFound />,
+      },
+      {
+        path: "*",
+        element: <Navigate to="/error/404" />,
+      },
+    ],
+  },
+]);
