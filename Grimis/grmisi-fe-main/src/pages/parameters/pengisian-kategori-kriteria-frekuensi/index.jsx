@@ -446,6 +446,7 @@ const KriteriaRisikoFrekuensiMatrix = () => {
                           padding: "8px",
                           fontSize: "0.85rem",
                           fontWeight: "bold",
+                          textTransform: "none",
                         }}
                       >
                         Peta Frekuensi
@@ -459,6 +460,7 @@ const KriteriaRisikoFrekuensiMatrix = () => {
                           fontSize: "0.9rem",
                           fontWeight: "bold",
                           padding: "8px",
+                          textTransform: "none",
                         }}
                       >
                         Kategori Frekuensi
@@ -477,6 +479,7 @@ const KriteriaRisikoFrekuensiMatrix = () => {
                             fontSize: "1.1rem",
                             fontWeight: "bold",
                             padding: "6px",
+                            textTransform: "none",
                           }}
                         >
                           {k.key}
@@ -500,6 +503,7 @@ const KriteriaRisikoFrekuensiMatrix = () => {
                             overflowWrap: "break-word",
                             lineHeight: "1.3",
                             cursor: "pointer",
+                            textTransform: "none",
                           }}
                           onClick={() => openKategoriModal(k)}
                           title="Klik untuk edit kategori"

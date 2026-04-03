@@ -459,6 +459,7 @@ const KriteriaRisikoDampakMatrix = () => {
                           padding: "8px",
                           fontSize: "0.85rem",
                           fontWeight: "bold",
+                          textTransform: "none",
                         }}
                       >
                         Peta Dampak
@@ -472,6 +473,7 @@ const KriteriaRisikoDampakMatrix = () => {
                           fontSize: "0.9rem",
                           fontWeight: "bold",
                           padding: "8px",
+                          textTransform: "none",
                         }}
                       >
                         Kategori Dampak
@@ -490,6 +492,7 @@ const KriteriaRisikoDampakMatrix = () => {
                             fontSize: "1.1rem",
                             fontWeight: "bold",
                             padding: "6px",
+                            textTransform: "none",
                           }}
                         >
                           {k.key}
@@ -513,6 +516,7 @@ const KriteriaRisikoDampakMatrix = () => {
                             overflowWrap: "break-word",
                             lineHeight: "1.3",
                             cursor: "pointer",
+                            textTransform: "none",
                           }}
                           onClick={() => openKategoriModal(k)}
                           title="Klik untuk edit kategori"
