@@ -697,7 +697,7 @@ const KriteriaRisikoDampakMatrix = () => {
         onHide={() => setShowKategoriModal(false)}
       >
         <Modal.Header closeButton>
-          <Modal.Title>Nilai Matriks DAMPAK</Modal.Title>
+          <Modal.Title>Nilai Matriks Dampak</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -705,11 +705,10 @@ const KriteriaRisikoDampakMatrix = () => {
               <Form.Label
                 style={{
                   fontWeight: "600",
-                  textTransform: "uppercase",
                   fontSize: "0.85rem",
                 }}
               >
-                KATEGORI {kategoriForm.key}
+                Kategori {kategoriForm.key}
               </Form.Label>
               <Form.Control
                 type="text"
@@ -741,7 +740,7 @@ const KriteriaRisikoDampakMatrix = () => {
         onHide={() => setShowPenjelasanModal(false)}
       >
         <Modal.Header closeButton>
-          <Modal.Title>Nilai Matriks DAMPAK</Modal.Title>
+          <Modal.Title>Nilai Matriks Dampak</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -749,11 +748,10 @@ const KriteriaRisikoDampakMatrix = () => {
               <Form.Label
                 style={{
                   fontWeight: "600",
-                  textTransform: "uppercase",
                   fontSize: "0.85rem",
                 }}
               >
-                PENJELASAN {penjelasanForm.id + 1}
+                Penjelasan {penjelasanForm.id + 1}
               </Form.Label>
               <Form.Control
                 type="text"
@@ -788,7 +786,7 @@ const KriteriaRisikoDampakMatrix = () => {
         onHide={() => setShowKriteriaModal(false)}
       >
         <Modal.Header closeButton>
-          <Modal.Title>Nilai Matriks DAMPAK</Modal.Title>
+          <Modal.Title>Nilai Matriks Dampak</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -796,11 +794,10 @@ const KriteriaRisikoDampakMatrix = () => {
               <Form.Label
                 style={{
                   fontWeight: "600",
-                  textTransform: "uppercase",
                   fontSize: "0.85rem",
                 }}
               >
-                KATEGORI x PENJELASAN ({kriteriaForm.kategori_key} x{" "}
+                Kategori x Penjelasan ({kriteriaForm.kategori_key} x{" "}
                 {jenisKriteriaList.indexOf(kriteriaForm.jenis_kriteria) + 1})
               </Form.Label>
               <Form.Control
@@ -834,7 +831,7 @@ const KriteriaRisikoDampakMatrix = () => {
         onHide={() => setShowAddJenisModal(false)}
       >
         <Modal.Header closeButton>
-          <Modal.Title>Nilai Matriks DAMPAK</Modal.Title>
+          <Modal.Title>Nilai Matriks Dampak</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -842,11 +839,10 @@ const KriteriaRisikoDampakMatrix = () => {
               <Form.Label
                 style={{
                   fontWeight: "600",
-                  textTransform: "uppercase",
                   fontSize: "0.85rem",
                 }}
               >
-                PENJELASAN {jenisKriteriaList.length + 1} (BARU)
+                Penjelasan {jenisKriteriaList.length + 1} (Baru)
               </Form.Label>
               <Form.Control
                 type="text"
