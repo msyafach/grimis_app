@@ -176,6 +176,17 @@ const API_ENDPOINTS = {
   deleteKategoriRisiko: (kategoriRisikoId) =>
     `${API_BASE_URL}/api/v1/kategori-risiko/${kategoriRisikoId}`,
 
+  // Jenis Konteks
+  postJenisKonteks: `${API_BASE_URL}/api/v1/jenis-konteks`,
+  getJenisKonteksAll: (instansiId) =>
+    `${API_BASE_URL}/api/v1/jenis-konteks?id_instansi=${instansiId}`,
+  getJenisKonteksById: (jenisKonteksId) =>
+    `${API_BASE_URL}/api/v1/jenis-konteks/${jenisKonteksId}`,
+  updateJenisKonteks: (jenisKonteksId) =>
+    `${API_BASE_URL}/api/v1/jenis-konteks/${jenisKonteksId}`,
+  deleteJenisKonteks: (jenisKonteksId) =>
+    `${API_BASE_URL}/api/v1/jenis-konteks/${jenisKonteksId}`,
+
   // Jenis Penyebab
   postJenisPenyebab: `${API_BASE_URL}/api/v1/jenis-penyebab`,
   getJenisPenyebabAll: (instansiId) =>
