@@ -40,13 +40,13 @@ export const getJenisPenyebabColumns = (handleActionClick, user) => [
     },
   },
   {
-    accessorKey: "nama_klp",
-    header: () => "Nama KLP",
+    accessorKey: "kode",
+    header: () => "Kode",
     cell: (info) => <span>{info.getValue()}</span>,
   },
   {
-    accessorKey: "kode",
-    header: () => "Kode",
+    accessorKey: "nama_klp",
+    header: () => "Nama KLP",
     cell: (info) => <span>{info.getValue()}</span>,
   },
   {
