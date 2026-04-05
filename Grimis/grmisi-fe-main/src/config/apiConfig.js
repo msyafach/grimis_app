@@ -93,6 +93,8 @@ const API_ENDPOINTS = {
   putUserPreferences: (instansiId, indukUnitKerjaId) =>
     `${API_BASE_URL}/api/v1/users/me/preferences?last_instansi_id=${instansiId}&last_induk_unit_kerja_id=${indukUnitKerjaId}`,
   checkWorkUnit: `${API_BASE_URL}/api/v1/users/me/check-work-unit`,
+  checkEmail: (email) =>
+    `${API_BASE_URL}/api/v1/users/check-email?email=${email}`,
 
   // Instansi
   postInstansi: `${API_BASE_URL}/api/v1/instansi`,

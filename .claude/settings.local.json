@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker compose:*)",
+      "WebSearch",
+      "Bash(git push:*)",
+      "Bash(docker exec:*)"
+    ]
+  }
+}

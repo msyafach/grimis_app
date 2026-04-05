@@ -1,0 +1,25 @@
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "sk-sp-26c2b03d20c944fa8f4b2df1cb12d5b0",
+    "ANTHROPIC_BASE_URL": "https://coding-intl.dashscope.aliyuncs.com/apps/anthropic",
+    "ANTHROPIC_MODEL": "kimi-k2.5"
+  },
+  "enabledPlugins": {
+    "engineering-skills@claude-code-skills": true,
+    "engineering-advanced-skills@claude-code-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-code-skills": {
+      "source": {
+        "source": "github",
+        "repo": "alirezarezvani/claude-skills"
+      }
+    }
+  },
+  "permissions": {
+    "deny": []
+  },
+  "effortLevel": "high",
+  "autoUpdatesChannel": "latest",
+  "hasCompletedOnboarding": true
+}
