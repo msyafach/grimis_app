@@ -161,11 +161,13 @@ const KategoriRisikoTabel = () => {
 
   return (
     <>
-      <Table
-        title="Data Kategori Risiko"
-        data={kategoriRisiko}
-        columns={columns}
-      />
+      <div style={{ overflow: "visible" }}>
+        <Table
+          title="Data Kategori Risiko"
+          data={kategoriRisiko}
+          columns={columns}
+        />
+      </div>
 
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>

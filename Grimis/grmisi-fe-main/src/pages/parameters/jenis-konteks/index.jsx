@@ -15,6 +15,7 @@ import {
   FiTrash2,
   FiMoreHorizontal,
 } from "react-icons/fi";
+import Dropdown from "@/components/shared/Dropdown";
 
 const JenisKonteks = () => {
   const [data, setData] = useState([]);
@@ -27,7 +28,6 @@ const JenisKonteks = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [activeDropdown, setActiveDropdown] = useState(null);
 
   // Form state
   const [form, setForm] = useState({
@@ -133,19 +133,16 @@ const JenisKonteks = () => {
     setSelectedItem(item);
     setForm({ kode: item.kode, nama: item.nama, jenis: item.jenis });
     setShowEditModal(true);
-    setActiveDropdown(null);
   };
 
   const openDetailModal = (item) => {
     setSelectedItem(item);
     setShowDetailModal(true);
-    setActiveDropdown(null);
   };
 
   const openDeleteModal = (item) => {
     setSelectedItem(item);
     setShowDeleteModal(true);
-    setActiveDropdown(null);
   };
 
   const filteredData = data.filter(
@@ -153,6 +150,30 @@ const JenisKonteks = () => {
       item.kode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.nama?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
+  const getActionItems = (item) => {
+    const actions = [
+      {
+        label: "Detil Data",
+        icon: <FiEye />,
+        onClick: () => openDetailModal(item),
+      },
+      {
+        label: "Ubah Data",
+        icon: <FiEdit3 />,
+        onClick: () => openEditModal(item),
+      },
+    ];
+    if (user?.role === "SUPER_ADMIN") {
+      actions.push({
+        label: "Hapus Data",
+        icon: <FiTrash2 />,
+        color: "text-danger",
+        onClick: () => openDeleteModal(item),
+      });
+    }
+    return actions;
+  };
 
   return (
     <>
@@ -169,7 +190,7 @@ const JenisKonteks = () => {
                 setShowAddModal(true);
               }}
             >
-              <span>+ Tambah Jenis Konteks</span>
+              <span>+ TAMBAH JENIS KONTEKS</span>
             </Button>
           </div>
           <div className="card-body">
@@ -192,7 +213,7 @@ const JenisKonteks = () => {
                 Belum ada data jenis konteks
               </div>
             ) : (
-              <div className="table-responsive">
+              <div className="table-responsive" style={{ overflow: "visible" }}>
                 <table className="table table-hover">
                   <thead>
                     <tr>
@@ -206,51 +227,14 @@ const JenisKonteks = () => {
                   <tbody>
                     {filteredData.map((item) => (
                       <tr key={item.id}>
-                        <td>
-                          <div className="position-relative">
-                            <button
-                              className="btn btn-sm btn-link p-0 text-muted"
-                              onClick={() =>
-                                setActiveDropdown(
-                                  activeDropdown === item.id ? null : item.id,
-                                )
-                              }
-                            >
-                              <FiMoreHorizontal />
-                            </button>
-                            {activeDropdown === item.id && (
-                              <div
-                                className="dropdown-menu show position-absolute shadow-sm"
-                                style={{
-                                  zIndex: 1050,
-                                  minWidth: "150px",
-                                  top: "100%",
-                                  left: "0",
-                                }}
-                              >
-                                <button
-                                  className="dropdown-item py-2"
-                                  onClick={() => openDetailModal(item)}
-                                >
-                                  <FiEye className="me-2" /> Detil Data
-                                </button>
-                                <button
-                                  className="dropdown-item py-2"
-                                  onClick={() => openEditModal(item)}
-                                >
-                                  <FiEdit3 className="me-2" /> Ubah Data
-                                </button>
-                                {user?.role === "SUPER_ADMIN" && (
-                                  <button
-                                    className="dropdown-item py-2 text-danger"
-                                    onClick={() => openDeleteModal(item)}
-                                  >
-                                    <FiTrash2 className="me-2" /> Hapus Data
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                        <td className="text-center">
+                          <Dropdown
+                            triggerIcon={<FiMoreHorizontal />}
+                            triggerClass="btn btn-sm btn-link p-0 text-muted"
+                            dropdownItems={getActionItems(item)}
+                            dropdownPosition="dropdown-menu-start"
+                            triggerPosition="0,10"
+                          />
                         </td>
                         <td>{item.kode}</td>
                         <td>
